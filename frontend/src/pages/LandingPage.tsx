@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useLanguage } from '../context/LanguageContext';
+import { useAppSelector } from '../store/hooks';
 import { SUPPORTED_LANGUAGES } from '../config/languages';
 import {
   Mic,
@@ -17,6 +18,7 @@ import {
 
 export const LandingPage: React.FC = () => {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   return (
     <div className="min-h-screen bg-[#090d16] flex flex-col font-sans text-slate-100 selection:bg-teal-500 selection:text-slate-950">
@@ -45,20 +47,32 @@ export const LandingPage: React.FC = () => {
               </p>
 
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  to="/signup"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-base rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-[1.02]"
-                >
-                  <span>{t.getStartedBtn || "Get Started"}</span>
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    to="/dashboard"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-base rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-[1.02]"
+                  >
+                    <span>{t.navDashboard || "Go to Dashboard"}</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/signup"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-base rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-[1.02]"
+                    >
+                      <span>{t.getStartedBtn || "Get Started"}</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
 
-                <Link
-                  to="/login"
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold text-base rounded-2xl transition-all"
-                >
-                  {t.signInBtn || "Sign In"}
-                </Link>
+                    <Link
+                      to="/login"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold text-base rounded-2xl transition-all"
+                    >
+                      {t.signInBtn || "Sign In"}
+                    </Link>
+                  </>
+                )}
               </div>
 
               <p className="text-xs text-slate-400 pt-2 flex items-center justify-center gap-1.5">
@@ -207,10 +221,10 @@ export const LandingPage: React.FC = () => {
             </div>
 
             <Link
-              to="/signup"
+              to={isAuthenticated ? "/dashboard" : "/signup"}
               className="shrink-0 px-6 py-3.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-lg shadow-teal-500/20"
             >
-              Start Intake Preparation
+              {isAuthenticated ? (t.navDashboard || "Go to Dashboard") : "Start Intake Preparation"}
             </Link>
           </div>
         </section>

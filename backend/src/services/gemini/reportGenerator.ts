@@ -23,21 +23,67 @@ export class ReportGenerator {
   ): Promise<GeneratedReportData> {
     const selectedLanguage = resolveLanguageName(language);
 
-    // 1. MOCK_MODE or missing API key fallback
-    if (env.MOCK_MODE || !env.GEMINI_API_KEY) {
-      logger.info('Generating mock intake report payload (MOCK_MODE=true)');
+    // Helper function to build a dynamic report strictly from actual transcript messages
+    const generateTranscriptBasedReport = (
+      userMsgs: string[]
+    ): GeneratedReportData => {
+      if (userMsgs.length === 0) {
+        return {
+          summary: 'Patient completed an intake session. No specific patient statements were recorded.',
+          keyThemes: ['General Intake'],
+          concerns: ['Not discussed during this session'],
+          emotionalContext: 'Patient engaged in the intake conversation.',
+          importantStatements: [],
+          conversationOverview: 'Structured intake session completed with 0 patient responses.'
+        };
+      }
+
+      const combinedText = userMsgs.join(' ');
+      const keyThemes: string[] = [];
+
+      if (/study|studies|exam|school|college|academic|university/i.test(combinedText)) {
+        keyThemes.push('Academic / Exam-Related Stress');
+      }
+      if (/work|job|boss|career|office/i.test(combinedText)) {
+        keyThemes.push('Workplace Stress');
+      }
+      if (/family|parent|spouse|partner|relationship/i.test(combinedText)) {
+        keyThemes.push('Interpersonal / Family Dynamics');
+      }
+      if (/sleep|insomnia|tired|fatigue/i.test(combinedText)) {
+        keyThemes.push('Sleep / Fatigue');
+      }
+      if (keyThemes.length === 0) {
+        keyThemes.push('Patient-Reported Concerns');
+      }
+
+      const cleanedMsgs = userMsgs.map((msg) =>
+        msg.replace(/\b(uh|um|like)\b/gi, '').replace(/\s+/g, ' ').trim()
+      );
+
       return {
-        summary: 'Patient expressed feelings of work-related stress and difficulty maintaining work-life balance.',
-        keyThemes: ['Workplace Stress', 'Time Management', 'Self-Care'],
-        concerns: ['High workload expectations', 'Intermittent sleep disruption'],
-        emotionalContext: 'Patient reflected an open and cooperative tone while discussing current daily pressure.',
-        importantStatements: ['"I want to learn better strategies to manage stress before it overwhelms me."'],
-        conversationOverview: 'The intake conversation covered primary lifestyle stressors, personal goals for therapy, and communication preferences.'
+        summary: `The patient reported experiencing concerns during intake: ${cleanedMsgs.join('. ')}`,
+        keyThemes,
+        concerns: cleanedMsgs.map((m) => `Patient reported: ${m}`),
+        emotionalContext: 'Patient communicated openly about their current experience during the intake session.',
+        importantStatements: cleanedMsgs.map((m) => `"${m}"`),
+        conversationOverview: `Intake session completed with ${userMsgs.length} user response(s).`
       };
+    };
+
+    const userMessages = transcript
+      .filter((m) => m.role === 'user' && m.text && !m.text.includes('No audible answer recorded.'))
+      .map((m) => m.text.trim());
+
+    // 1. Missing API key fallback check
+    if (!env.GEMINI_API_KEY) {
+      logger.info('GEMINI_API_KEY not set. Generating dynamic fallback intake report from transcript.');
+      return generateTranscriptBasedReport(userMessages);
     }
 
-    // 2. Real Gemini API call with 15-second timeout
+    // 2. Gemini 2.5 Flash API execution with safe logging
     try {
+      logger.info(`[Report] Provider: Gemini | Model: ${modelName} | Transcript messages: ${transcript.length}`);
       const prompt = buildReportPrompt(selectedLanguage, transcript);
 
       const generatePromise = ai.models.generateContent({
@@ -67,25 +113,16 @@ export class ReportGenerator {
 
       // Validate required report fields
       return {
-        summary: parsed.summary || 'Summary of intake conversation provided by patient.',
-        keyThemes: Array.isArray(parsed.keyThemes) ? parsed.keyThemes : ['General Intake'],
-        concerns: Array.isArray(parsed.concerns) ? parsed.concerns : ['Personal Goals'],
+        summary: parsed.summary || (userMessages.length > 0 ? `Patient reported: "${userMessages.join(' ')}"` : 'Summary of intake conversation.'),
+        keyThemes: Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0 ? parsed.keyThemes : ['General Intake'],
+        concerns: Array.isArray(parsed.concerns) && parsed.concerns.length > 0 ? parsed.concerns : ['Not discussed during this session'],
         emotionalContext: parsed.emotionalContext || 'Patient communicated openly about concerns.',
-        importantStatements: Array.isArray(parsed.importantStatements) ? parsed.importantStatements : [],
+        importantStatements: Array.isArray(parsed.importantStatements) ? parsed.importantStatements : userMessages.map(m => `"${m}"`),
         conversationOverview: parsed.conversationOverview || 'Intake conversation completed.'
       };
     } catch (err: any) {
       logger.error(`Gemini Report Generation Error: ${err.message}`);
-
-      // Safe fallback report payload
-      return {
-        summary: 'Patient completed an intake session expressing personal concerns and goals for therapy.',
-        keyThemes: ['General Intake', 'Therapy Goals'],
-        concerns: ['Primary Life Stressors'],
-        emotionalContext: 'Patient engaged in a supportive pre-therapy conversation.',
-        importantStatements: [],
-        conversationOverview: 'Structured pre-therapy intake session completed.'
-      };
+      return generateTranscriptBasedReport(userMessages);
     }
   }
 }

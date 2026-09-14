@@ -21,7 +21,6 @@ import HandHeatmap from '../components/session/HandHeatmap';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorAlert from '../components/common/ErrorAlert';
 import { Sparkles, CheckCircle2 } from 'lucide-react';
-import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 
 // Explicit State Machine States
 type SessionState =
@@ -70,63 +69,121 @@ export const SessionPage: React.FC = () => {
   // Retrieve Azure speech token for session
   const fetchSpeechToken = useCallback(async () => {
     try {
-      const data = await speechService.getSpeechToken();
+      const data = await speechService.getSpeechToken(languageCode);
       setAzureTokenData(data);
       return data;
     } catch (e) {
       console.warn('Speech token notice:', e);
       return null;
     }
+  }, [languageCode]);
+
+  // Speech Recognition: ONLY appends to currentAnswer transcript. NEVER generates questions.
+  const stopSpeechRecognition = useCallback(() => {
+    if (recognizerRef.current) {
+      try {
+        if (recognizerRef.current.stopContinuousRecognitionAsync) {
+          recognizerRef.current.stopContinuousRecognitionAsync();
+        } else if (recognizerRef.current.close) {
+          recognizerRef.current.close();
+        } else if (recognizerRef.current.stop) {
+          recognizerRef.current.stop();
+        }
+      } catch (e) {
+        console.warn('Error stopping recognizer:', e);
+      }
+      recognizerRef.current = null;
+    }
+    setIsListening(false);
   }, []);
 
-  // Text-To-Speech Synthesis helper
+  const startSpeechRecognition = useCallback(async () => {
+    stopSpeechRecognition();
+    try {
+      const speechToken = await speechService.getSpeechToken(languageCode);
+      const locales = recognitionLocales(languageCode);
+
+      const recognizer = speechService.createAzureRecognizer(
+        speechToken,
+        locales[0] || language.locale
+      );
+
+      if (recognizer) {
+        recognizerRef.current = recognizer;
+        recognizer.recognized = (_: any, event: any) => {
+          if (event.result && event.result.text) {
+            const recognized = event.result.text.trim();
+            setCurrentAnswer((prev) => (prev ? `${prev} ${recognized}` : recognized));
+            setSessionState('ANSWERING');
+          }
+        };
+        recognizer.startContinuousRecognitionAsync(
+          () => setIsListening(true),
+          (err: any) => console.warn('Azure STT error:', err)
+        );
+      } else {
+        const SpeechRecognition =
+          (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const rec = new SpeechRecognition();
+          rec.continuous = true;
+          rec.interimResults = false;
+          rec.lang = language.locale;
+          rec.onresult = (event: any) => {
+            const last = event.results.length - 1;
+            if (event.results[last].isFinal || !event.results[last].isFinal) {
+              const text = event.results[last][0].transcript;
+              if (text) {
+                setCurrentAnswer((prev) => (prev ? `${prev} ${text.trim()}` : text.trim()));
+                setSessionState('ANSWERING');
+              }
+            }
+          };
+          rec.onend = () => setIsListening(false);
+          rec.start();
+          recognizerRef.current = rec;
+          setIsListening(true);
+        } else {
+          setIsListening(true);
+        }
+      }
+    } catch (err) {
+      console.warn('Speech recognition notice:', err);
+      setIsListening(true);
+    }
+  }, [languageCode, language, stopSpeechRecognition]);
+
+  // Text-To-Speech Synthesis helper (Azure Speech SDK strictly)
   const speakText = useCallback(
     async (text: string) => {
       if (!text) return;
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+
+      // Prevent AI voice from being transcribed as patient speech
+      stopSpeechRecognition();
       setIsSpeaking(true);
 
-      try {
-        if (azureTokenData && !azureTokenData.token.startsWith('mock-')) {
-          const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
-            azureTokenData.token,
-            azureTokenData.region
-          );
-          speechConfig.speechSynthesisVoiceName = azureTokenData.voice || language.voice;
-          const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
+      // Safe development logging (no secret keys or tokens)
+      console.log(`[Speech] Provider: Azure Speech`);
+      console.log(`[Speech] Voice: ${azureTokenData?.voice || language.voice}`);
+      console.log(`[Speech] Region: ${azureTokenData?.region || 'centralindia'}`);
 
-          synthesizer.speakTextAsync(
-            text,
-            () => {
-              setIsSpeaking(false);
-              synthesizer.close();
-            },
-            (err: any) => {
-              console.warn('Azure TTS fallback:', err);
-              setIsSpeaking(false);
-              synthesizer.close();
-            }
-          );
-          return;
+      speechService.synthesizeSpeech(
+        text,
+        azureTokenData,
+        azureTokenData?.voice || language.voice,
+        () => setIsSpeaking(true),
+        () => {
+          setIsSpeaking(false);
+          // Enable mic recognition after AI finishes speaking
+          startSpeechRecognition();
+        },
+        (err) => {
+          console.warn('Azure Speech Services TTS Notice:', err?.message || err);
+          setIsSpeaking(false);
         }
-      } catch (err) {
-        console.warn('Azure TTS init notice:', err);
-      }
-
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = language.locale || 'en-US';
-        utterance.rate = 0.95;
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-        window.speechSynthesis.speak(utterance);
-      } else {
-        setIsSpeaking(false);
-      }
+      );
     },
-    [azureTokenData, language]
+    [azureTokenData, language, stopSpeechRecognition, startSpeechRecognition]
   );
 
   // 1. Single initialization of intake session
@@ -261,75 +318,6 @@ export const SessionPage: React.FC = () => {
     };
   }, [sessionId, dispatch, speakText]);
 
-  // Speech Recognition: ONLY appends to currentAnswer transcript. NEVER generates questions.
-  const startSpeechRecognition = useCallback(async () => {
-    try {
-      const speechToken = await speechService.getSpeechToken();
-      const locales = recognitionLocales(languageCode);
-
-      const recognizer = speechService.createAzureRecognizer(
-        speechToken,
-        locales[0] || language.locale
-      );
-
-      if (recognizer) {
-        recognizerRef.current = recognizer;
-        recognizer.recognized = (_: any, event: any) => {
-          if (event.result.text) {
-            const recognized = event.result.text.trim();
-            setCurrentAnswer((prev) => (prev ? `${prev} ${recognized}` : recognized));
-            setSessionState('ANSWERING');
-          }
-        };
-        recognizer.startContinuousRecognitionAsync(
-          () => setIsListening(true),
-          (err: any) => console.warn('Azure STT error:', err)
-        );
-      } else {
-        const SpeechRecognition =
-          (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-          const rec = new SpeechRecognition();
-          rec.continuous = true;
-          rec.interimResults = false;
-          rec.lang = language.locale;
-          rec.onresult = (event: any) => {
-            const last = event.results.length - 1;
-            const text = event.results[last][0].transcript;
-            if (text) {
-              setCurrentAnswer((prev) => (prev ? `${prev} ${text.trim()}` : text.trim()));
-              setSessionState('ANSWERING');
-            }
-          };
-          rec.onend = () => setIsListening(false);
-          rec.start();
-          recognizerRef.current = rec;
-          setIsListening(true);
-        } else {
-          setIsListening(true);
-        }
-      }
-    } catch (err) {
-      console.warn('Speech recognition notice:', err);
-      setIsListening(true);
-    }
-  }, [languageCode, language]);
-
-  const stopSpeechRecognition = useCallback(() => {
-    if (recognizerRef.current) {
-      try {
-        if (recognizerRef.current.stopContinuousRecognitionAsync) {
-          recognizerRef.current.stopContinuousRecognitionAsync();
-        } else if (recognizerRef.current.stop) {
-          recognizerRef.current.stop();
-        }
-      } catch (e) {
-        console.warn('Error stopping recognizer:', e);
-      }
-    }
-    setIsListening(false);
-  }, []);
-
   const toggleMic = () => {
     if (isListening) {
       stopSpeechRecognition();
@@ -365,6 +353,9 @@ export const SessionPage: React.FC = () => {
     // 3. Freeze current answer transcript
     const finalAnswer = currentAnswer.trim() || 'No audible answer recorded.';
 
+    // Clear current answer buffer for the next question
+    setCurrentAnswer('');
+
     // 4. Append user answer to visual transcript bubble
     dispatch(
       addTranscriptMessage({
@@ -396,12 +387,31 @@ export const SessionPage: React.FC = () => {
   const handleCompleteSession = async () => {
     if (!sessionId) return;
     stopSpeechRecognition();
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
     setGeneratingReport(true);
 
     try {
+      // Flush any pending user answer recorded before clicking Finish Session
+      const activeAnswer = currentAnswer.trim();
+      if (activeAnswer) {
+        dispatch(
+          addTranscriptMessage({
+            role: 'user',
+            text: activeAnswer,
+            timestamp: new Date().toISOString(),
+          })
+        );
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(
+            JSON.stringify({
+              type: 'user_message',
+              sessionId,
+              text: activeAnswer,
+            })
+          );
+        }
+        setCurrentAnswer('');
+      }
+
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         const payload: WSClientMessage = { type: 'end_session', sessionId };
         wsRef.current.send(JSON.stringify(payload));

@@ -60,9 +60,23 @@ const sessionSlice = createSlice({
       state.isAiProcessing = action.payload;
     },
     addTranscriptMessage(state, action: PayloadAction<TranscriptMessage>) {
-      state.transcript.push(action.payload);
-      if (state.currentSession) {
-        state.currentSession.transcript = [...state.transcript];
+      const msg = action.payload;
+      const isDuplicate = state.transcript.some((existing) => {
+        if (existing.role !== msg.role || existing.text.trim() !== msg.text.trim()) {
+          return false;
+        }
+        if (existing.id && msg.id) {
+          return existing.id === msg.id;
+        }
+        const existingTime = existing.timestamp ? new Date(existing.timestamp).getTime() : 0;
+        const msgTime = msg.timestamp ? new Date(msg.timestamp).getTime() : 0;
+        return Math.abs(existingTime - msgTime) < 1000;
+      });
+      if (!isDuplicate) {
+        state.transcript.push(msg);
+        if (state.currentSession) {
+          state.currentSession.transcript = [...state.transcript];
+        }
       }
     },
     setTranscript(state, action: PayloadAction<TranscriptMessage[]>) {

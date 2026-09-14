@@ -52,6 +52,7 @@ export interface OnboardingResponse {
 }
 
 export interface TranscriptMessage {
+  id?: string;
   role: 'user' | 'assistant';
   text: string;
   timestamp?: string;

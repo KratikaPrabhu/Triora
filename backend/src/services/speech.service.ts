@@ -24,9 +24,9 @@ export class SpeechService {
     const locale = langObj.locale;
     const recLocales = recognitionLocales(langCode || 'en');
 
-    // MOCK_MODE or missing keys fallback for local development / testing
-    if (env.MOCK_MODE || !env.AZURE_SPEECH_KEY) {
-      logger.info(`Generating mock Azure Speech token for language '${langObj.code}' (MOCK_MODE=true)`);
+    // Issue Azure Speech authorization token when subscription key is present
+    if (!env.AZURE_SPEECH_KEY) {
+      logger.warn(`AZURE_SPEECH_KEY not set. Returning fallback mock token for language '${langObj.code}'`);
       return {
         token: `mock-azure-speech-token-${Date.now()}`,
         region,
