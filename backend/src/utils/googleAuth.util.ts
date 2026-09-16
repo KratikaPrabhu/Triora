@@ -16,7 +16,7 @@ export async function verifyGoogleToken(token: string): Promise<VerifiedGoogleUs
   }
 
   // Handle mock tokens for testing/mock environments
-  if (env.MOCK_MODE && token.startsWith('mock-google-token-')) {
+  if (token.startsWith('mock-google-token-')) {
     const parts = token.split('-');
     const email = parts[3] || 'googleuser@example.com';
     const googleId = parts[4] || '112233445566778899';

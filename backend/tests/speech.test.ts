@@ -58,7 +58,15 @@ export async function runSpeechTests(): Promise<boolean> {
   }
 
   if (mongoose.connection.db) {
-    await mongoose.connection.db.dropDatabase();
+    try {
+      await mongoose.connection.db.dropDatabase();
+    } catch (_) {
+      try {
+        await mongoose.connection.db.collection('users').deleteMany({});
+        await mongoose.connection.db.collection('sessions').deleteMany({});
+        await mongoose.connection.db.collection('reports').deleteMany({});
+      } catch (e) {}
+    }
   }
 
   const server = app.listen(0);

@@ -73,7 +73,7 @@ export const SessionPage: React.FC = () => {
       setAzureTokenData(data);
       return data;
     } catch (e) {
-      console.warn('Speech token notice:', e);
+      console.warn('[Speech] Token notice:', e);
       return null;
     }
   }, [languageCode]);
@@ -90,7 +90,7 @@ export const SessionPage: React.FC = () => {
           recognizerRef.current.stop();
         }
       } catch (e) {
-        console.warn('Error stopping recognizer:', e);
+        console.warn('[Speech] Error stopping recognizer:', e);
       }
       recognizerRef.current = null;
     }
@@ -100,13 +100,12 @@ export const SessionPage: React.FC = () => {
   const startSpeechRecognition = useCallback(async () => {
     stopSpeechRecognition();
     try {
-      const speechToken = await speechService.getSpeechToken(languageCode);
+      const speechToken = await speechService.ensureValidToken(languageCode);
       const locales = recognitionLocales(languageCode);
 
-      const recognizer = speechService.createAzureRecognizer(
-        speechToken,
-        locales[0] || language.locale
-      );
+      const recognizer = speechToken
+        ? speechService.createAzureRecognizer(speechToken, locales[0] || language.locale)
+        : null;
 
       if (recognizer) {
         recognizerRef.current = recognizer;
@@ -119,7 +118,7 @@ export const SessionPage: React.FC = () => {
         };
         recognizer.startContinuousRecognitionAsync(
           () => setIsListening(true),
-          (err: any) => console.warn('Azure STT error:', err)
+          (err: any) => console.warn('[Speech] Azure STT notice:', err)
         );
       } else {
         const SpeechRecognition =
@@ -148,7 +147,7 @@ export const SessionPage: React.FC = () => {
         }
       }
     } catch (err) {
-      console.warn('Speech recognition notice:', err);
+      console.warn('[Speech] Speech recognition notice:', err);
       setIsListening(true);
     }
   }, [languageCode, language, stopSpeechRecognition]);
@@ -162,15 +161,13 @@ export const SessionPage: React.FC = () => {
       stopSpeechRecognition();
       setIsSpeaking(true);
 
-      // Safe development logging (no secret keys or tokens)
-      console.log(`[Speech] Provider: Azure Speech`);
-      console.log(`[Speech] Voice: ${azureTokenData?.voice || language.voice}`);
-      console.log(`[Speech] Region: ${azureTokenData?.region || 'centralindia'}`);
+      const tokenData = azureTokenData || (await fetchSpeechToken());
 
-      speechService.synthesizeSpeech(
+      await speechService.synthesizeSpeech(
         text,
-        azureTokenData,
-        azureTokenData?.voice || language.voice,
+        tokenData,
+        tokenData?.voice || language.voice,
+        languageCode,
         () => setIsSpeaking(true),
         () => {
           setIsSpeaking(false);
@@ -178,13 +175,29 @@ export const SessionPage: React.FC = () => {
           startSpeechRecognition();
         },
         (err) => {
-          console.warn('Azure Speech Services TTS Notice:', err?.message || err);
+          console.warn('[Speech] Azure Speech Services TTS Notice:', err?.message || err);
           setIsSpeaking(false);
+          // Allow mic recognition if synthesis failed
+          startSpeechRecognition();
         }
       );
     },
-    [azureTokenData, language, stopSpeechRecognition, startSpeechRecognition]
+    [azureTokenData, fetchSpeechToken, language, languageCode, stopSpeechRecognition, startSpeechRecognition]
   );
+
+  // Keep speakText ref updated to avoid closing & reopening WebSocket connection
+  const speakTextRef = useRef(speakText);
+  useEffect(() => {
+    speakTextRef.current = speakText;
+  }, [speakText]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopSpeechRecognition();
+      speechService.cancelSynthesis();
+    };
+  }, [stopSpeechRecognition]);
 
   // 1. Single initialization of intake session
   useEffect(() => {
@@ -223,7 +236,7 @@ export const SessionPage: React.FC = () => {
             timestamp: new Date().toISOString(),
           })
         );
-        speakText(firstQText);
+        speakTextRef.current(firstQText);
       } catch (err: any) {
         setErrorMsg(err.message || 'Unable to create intake session');
       } finally {
@@ -295,7 +308,7 @@ export const SessionPage: React.FC = () => {
               metadata: data.metadata,
             })
           );
-          speakText(nextText);
+          speakTextRef.current(nextText);
         } else if (data.type === 'session_completed') {
           dispatch(setAiProcessing(false));
           setIsProcessingAnswer(false);
@@ -316,7 +329,7 @@ export const SessionPage: React.FC = () => {
         ws.close();
       }
     };
-  }, [sessionId, dispatch, speakText]);
+  }, [sessionId, dispatch]);
 
   const toggleMic = () => {
     if (isListening) {
@@ -347,8 +360,9 @@ export const SessionPage: React.FC = () => {
     setIsProcessingAnswer(true);
     setSessionState('PROCESSING_ANSWER');
 
-    // 2. Stop active speech recognition
+    // 2. Stop active speech recognition & synthesis
     stopSpeechRecognition();
+    speechService.cancelSynthesis();
 
     // 3. Freeze current answer transcript
     const finalAnswer = currentAnswer.trim() || 'No audible answer recorded.';
@@ -387,6 +401,7 @@ export const SessionPage: React.FC = () => {
   const handleCompleteSession = async () => {
     if (!sessionId) return;
     stopSpeechRecognition();
+    speechService.cancelSynthesis();
     setGeneratingReport(true);
 
     try {
