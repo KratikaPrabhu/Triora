@@ -19,9 +19,33 @@ export class ReportGenerator {
    */
   async generateReportPayload(
     language: string,
-    transcript: Array<{ role: string; text: string }>
+    transcript: Array<{ role: string; text: string; status?: string }>
   ): Promise<GeneratedReportData> {
     const selectedLanguage = resolveLanguageName(language);
+
+    // Filter to ONLY user messages that were genuinely answered
+    const realUserMessages = transcript
+      .filter(
+        (m) =>
+          m.role === 'user' &&
+          m.text &&
+          m.text.trim() &&
+          m.status !== 'skipped' &&
+          m.status !== 'silent' &&
+          m.status !== 'recognition_error' &&
+          !m.text.includes('No audible answer recorded.')
+      )
+      .map((m) => m.text.trim());
+
+    // Filter full transcript for prompt to exclude empty/skipped items
+    const filteredTranscript = transcript.filter(
+      (m) =>
+        m.text &&
+        m.text.trim() &&
+        m.status !== 'skipped' &&
+        m.status !== 'silent' &&
+        !m.text.includes('No audible answer recorded.')
+    );
 
     // Helper function to build a dynamic report strictly from actual transcript messages
     const generateTranscriptBasedReport = (
@@ -71,20 +95,16 @@ export class ReportGenerator {
       };
     };
 
-    const userMessages = transcript
-      .filter((m) => m.role === 'user' && m.text && !m.text.includes('No audible answer recorded.'))
-      .map((m) => m.text.trim());
-
-    // 1. Missing API key fallback check
-    if (!env.GEMINI_API_KEY) {
-      logger.info('GEMINI_API_KEY not set. Generating dynamic fallback intake report from transcript.');
-      return generateTranscriptBasedReport(userMessages);
+    // 1. Missing API key or MOCK_MODE fallback check
+    if (env.MOCK_MODE || process.env.MOCK_MODE === 'true' || !env.GEMINI_API_KEY) {
+      logger.info('MOCK_MODE active or GEMINI_API_KEY not set. Generating dynamic fallback intake report from transcript.');
+      return generateTranscriptBasedReport(realUserMessages);
     }
 
     // 2. Gemini 2.5 Flash API execution with safe logging
     try {
-      logger.info(`[Report] Provider: Gemini | Model: ${modelName} | Transcript messages: ${transcript.length}`);
-      const prompt = buildReportPrompt(selectedLanguage, transcript);
+      logger.info(`[Report] Provider: Gemini | Model: ${modelName} | Real user responses: ${realUserMessages.length}`);
+      const prompt = buildReportPrompt(selectedLanguage, filteredTranscript);
 
       const generatePromise = ai.models.generateContent({
         model: modelName,
@@ -113,16 +133,16 @@ export class ReportGenerator {
 
       // Validate required report fields
       return {
-        summary: parsed.summary || (userMessages.length > 0 ? `Patient reported: "${userMessages.join(' ')}"` : 'Summary of intake conversation.'),
+        summary: parsed.summary || (realUserMessages.length > 0 ? `Patient reported: "${realUserMessages.join(' ')}"` : 'Summary of intake conversation.'),
         keyThemes: Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0 ? parsed.keyThemes : ['General Intake'],
         concerns: Array.isArray(parsed.concerns) && parsed.concerns.length > 0 ? parsed.concerns : ['Not discussed during this session'],
         emotionalContext: parsed.emotionalContext || 'Patient communicated openly about concerns.',
-        importantStatements: Array.isArray(parsed.importantStatements) ? parsed.importantStatements : userMessages.map(m => `"${m}"`),
+        importantStatements: Array.isArray(parsed.importantStatements) ? parsed.importantStatements : realUserMessages.map(m => `"${m}"`),
         conversationOverview: parsed.conversationOverview || 'Intake conversation completed.'
       };
     } catch (err: any) {
       logger.error(`Gemini Report Generation Error: ${err.message}`);
-      return generateTranscriptBasedReport(userMessages);
+      return generateTranscriptBasedReport(realUserMessages);
     }
   }
 }

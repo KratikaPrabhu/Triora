@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartHandshake, LogOut, CheckCircle, Globe } from 'lucide-react';
+import { HeartHandshake, LogOut, CheckCircle } from 'lucide-react';
 
 interface SessionHeaderProps {
   status: 'created' | 'active' | 'completed' | 'failed';
@@ -23,21 +23,15 @@ export const SessionHeader: React.FC<SessionHeaderProps> = ({
           </div>
           <div>
             <span className="text-base font-bold tracking-tight text-white">Triora Session</span>
+            <span className="text-xs text-slate-400 block">{language}</span>
             <span className="text-[10px] text-teal-400 font-semibold block uppercase tracking-wider">
               Spoken Intake Mode
             </span>
           </div>
         </div>
 
-        {/* Center: Non-Editable Locked Language Display & Status */}
+        {/* Center: Status */}
         <div className="flex items-center gap-3">
-          {/* Non-Editable Locked Language Indicator */}
-          <div className="flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs font-semibold text-teal-300">
-            <Globe className="w-4 h-4 text-teal-400 shrink-0" />
-            <span>{language}</span>
-            <span className="text-[10px] text-slate-400 font-normal border-l border-slate-700 pl-2 ml-0.5">Locked for Session</span>
-          </div>
-
           {/* Status Indicator */}
           {status === 'active' ? (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">

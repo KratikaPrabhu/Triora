@@ -13,7 +13,7 @@
 - **Framework**: Express.js
 - **Database**: MongoDB via Mongoose ODM
 - **Real-Time Communication**: `ws` WebSocket library
-- **AI Intelligence**: `@google/genai` (Gemini API with `gemini-2.5-flash`)
+- **AI Intelligence**: `@google/genai` (Gemini API with `gemini-3.6-flash`)
 - **Speech Services**: Azure Speech Services API
 - **Authentication**: JWT (`jsonwebtoken`) & Google OAuth (`google-auth-library`)
 - **Password Hashing**: `bcryptjs`

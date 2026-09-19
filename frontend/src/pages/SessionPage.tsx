@@ -61,6 +61,8 @@ export const SessionPage: React.FC = () => {
   const [generatingReport, setGeneratingReport] = useState(false);
   const [azureTokenData, setAzureTokenData] = useState<any>(null);
 
+  const [aiErrorMsg, setAiErrorMsg] = useState<string | null>(null);
+
   const wsRef = useRef<WebSocket | null>(null);
   const recognizerRef = useRef<any>(null);
   const activeReqIdRef = useRef<string | null>(null);
@@ -78,10 +80,22 @@ export const SessionPage: React.FC = () => {
     }
   }, [languageCode]);
 
-  // Speech Recognition: ONLY appends to currentAnswer transcript. NEVER generates questions.
+  const transcriptRef = useRef<string>('');
+
+  // Keep transcriptRef synced with currentAnswer state
+  const updateCurrentAnswer = useCallback((updater: string | ((prev: string) => string)) => {
+    setCurrentAnswer((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      transcriptRef.current = next;
+      return next;
+    });
+  }, []);
+
+  // Speech Recognition: ONLY appends to currentAnswer transcript via transcriptRef.
   const stopSpeechRecognition = useCallback(() => {
     if (recognizerRef.current) {
       try {
+        console.log('[STT] Recognition stopped');
         if (recognizerRef.current.stopContinuousRecognitionAsync) {
           recognizerRef.current.stopContinuousRecognitionAsync();
         } else if (recognizerRef.current.close) {
@@ -109,16 +123,46 @@ export const SessionPage: React.FC = () => {
 
       if (recognizer) {
         recognizerRef.current = recognizer;
-        recognizer.recognized = (_: any, event: any) => {
+
+        recognizer.sessionStarted = () => {
+          console.log('[STT] Recognition started');
+          setIsListening(true);
+        };
+
+        recognizer.sessionStopped = () => {
+          console.log('[STT] Recognition stopped');
+          setIsListening(false);
+        };
+
+        recognizer.recognizing = (_: any, event: any) => {
           if (event.result && event.result.text) {
-            const recognized = event.result.text.trim();
-            setCurrentAnswer((prev) => (prev ? `${prev} ${recognized}` : recognized));
-            setSessionState('ANSWERING');
+            console.log(`[STT] Recognizing partial: ${event.result.text.trim()}`);
           }
         };
+
+        recognizer.recognized = (_: any, event: any) => {
+          if (event.result && event.result.text) {
+            const recognizedSegment = event.result.text.trim();
+            if (recognizedSegment) {
+              console.log(`[STT] Recognized final: ${recognizedSegment}`);
+              updateCurrentAnswer((prev) => (prev ? `${prev} ${recognizedSegment}` : recognizedSegment));
+              setSessionState('ANSWERING');
+            }
+          }
+        };
+
+        recognizer.canceled = (_: any, event: any) => {
+          console.warn(`[STT] Cancellation reason: ${event.reason}`);
+          console.warn(`[STT] Cancellation details: ${event.errorDetails || 'None'}`);
+          if (event.errorDetails) {
+            console.error(`[STT] Error: ${event.errorDetails}`);
+          }
+          setIsListening(false);
+        };
+
         recognizer.startContinuousRecognitionAsync(
-          () => setIsListening(true),
-          (err: any) => console.warn('[Speech] Azure STT notice:', err)
+          () => console.log('[STT] continuous recognition async initialized'),
+          (err: any) => console.warn('[STT] Azure STT start notice:', err)
         );
       } else {
         const SpeechRecognition =
@@ -130,10 +174,12 @@ export const SessionPage: React.FC = () => {
           rec.lang = language.locale;
           rec.onresult = (event: any) => {
             const last = event.results.length - 1;
-            if (event.results[last].isFinal || !event.results[last].isFinal) {
+            if (event.results[last].isFinal) {
               const text = event.results[last][0].transcript;
-              if (text) {
-                setCurrentAnswer((prev) => (prev ? `${prev} ${text.trim()}` : text.trim()));
+              if (text && text.trim()) {
+                const recognizedSegment = text.trim();
+                console.log(`[STT] Recognized final (fallback): ${recognizedSegment}`);
+                updateCurrentAnswer((prev) => (prev ? `${prev} ${recognizedSegment}` : recognizedSegment));
                 setSessionState('ANSWERING');
               }
             }
@@ -150,7 +196,7 @@ export const SessionPage: React.FC = () => {
       console.warn('[Speech] Speech recognition notice:', err);
       setIsListening(true);
     }
-  }, [languageCode, language, stopSpeechRecognition]);
+  }, [languageCode, language, stopSpeechRecognition, updateCurrentAnswer]);
 
   // Text-To-Speech Synthesis helper (Azure Speech SDK strictly)
   const speakText = useCallback(
@@ -314,7 +360,14 @@ export const SessionPage: React.FC = () => {
           setIsProcessingAnswer(false);
           dispatch(updateCurrentSessionStatus('completed'));
           setSessionState('SESSION_COMPLETE');
+          stopSpeechRecognition();
+          speechService.cancelSynthesis();
           setIsCompleted(true);
+        } else if (data.type === 'conversation_error') {
+          dispatch(setAiProcessing(false));
+          setIsProcessingAnswer(false);
+          setAiErrorMsg(data.message || 'The AI service is temporarily unavailable. Please try again.');
+          setSessionState('QUESTION_DISPLAYED');
         }
       } catch (e) {
         console.error('Error parsing WS message:', e);
@@ -356,19 +409,30 @@ export const SessionPage: React.FC = () => {
   const handleNextQuestion = useCallback(() => {
     if (isProcessingAnswer || isAiProcessing || !sessionId) return;
 
-    // 1. Lock processing flag to prevent double clicks & race conditions
-    setIsProcessingAnswer(true);
-    setSessionState('PROCESSING_ANSWER');
+    setAiErrorMsg(null);
 
-    // 2. Stop active speech recognition & synthesis
+    // 1. Stop active speech recognition & synthesis first to flush final speech events
     stopSpeechRecognition();
     speechService.cancelSynthesis();
 
-    // 3. Freeze current answer transcript
-    const finalAnswer = currentAnswer.trim() || 'No audible answer recorded.';
+    // 2. Read final transcript directly from stable ref to avoid React state race condition
+    const rawAnswer = (transcriptRef.current || currentAnswer).trim();
 
-    // Clear current answer buffer for the next question
+    if (!rawAnswer) {
+      setAiErrorMsg("I couldn't hear that clearly. Please try again.");
+      startSpeechRecognition();
+      return;
+    }
+
+    // 3. Lock processing flag to prevent double clicks
+    setIsProcessingAnswer(true);
+    setSessionState('PROCESSING_ANSWER');
+
+    const finalAnswer = rawAnswer;
+
+    // Reset local transcript state and ref ONLY after locking final answer
     setCurrentAnswer('');
+    transcriptRef.current = '';
 
     // 4. Append user answer to visual transcript bubble
     dispatch(
@@ -395,17 +459,18 @@ export const SessionPage: React.FC = () => {
       setIsProcessingAnswer(false);
       setSessionState('QUESTION_DISPLAYED');
     }
-  }, [isProcessingAnswer, isAiProcessing, sessionId, currentAnswer, dispatch, stopSpeechRecognition]);
+  }, [isProcessingAnswer, isAiProcessing, sessionId, currentAnswer, dispatch, stopSpeechRecognition, startSpeechRecognition]);
 
-  // Complete & Clean Up Session
-  const handleCompleteSession = async () => {
-    if (!sessionId) return;
+  // Complete & Clean Up Session / Generate Report Action
+  const handleGenerateReport = async () => {
+    if (!sessionId || generatingReport) return;
+
     stopSpeechRecognition();
     speechService.cancelSynthesis();
     setGeneratingReport(true);
 
     try {
-      // Flush any pending user answer recorded before clicking Finish Session
+      // Flush any active user answer buffer if not yet saved
       const activeAnswer = currentAnswer.trim();
       if (activeAnswer) {
         dispatch(
@@ -434,13 +499,23 @@ export const SessionPage: React.FC = () => {
 
       await sessionService.updateSession(sessionId, { status: 'completed' });
       const report = await reportService.generateReport(sessionId);
-      navigate(`/report/${report.id || report._id || sessionId}`, { replace: true });
-    } catch (err) {
-      console.warn('Report generation notice:', err);
-      navigate(`/report/${sessionId}`, { replace: true });
+      
+      const targetReportId = report._id || report.id || sessionId;
+      console.log(`[Report] Saved successfully. Navigating to /report/${targetReportId}`);
+      navigate(`/report/${targetReportId}`, { replace: true });
+    } catch (err: any) {
+      console.error('[Report] Report generation failed:', err);
+      setErrorMsg(err?.message || 'Report generation failed. Please try again.');
     } finally {
       setGeneratingReport(false);
     }
+  };
+
+  const handleCompleteSession = () => {
+    stopSpeechRecognition();
+    speechService.cancelSynthesis();
+    setIsCompleted(true);
+    setSessionState('SESSION_COMPLETE');
   };
 
   if (initializing) {
@@ -486,6 +561,18 @@ export const SessionPage: React.FC = () => {
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Main Conversation & Question Control Area */}
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950/80">
+          {aiErrorMsg && (
+            <div className="bg-amber-900/40 border-b border-amber-500/30 px-4 py-3 flex items-center justify-between text-amber-200 text-xs shrink-0 z-10">
+              <span>{aiErrorMsg}</span>
+              <button
+                type="button"
+                onClick={() => handleNextQuestion()}
+                className="ml-3 px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition-colors shadow-sm"
+              >
+                Retry
+              </button>
+            </div>
+          )}
           <ConversationBubbles
             messages={transcript}
             isAiProcessing={isAiProcessing || isProcessingAnswer}
@@ -519,16 +606,24 @@ export const SessionPage: React.FC = () => {
             <div className="w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center mx-auto shadow-inner">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold">Your conversation is complete.</h3>
+            <h3 className="text-xl font-bold">Session Completed</h3>
             <p className="text-xs text-slate-400">
-              Thank you for completing your intake session. Your summary report has been created for your therapist.
+              Thank you for sharing your responses. Your intake session is now complete.
             </p>
             <button
               type="button"
-              onClick={() => navigate(`/report/${sessionId}`)}
-              className="w-full py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-md"
+              disabled={generatingReport}
+              onClick={handleGenerateReport}
+              className="w-full py-3 bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
             >
-              View Your Summary &rarr;
+              {generatingReport ? (
+                <>
+                  <Sparkles className="w-4 h-4 animate-spin" />
+                  Generating Report...
+                </>
+              ) : (
+                'Generate Report'
+              )}
             </button>
           </div>
         </div>

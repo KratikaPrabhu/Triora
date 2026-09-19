@@ -23,8 +23,13 @@ const sessionMessageSchema = new Schema(
     },
     text: {
       type: String,
-      required: true,
+      default: '',
       trim: true
+    },
+    status: {
+      type: String,
+      enum: ['answered', 'silent', 'skipped', 'recognition_error', 'cancelled'],
+      default: 'answered'
     },
     timestamp: {
       type: Date,

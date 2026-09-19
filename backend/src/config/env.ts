@@ -14,7 +14,7 @@ const envSchema = z.object({
   AZURE_SPEECH_REGION: z.string().optional().default(''),
   AZURE_SPEECH_VOICE: z.string().optional().default(''),
   GEMINI_API_KEY: z.string().optional().default(''),
-  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-3.6-flash'),
   MOCK_MODE: z.string().transform((val) => val === 'true').default('true'),
   CLIENT_URL: z.string().default('http://localhost:3000')
 });

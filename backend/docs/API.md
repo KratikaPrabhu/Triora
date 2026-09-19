@@ -261,7 +261,7 @@ Generates a non-diagnostic pre-therapy intake summary for a **completed** sessio
     "importantStatements": ["I struggle to disconnect after 7 PM."],
     "conversationOverview": "Pre-therapy intake conversation covering work burnout.",
     "generatedAt": "2026-09-12T21:20:00.000Z",
-    "modelName": "gemini-2.5-flash",
+    "modelName": "gemini-3.6-flash",
     "version": "1.0"
   }
 }

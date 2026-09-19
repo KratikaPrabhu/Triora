@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Volume2, ArrowRight, Sparkles, CheckCircle2, Mic, MicOff, Send } from 'lucide-react';
+import { Volume2, ArrowRight, Sparkles, Mic, MicOff, Send, RefreshCw, SkipForward, AlertCircle } from 'lucide-react';
 
 interface SessionQuestionFlowProps {
   currentQuestionIndex: number;
-  totalQuestions: number;
+  totalQuestions?: number;
   currentQuestion: string;
   isSpeaking: boolean;
   isListening: boolean;
   isAiProcessing: boolean;
+  isSilenceState?: boolean;
   onRepeatQuestion: () => void;
   onNextQuestion: () => void;
+  onSkipQuestion?: () => void;
+  onTryAgain?: () => void;
   onToggleMic: () => void;
   onSendMessage: (text: string) => void;
   onCompleteSession: () => void;
@@ -18,13 +21,15 @@ interface SessionQuestionFlowProps {
 
 export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
   currentQuestionIndex,
-  totalQuestions,
   currentQuestion,
   isSpeaking,
   isListening,
   isAiProcessing,
+  isSilenceState = false,
   onRepeatQuestion,
   onNextQuestion,
+  onSkipQuestion,
+  onTryAgain,
   onToggleMic,
   onSendMessage,
   onCompleteSession,
@@ -33,13 +38,11 @@ export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
   const [textInput, setTextInput] = useState('');
   const [nextDisabled, setNextDisabled] = useState(false);
 
-  const isFinalQuestion = currentQuestionIndex >= totalQuestions - 1;
-
   const handleNextClick = () => {
     if (nextDisabled || isAiProcessing) return;
     setNextDisabled(true);
     onNextQuestion();
-    setTimeout(() => setNextDisabled(false), 600); // 600ms debounce to prevent double-click skips
+    setTimeout(() => setNextDisabled(false), 600);
   };
 
   const handleTextSubmit = (e: React.FormEvent) => {
@@ -57,24 +60,8 @@ export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-teal-400" />
             <span className="text-xs font-bold uppercase tracking-wider text-teal-400">
-              {t.questionPrefix || 'Question'} {Math.min(currentQuestionIndex + 1, totalQuestions)} of {totalQuestions}
+              {t.questionPrefix || 'Question'} {currentQuestionIndex + 1}
             </span>
-          </div>
-
-          {/* Question Progress Dots */}
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: totalQuestions }).map((_, idx) => (
-              <div
-                key={idx}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === currentQuestionIndex
-                    ? 'w-6 bg-teal-400'
-                    : idx < currentQuestionIndex
-                    ? 'w-2 bg-teal-600'
-                    : 'w-2 bg-slate-800'
-                }`}
-              />
-            ))}
           </div>
         </div>
 
@@ -82,6 +69,36 @@ export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
         <h3 className="text-lg sm:text-xl font-bold text-white leading-relaxed">
           "{currentQuestion}"
         </h3>
+
+        {/* Silence Notice Banner */}
+        {isSilenceState && (
+          <div className="bg-amber-950/50 border border-amber-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-amber-200 text-xs">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>I didn't catch anything. You can try speaking again or skip when ready.</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={onTryAgain}
+                className="px-3 py-1.5 bg-amber-800/60 hover:bg-amber-700/60 font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Try Again</span>
+              </button>
+              {onSkipQuestion && (
+                <button
+                  type="button"
+                  onClick={onSkipQuestion}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl flex items-center gap-1.5 text-slate-300 transition-colors"
+                >
+                  <SkipForward className="w-3.5 h-3.5" />
+                  <span>Skip</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Actions: [ 🔊 Repeat Question ] & [ Next → ] */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
@@ -102,18 +119,13 @@ export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
             type="button"
             onClick={handleNextClick}
             disabled={nextDisabled || isAiProcessing}
-            aria-label={isFinalQuestion ? t.finishSessionBtn : t.nextQuestionBtn}
+            aria-label={t.nextQuestionBtn}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-2xl transition-all shadow-md shadow-teal-500/20"
           >
             {isAiProcessing ? (
               <>
                 <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                 <span>Preparing next question...</span>
-              </>
-            ) : isFinalQuestion ? (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{t.finishSessionBtn}</span>
               </>
             ) : (
               <>

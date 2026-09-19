@@ -49,6 +49,9 @@ class SpeechService {
       }
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenData.token, tokenData.region);
       speechConfig.speechRecognitionLanguage = locale;
+      // Configure silence timeouts (in milliseconds) for continuous natural speech
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, '15000');
+      speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, '5000');
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       return new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
     } catch (err) {
@@ -100,11 +103,9 @@ class SpeechService {
 
     const selectedVoice = voiceName || tokenData.voice || 'en-US-AvaMultilingualNeural';
 
-    // Safe development logging
-    console.log('[Speech] AI response received');
-    console.log('[Speech] Starting Azure TTS');
-    console.log(`[Speech] Voice: ${selectedVoice}`);
-    console.log(`[Speech] Region: ${tokenData.region}`);
+    console.log('[Azure TTS] Question received');
+    console.log('[Azure TTS] Starting synthesis');
+    console.log(`[Azure TTS] Voice: ${selectedVoice}`);
 
     const synthesisId = ++this.currentSynthesisId;
 
@@ -112,8 +113,15 @@ class SpeechService {
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenData.token, tokenData.region);
       speechConfig.speechSynthesisVoiceName = selectedVoice;
 
-      const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+      const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
       this.activeSynthesizer = synthesizer;
+
+      synthesizer.synthesisStarted = () => {
+        console.log('[Azure TTS] Starting');
+        console.log('[Azure TTS] Synthesis started');
+        console.log('[Azure TTS] Audio playback started');
+      };
 
       if (onStart) onStart();
 
@@ -127,13 +135,16 @@ class SpeechService {
           }
 
           if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-            console.log('[Speech] Azure TTS completed');
+            console.log('[Azure TTS] Synthesis completed');
+            console.log('[Azure TTS] Playback started');
+            console.log('[Azure TTS] Playback completed');
             if (onEnd) onEnd();
           } else {
             const cancellation = SpeechSDK.CancellationDetails.fromResult(result);
             const errorDetails = cancellation.errorDetails || result.errorDetails || 'Synthesis canceled or incomplete';
-            console.error('[Speech] Azure TTS failed');
-            console.error(`[Speech] Error: ${errorDetails}`);
+            console.error('[Azure TTS] Synthesis canceled');
+            console.error(`[Azure TTS] Error reason: ${cancellation.reason}`);
+            console.error(`[Azure TTS] Error details: ${errorDetails}`);
             if (onError) onError(new Error(errorDetails));
             if (onEnd) onEnd();
           }
@@ -150,8 +161,9 @@ class SpeechService {
           }
 
           const safeError = err?.message || err || 'Synthesis runtime exception';
-          console.error('[Speech] Azure TTS failed');
-          console.error(`[Speech] Error: ${safeError}`);
+          console.error('[Azure TTS] Synthesis canceled');
+          console.error(`[Azure TTS] Error reason: Runtime Exception`);
+          console.error(`[Azure TTS] Error details: ${safeError}`);
 
           if (onError) onError(err);
           if (onEnd) onEnd();

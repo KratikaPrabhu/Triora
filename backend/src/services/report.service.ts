@@ -5,6 +5,8 @@ import Session from '../models/session.model';
 import reportGenerator from './gemini/reportGenerator';
 import { AppError } from '../middleware/error.middleware';
 
+import logger from '../config/logger';
+
 export class ReportService {
   /**
    * Generate an intake report for a completed patient session
@@ -16,6 +18,9 @@ export class ReportService {
       throw error;
     }
 
+    logger.info(`[Report] Finish session requested`);
+    logger.info(`[Report] Session ID: ${sessionId}`);
+
     // Verify session ownership
     const session = await sessionService.getSessionById(userId, sessionId);
 
@@ -26,11 +31,20 @@ export class ReportService {
       throw error;
     }
 
+    const patientResponseCount = (session.transcript || []).filter(
+      (m: any) => m.role === 'user' && m.text && m.text.trim()
+    ).length;
+    logger.info(`[Report] Patient responses: ${patientResponseCount}`);
+    logger.info(`[Report] Generating Gemini report`);
+
     // Generate structured report content via Gemini / Mock engine
     const reportData = await reportGenerator.generateReportPayload(
       session.language || 'English',
       session.transcript || []
     );
+
+    logger.info(`[Report] Gemini report generated`);
+    logger.info(`[Report] Saving report`);
 
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const sessionObjectId = new mongoose.Types.ObjectId(sessionId);
@@ -58,6 +72,9 @@ export class ReportService {
 
     // Link report ID to Session
     await Session.findByIdAndUpdate(sessionObjectId, { reportId: report._id });
+
+    logger.info(`[Report] Report saved successfully`);
+    logger.info(`[Report] Returning report ID: ${report._id}`);
 
     return report.toJSON();
   }

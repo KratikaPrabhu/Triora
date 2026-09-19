@@ -15,7 +15,7 @@ Patients participate in an open-ended spoken intake conversation prior to their 
 - **Authentication**: JWT & Google OAuth 2.0 (`google-auth-library`)
 - **Real-Time Communication**: WebSockets (`ws`)
 - **Speech Services**: Azure Speech Services API
-- **AI Intelligence**: Google Gemini API (`gemini-2.5-flash`)
+- **AI Intelligence**: Google Gemini API (`gemini-3.6-flash`)
 - **Security & Validation**: Helmet, CORS, Express Rate Limit, Zod
 - **Logging**: Winston structured logger
 
@@ -76,7 +76,7 @@ AZURE_SPEECH_KEY=your_azure_speech_key
 AZURE_SPEECH_REGION=eastus
 AZURE_SPEECH_VOICE=en-US-AvaNeural
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 MOCK_MODE=true
 CLIENT_URL=http://localhost:3000
 ```

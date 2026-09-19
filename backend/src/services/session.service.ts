@@ -25,7 +25,13 @@ export class SessionService {
       status: 'created',
       language: data.language || 'en',
       metadata: data.metadata || {},
-      transcript: []
+      transcript: [
+        {
+          role: 'assistant',
+          text: 'What has been on your mind lately?',
+          timestamp: new Date()
+        }
+      ]
     });
 
     return session.toJSON();

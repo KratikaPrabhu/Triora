@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import sessionService from '../services/session.service';
+import conversationService from '../services/conversation.service';
 import asyncWrapper from '../utils/asyncWrapper';
 
 export const createSession = asyncWrapper(async (req: Request, res: Response) => {
@@ -34,3 +35,26 @@ export const updateSession = asyncWrapper(async (req: Request, res: Response) =>
   });
 });
 
+export const respondSession = asyncWrapper(async (req: Request, res: Response) => {
+  const { text, status } = req.body;
+  const sessionId = req.params.id as string;
+  const userId = req.user!._id.toString();
+
+  const { session, aiResponse } = await conversationService.processSessionMessage({
+    userId,
+    sessionId,
+    userMessage: text || '',
+    status: status || 'answered'
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      action: aiResponse.action,
+      question: aiResponse.reply,
+      reason: aiResponse.reason,
+      metadata: aiResponse.metadata,
+      session
+    }
+  });
+});

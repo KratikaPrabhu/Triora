@@ -20,14 +20,14 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
 
   // Handle HTTP upgrade requests for /ws/conversation
   server.on('upgrade', async (request, socket, head) => {
-    const parsedUrl = url.parse(request.url || '', true);
+    const reqUrl = new URL(request.url || '', `http://${request.headers.host || 'localhost'}`);
 
-    if (parsedUrl.pathname !== '/ws/conversation') {
+    if (reqUrl.pathname !== '/ws/conversation') {
       return; // Let other handlers process if any
     }
 
     try {
-      const token = (parsedUrl.query.token as string) || request.headers['authorization']?.replace('Bearer ', '');
+      const token = reqUrl.searchParams.get('token') || request.headers['authorization']?.replace('Bearer ', '');
 
       if (!token) {
         logger.warn('WebSocket connection rejected: No authentication token provided.');
@@ -130,6 +130,7 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
       try {
         switch (type) {
           case 'start_session': {
+            logger.info(`[WS] Message received: start_session for session ${sessionId}`);
             if (!sessionId) {
               sendEvent(ws, { type: 'error', message: 'sessionId is required.', statusCode: 400 });
               return;
@@ -147,10 +148,22 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
           }
 
           case 'user_message': {
-            if (!sessionId || !text || typeof text !== 'string' || !text.trim()) {
+            logger.info(`[WS] Message received: user_message for session ${sessionId}`);
+            const msgStatus = payload.status || 'answered';
+
+            if (!sessionId) {
               sendEvent(ws, {
                 type: 'error',
-                message: 'sessionId and non-empty text string are required.',
+                message: 'sessionId is required.',
+                statusCode: 400
+              });
+              return;
+            }
+
+            if (msgStatus === 'answered' && (!text || typeof text !== 'string' || !text.trim())) {
+              sendEvent(ws, {
+                type: 'error',
+                message: 'Non-empty text string is required when status is answered.',
                 statusCode: 400
               });
               return;
@@ -160,28 +173,54 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
             await sessionService.getSessionById(userIdStr, sessionId);
 
             // Emit processing status
+            logger.info(`[WS] Processing patient response for session ${sessionId}`);
             sendEvent(ws, { type: 'processing', sessionId });
 
-            // Process message via conversation service
-            const { aiResponse } = await conversationService.processSessionMessage({
-              userId: userIdStr,
-              sessionId,
-              userMessage: text
-            });
+            logger.info(`[WS] Gemini request started`);
+            try {
+              // Process message via conversation service
+              const { aiResponse } = await conversationService.processSessionMessage({
+                userId: userIdStr,
+                sessionId,
+                userMessage: text || '',
+                status: msgStatus
+              });
 
-            // Emit assistant response
-            sendEvent(ws, {
-              type: 'assistant_message',
-              sessionId,
-              text: aiResponse.reply,
-              metadata: aiResponse.metadata,
-              timestamp: new Date().toISOString()
-            });
+              if (aiResponse.action === 'complete') {
+                await sessionService.updateSession(userIdStr, sessionId, { status: 'completed' });
+                sendEvent(ws, {
+                  type: 'session_completed',
+                  sessionId,
+                  status: 'completed',
+                  reason: aiResponse.reason
+                });
+              } else {
+                // Emit assistant response
+                sendEvent(ws, {
+                  type: 'assistant_message',
+                  sessionId,
+                  text: aiResponse.reply,
+                  action: aiResponse.action,
+                  metadata: aiResponse.metadata,
+                  timestamp: new Date().toISOString()
+                });
+              }
+            } catch (geminiErr: any) {
+              logger.error(`[WS] Gemini request failed: ${geminiErr.message}`);
+              logger.info(`[WS] Keeping session alive`);
+              logger.info(`[WS] Sending error to client`);
+              sendEvent(ws, {
+                type: 'conversation_error',
+                code: geminiErr.code || 'AI_TEMPORARILY_UNAVAILABLE',
+                message: 'The AI service is temporarily unavailable. Please try again.'
+              });
+            }
             break;
           }
 
 
           case 'end_session': {
+            logger.info(`[WS] Message received: end_session for session ${sessionId}`);
             if (!sessionId) {
               sendEvent(ws, { type: 'error', message: 'sessionId is required.', statusCode: 400 });
               return;

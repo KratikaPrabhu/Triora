@@ -50,10 +50,12 @@ export async function runGoogleAuthTests(): Promise<boolean> {
   let mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/triora_test_google_db';
 
   try {
-    await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
-    process.stdout.write(`Connected to local MongoDB at ${mongoUri}\n`);
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 });
+    }
+    process.stdout.write(`Connected to MongoDB at ${mongoUri}\n`);
   } catch (err: any) {
-    process.stdout.write(`Local MongoDB connection error: ${err.message}\n`);
+    process.stdout.write(`MongoDB connection error: ${err.message}\n`);
   }
 
   if (mongoose.connection.db) {

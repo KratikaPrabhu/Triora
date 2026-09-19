@@ -3,15 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../store/hooks';
 import { createNewSession } from '../../store/sessionSlice';
 import { useLanguage } from '../../context/LanguageContext';
-import { LANGUAGES } from '../../config/languages';
-import { Mic, ArrowRight, Globe, Sparkles } from 'lucide-react';
+import { Mic, ArrowRight, Sparkles } from 'lucide-react';
 
 interface StartSessionCardProps {
   preferredLanguage?: string;
 }
 
 export const StartSessionCard: React.FC<StartSessionCardProps> = () => {
-  const { languageCode, setLanguageCode, t } = useLanguage();
+  const { languageCode, t } = useLanguage();
   const [creating, setCreating] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -47,25 +46,6 @@ export const StartSessionCard: React.FC<StartSessionCardProps> = () => {
           <p className="text-sm text-slate-300 leading-relaxed">
             {t.heroSub}
           </p>
-
-          {/* Prominent Language Selector */}
-          <div className="pt-2 flex flex-wrap items-center gap-3">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Globe className="w-4 h-4 text-teal-400" />
-              <span>Select Spoken Language:</span>
-            </label>
-            <select
-              value={languageCode}
-              onChange={(e) => setLanguageCode(e.target.value)}
-              className="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-teal-300 focus:ring-2 focus:ring-teal-500 focus:bg-slate-800 outline-none transition-all cursor-pointer"
-            >
-              {LANGUAGES.map((lang) => (
-                <option key={lang.code} value={lang.code} className="bg-slate-900 text-slate-200">
-                  {lang.flag || '🌐'} {lang.nativeName} ({lang.englishName})
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
         {/* Action Button */}

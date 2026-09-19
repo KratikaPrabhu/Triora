@@ -48,7 +48,7 @@ const reportSchema = new Schema<IReportDocument>(
     },
     modelName: {
       type: String,
-      default: 'gemini-2.5-flash'
+      default: 'gemini-3.6-flash'
     },
     version: {
       type: String,

@@ -42,10 +42,13 @@ export interface IUserDocument extends IUser, Document<Types.ObjectId> {
 
 export type SessionStatus = 'created' | 'active' | 'completed' | 'failed';
 
+export type AnswerStatus = 'answered' | 'silent' | 'skipped' | 'recognition_error' | 'cancelled';
+
 export interface ISessionMessage {
   role: 'user' | 'assistant' | 'system';
   text: string;
   timestamp: Date;
+  status?: AnswerStatus;
 }
 
 export interface ISession {

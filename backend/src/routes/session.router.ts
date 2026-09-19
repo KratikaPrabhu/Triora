@@ -16,4 +16,7 @@ router.get('/:id', sessionController.getSessionById);
 router.get('/:id/heatmap', heatmapController.getSessionHeatmap);
 router.patch('/:id', validateBody(updateSessionSchema), sessionController.updateSession);
 
+router.post('/:id/next-question', sessionController.respondSession);
+router.post('/:id/respond', sessionController.respondSession);
+
 export default router;

@@ -55,6 +55,7 @@ export interface TranscriptMessage {
   id?: string;
   role: 'user' | 'assistant';
   text: string;
+  status?: 'answered' | 'silent' | 'skipped' | 'recognition_error' | 'cancelled';
   timestamp?: string;
   metadata?: {
     intent?: string;
@@ -136,12 +137,13 @@ export interface ApiResponse<T = any> {
 
 export type WSClientMessage =
   | { type: 'start_session'; sessionId: string }
-  | { type: 'user_message'; sessionId: string; text: string }
+  | { type: 'user_message'; sessionId: string; text: string; status?: 'answered' | 'silent' | 'skipped' }
   | { type: 'end_session'; sessionId: string };
 
 export type WSServerMessage =
   | { type: 'session_started'; sessionId: string; status: string }
   | { type: 'processing'; sessionId: string }
-  | { type: 'assistant_message'; sessionId: string; text: string; metadata?: any; timestamp?: string }
-  | { type: 'session_completed'; sessionId: string; status: string }
+  | { type: 'assistant_message'; sessionId: string; text: string; action?: string; metadata?: any; timestamp?: string }
+  | { type: 'session_completed'; sessionId: string; status: string; reason?: string }
+  | { type: 'conversation_error'; code?: string; message: string }
   | { type: 'error'; message: string };

@@ -10,6 +10,7 @@ import { runReportTests } from './report.test';
 import { runFailuresAndHeatmapTests } from './failuresAndHeatmap.test';
 
 async function runAll() {
+  process.env.MOCK_MODE = 'true';
   process.stdout.write('===========================================\n');
   process.stdout.write('   RUNNING TRIORA FULL BACKEND TEST SUITE  \n');
   process.stdout.write('===========================================\n\n');
