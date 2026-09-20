@@ -81,6 +81,7 @@ export const SessionPage: React.FC = () => {
   }, [languageCode]);
 
   const transcriptRef = useRef<string>('');
+  const partialTranscriptRef = useRef<string>('');
 
   // Keep transcriptRef synced with currentAnswer state
   const updateCurrentAnswer = useCallback((updater: string | ((prev: string) => string)) => {
@@ -113,6 +114,7 @@ export const SessionPage: React.FC = () => {
 
   const startSpeechRecognition = useCallback(async () => {
     stopSpeechRecognition();
+    partialTranscriptRef.current = '';
     try {
       const speechToken = await speechService.ensureValidToken(languageCode);
       const locales = recognitionLocales(languageCode);
@@ -136,7 +138,11 @@ export const SessionPage: React.FC = () => {
 
         recognizer.recognizing = (_: any, event: any) => {
           if (event.result && event.result.text) {
-            console.log(`[STT] Recognizing partial: ${event.result.text.trim()}`);
+            const partial = event.result.text.trim();
+            console.log(`[STT] Recognizing partial: ${partial}`);
+            if (partial) {
+              partialTranscriptRef.current = partial;
+            }
           }
         };
 
@@ -145,6 +151,7 @@ export const SessionPage: React.FC = () => {
             const recognizedSegment = event.result.text.trim();
             if (recognizedSegment) {
               console.log(`[STT] Recognized final: ${recognizedSegment}`);
+              partialTranscriptRef.current = '';
               updateCurrentAnswer((prev) => (prev ? `${prev} ${recognizedSegment}` : recognizedSegment));
               setSessionState('ANSWERING');
             }
@@ -170,18 +177,24 @@ export const SessionPage: React.FC = () => {
         if (SpeechRecognition) {
           const rec = new SpeechRecognition();
           rec.continuous = true;
-          rec.interimResults = false;
+          rec.interimResults = true;
           rec.lang = language.locale;
           rec.onresult = (event: any) => {
-            const last = event.results.length - 1;
-            if (event.results[last].isFinal) {
-              const text = event.results[last][0].transcript;
-              if (text && text.trim()) {
-                const recognizedSegment = text.trim();
-                console.log(`[STT] Recognized final (fallback): ${recognizedSegment}`);
-                updateCurrentAnswer((prev) => (prev ? `${prev} ${recognizedSegment}` : recognizedSegment));
-                setSessionState('ANSWERING');
+            let finalChunk = '';
+            let interimChunk = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                finalChunk += event.results[i][0].transcript;
+              } else {
+                interimChunk += event.results[i][0].transcript;
               }
+            }
+            if (finalChunk.trim()) {
+              partialTranscriptRef.current = '';
+              updateCurrentAnswer((prev) => (prev ? `${prev} ${finalChunk.trim()}` : finalChunk.trim()));
+              setSessionState('ANSWERING');
+            } else if (interimChunk.trim()) {
+              partialTranscriptRef.current = interimChunk.trim();
             }
           };
           rec.onend = () => setIsListening(false);
@@ -416,13 +429,14 @@ export const SessionPage: React.FC = () => {
     speechService.cancelSynthesis();
 
     // 2. Read final transcript directly from stable ref to avoid React state race condition
-    const rawAnswer = (transcriptRef.current || currentAnswer).trim();
-
-    if (!rawAnswer) {
-      setAiErrorMsg("I couldn't hear that clearly. Please try again.");
-      startSpeechRecognition();
-      return;
+    let accumulated = (transcriptRef.current || currentAnswer).trim();
+    if (partialTranscriptRef.current) {
+      const partial = partialTranscriptRef.current.trim();
+      if (partial && !accumulated.endsWith(partial)) {
+        accumulated = accumulated ? `${accumulated} ${partial}`.trim() : partial;
+      }
     }
+    const rawAnswer = accumulated || 'No response recorded.';
 
     // 3. Lock processing flag to prevent double clicks
     setIsProcessingAnswer(true);
@@ -430,9 +444,10 @@ export const SessionPage: React.FC = () => {
 
     const finalAnswer = rawAnswer;
 
-    // Reset local transcript state and ref ONLY after locking final answer
+    // Reset local transcript state and refs ONLY after locking final answer
     setCurrentAnswer('');
     transcriptRef.current = '';
+    partialTranscriptRef.current = '';
 
     // 4. Append user answer to visual transcript bubble
     dispatch(
