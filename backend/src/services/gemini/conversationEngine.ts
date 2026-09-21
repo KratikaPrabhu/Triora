@@ -55,7 +55,7 @@ export function resolveLanguageName(codeOrName: string | undefined): string {
 export function normalizeQuestion(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -159,7 +159,7 @@ const FALLBACK_QUESTION_BANKS: Record<string, string[]> = {
   ]
 };
 
-function getFallbackQuestion(language: string, askedQuestions: string[]): string {
+export function getFallbackQuestion(language: string, askedQuestions: string[]): string {
   const bank = FALLBACK_QUESTION_BANKS[language] || FALLBACK_QUESTION_BANKS.English;
   const normalizedAsked = new Set(askedQuestions.map(normalizeQuestion));
 

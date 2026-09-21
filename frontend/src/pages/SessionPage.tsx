@@ -339,22 +339,24 @@ export const SessionPage: React.FC = () => {
           setIsProcessingAnswer(false);
 
           const nextText = data.text;
-          const nextIndex = activeQuestion ? activeQuestion.index + 1 : 1;
-          const nextId = `q${nextIndex + 1}`;
+          const qNum = data.metadata?.questionNumber;
 
           // Check if AI generated a duplicate question text
           if (askedQuestionTexts.includes(nextText.trim())) {
             console.warn('Duplicate question detected from AI. Displaying fallback context question.');
           }
 
-          const newQ: ActiveQuestion = {
-            id: nextId,
-            text: nextText,
-            index: nextIndex,
-          };
+          setActiveQuestion((prev) => {
+            const nextIndex = typeof qNum === 'number' && qNum > 0 ? qNum - 1 : prev ? prev.index + 1 : 1;
+            const nextId = `q${nextIndex + 1}`;
+            setAskedQuestionIds((prevSet) => new Set(prevSet).add(nextId));
+            return {
+              id: nextId,
+              text: nextText,
+              index: nextIndex,
+            };
+          });
 
-          setActiveQuestion(newQ);
-          setAskedQuestionIds((prev) => new Set(prev).add(nextId));
           setAskedQuestionTexts((prev) => [...prev, nextText]);
           setCurrentAnswer(''); // Reset answer transcript for the new question
           setSessionState('QUESTION_DISPLAYED');
@@ -596,7 +598,7 @@ export const SessionPage: React.FC = () => {
 
           <SessionQuestionFlow
             currentQuestionIndex={activeIdx}
-            totalQuestions={initialQuestions.length}
+            totalQuestions={8}
             currentQuestion={activeText}
             isSpeaking={isSpeaking}
             isListening={isListening}

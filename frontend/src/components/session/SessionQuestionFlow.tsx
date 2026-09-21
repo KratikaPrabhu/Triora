@@ -21,6 +21,7 @@ interface SessionQuestionFlowProps {
 
 export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
   currentQuestionIndex,
+  totalQuestions = 8,
   currentQuestion,
   isSpeaking,
   isListening,
@@ -100,7 +101,7 @@ export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
           </div>
         )}
 
-        {/* Actions: [ 🔊 Repeat Question ] & [ Next → ] */}
+        {/* Actions: [ 🔊 Repeat Question ] & [ Next / Finish → ] */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           {/* Repeat Question Button */}
           <button
@@ -114,26 +115,32 @@ export const SessionQuestionFlow: React.FC<SessionQuestionFlowProps> = ({
             <span>{isSpeaking ? t.speakingState : t.repeatQuestionBtn}</span>
           </button>
 
-          {/* Next Button */}
-          <button
-            type="button"
-            onClick={handleNextClick}
-            disabled={nextDisabled || isAiProcessing}
-            aria-label={t.nextQuestionBtn}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-2xl transition-all shadow-md shadow-teal-500/20"
-          >
-            {isAiProcessing ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Preparing next question...</span>
-              </>
-            ) : (
-              <>
-                <span>{t.nextQuestionBtn}</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          {/* Next / Finish Button */}
+          {(() => {
+            const isLastQuestion = (currentQuestionIndex + 1) >= (totalQuestions || 8);
+            const buttonLabel = isLastQuestion ? (t.finishBtn || 'Finish →') : t.nextQuestionBtn;
+            return (
+              <button
+                type="button"
+                onClick={handleNextClick}
+                disabled={nextDisabled || isAiProcessing}
+                aria-label={buttonLabel}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-2xl transition-all shadow-md shadow-teal-500/20"
+              >
+                {isAiProcessing ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    <span>{isLastQuestion ? 'Completing session...' : 'Preparing next question...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{buttonLabel}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 

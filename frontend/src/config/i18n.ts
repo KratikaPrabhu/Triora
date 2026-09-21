@@ -55,6 +55,7 @@ export interface Translations {
   // Session & Questions
   repeatQuestionBtn: string;
   nextQuestionBtn: string;
+  finishBtn: string;
   questionPrefix: string;
   speakingState: string;
   listeningState: string;
@@ -135,6 +136,7 @@ export const DICTIONARY: Record<string, Translations> = {
 
     repeatQuestionBtn: "🔊 Repeat Question",
     nextQuestionBtn: "Next →",
+    finishBtn: "Finish →",
     questionPrefix: "Question",
     speakingState: "Triora is speaking...",
     listeningState: "Microphone Active & Listening",
@@ -219,8 +221,9 @@ export const DICTIONARY: Record<string, Translations> = {
     viewReportBtn: "ಸಾರಾಂಶ ವರದಿ ವೀಕ್ಷಿಸಿ",
     resumeConversationBtn: "ಸಂಭಾಷಣೆ ಮುಂದುವರಿಸಿ",
 
-    repeatQuestionBtn: "🔊 ಪ್ರಶ್ನೆ ಮರುಕಳಿಸಿ",
+    repeatQuestionBtn: "🔊 ಪ್ರಶ್ನೆಯನ್ನು ಪುನರಾವರ್ತಿಸಿ",
     nextQuestionBtn: "ಮುಂದೆ →",
+    finishBtn: "ಮುಕ್ತಾಯ →",
     questionPrefix: "ಪ್ರಶ್ನೆ",
     speakingState: "ಸನಾ ಮಾತನಾಡುತ್ತಿದ್ದಾರೆ...",
     listeningState: "ಮೈಕ್ರೋಫೋನ್ ಸಕ್ರಿಯವಾಗಿದೆ",
@@ -307,6 +310,7 @@ export const DICTIONARY: Record<string, Translations> = {
 
     repeatQuestionBtn: "🔊 प्रश्न दोहराएं",
     nextQuestionBtn: "आगे →",
+    finishBtn: "समाप्त करें →",
     questionPrefix: "प्रश्न",
     speakingState: "सना बोल रही हैं...",
     listeningState: "माइक्रोफोन सक्रिय है",
@@ -393,6 +397,7 @@ export const DICTIONARY: Record<string, Translations> = {
 
     repeatQuestionBtn: "🔊 ചോദ്യം ആവർത്തിക്കുക",
     nextQuestionBtn: "അടുത്തത് →",
+    finishBtn: "പൂർത്തിയാക്കുക →",
     questionPrefix: "ചോദ്യം",
     speakingState: "സന സംസാരിക്കുന്നു...",
     listeningState: "മൈക്രോഫോൺ പ്രവർത്തിക്കുന്നു",
@@ -477,8 +482,9 @@ export const DICTIONARY: Record<string, Translations> = {
     viewReportBtn: "அறிக்கையைப் பார்",
     resumeConversationBtn: "உரையாடலைத் தொடர்",
 
-    repeatQuestionBtn: "🔊 கேள்வியை மீண்டும் கேள்",
+    repeatQuestionBtn: "🔊 கேள்வியை மீண்டும் செய்",
     nextQuestionBtn: "அடுத்து →",
+    finishBtn: "முடிக்கவும் →",
     questionPrefix: "கேள்வி",
     speakingState: "சனா பேசுகிறார்...",
     listeningState: "மைக்ரோஃபோன் இயங்குகிறது",
@@ -563,8 +569,9 @@ export const DICTIONARY: Record<string, Translations> = {
     viewReportBtn: "నివేదిక చూడండి",
     resumeConversationBtn: "సంభాషణ కొనసాగించండి",
 
-    repeatQuestionBtn: "🔊 ప్రశ్నను మళ్ళీ వినండి",
+    repeatQuestionBtn: "🔊 ప్రశ్నను పునరావృతం చేయండి",
     nextQuestionBtn: "తరువాత →",
+    finishBtn: "పూర్తి చేయి →",
     questionPrefix: "ప్రశ్న",
     speakingState: "సనా మాట్లాడుతున్నారు...",
     listeningState: "మైక్రోఫోన్ ప్రారంభంలో ఉంది",
@@ -649,8 +656,9 @@ export const DICTIONARY: Record<string, Translations> = {
     viewReportBtn: "अहवाल पहा",
     resumeConversationBtn: "संभाषण सुरू ठेवा",
 
-    repeatQuestionBtn: "🔊 प्रश्न पुन्हा ऐका",
+    repeatQuestionBtn: "🔊 प्रश्न पुन्हा सांगा",
     nextQuestionBtn: "पुढे →",
+    finishBtn: "पूर्ण करा →",
     questionPrefix: "प्रश्न",
     speakingState: "सना बोलत आहेत...",
     listeningState: "मायक्रोफोन चालू आहे",
@@ -735,8 +743,9 @@ export const DICTIONARY: Record<string, Translations> = {
     viewReportBtn: "রিপোর্ট দেখুন",
     resumeConversationBtn: "কথোপকথন চালিয়ে যান",
 
-    repeatQuestionBtn: "🔊 প্রশ্নটি পুনরায় শুনুন",
+    repeatQuestionBtn: "🔊 প্রশ্ন পুনরায় বলুন",
     nextQuestionBtn: "পরবর্তী →",
+    finishBtn: "সম্পন্ন করুন →",
     questionPrefix: "প্রশ্ন",
     speakingState: "সানা কথা বলছেন...",
     listeningState: "মাইক্রোফোন সক্রিয় আছে",

@@ -3,6 +3,8 @@ import Session, { isValidStatusTransition } from '../models/session.model';
 import { ISessionMessage, SessionStatus } from '../types';
 import { AppError } from '../middleware/error.middleware';
 
+import { resolveLanguageName, getFallbackQuestion } from './gemini/conversationEngine';
+
 export interface CreateSessionInput {
   language?: string;
   metadata?: Record<string, any>;
@@ -20,6 +22,9 @@ export class SessionService {
    * Create a new pre-therapy intake session for the authenticated user
    */
   async createSession(userId: string, data: CreateSessionInput) {
+    const selectedLang = resolveLanguageName(data.language);
+    const initialQuestion = getFallbackQuestion(selectedLang, []);
+
     const session = await Session.create({
       userId: new mongoose.Types.ObjectId(userId),
       status: 'created',
@@ -28,7 +33,7 @@ export class SessionService {
       transcript: [
         {
           role: 'assistant',
-          text: 'What has been on your mind lately?',
+          text: initialQuestion,
           timestamp: new Date()
         }
       ]
