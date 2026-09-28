@@ -1,7 +1,6 @@
 // Text-To-Speech Service for Triora
 
 class TTSService {
-  private lastSpokenText = '';
   private isSpeakingState = false;
 
   /**
@@ -58,7 +57,7 @@ class TTSService {
       // Make sure synthesis is resumed
       synth.resume();
 
-      this.lastSpokenText = trimmedText;
+      
       this.isSpeakingState = true;
 
       const utterance = new SpeechSynthesisUtterance(trimmedText);
