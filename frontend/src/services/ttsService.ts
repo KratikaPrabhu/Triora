@@ -3,7 +3,6 @@
 class TTSService {
   private lastSpokenText = '';
   private isSpeakingState = false;
-  private isUnlocked = false;
 
   /**
    * Call this ONLY from a real user interaction:
@@ -19,9 +18,6 @@ class TTSService {
 
     synth.cancel();
     synth.resume();
-
-    // Do NOT depend on an empty silent utterance.
-    this.isUnlocked = true;
 
     console.log('🔊 Triora audio unlocked');
   }
@@ -77,18 +73,19 @@ class TTSService {
 
       console.log(
         '🎤 Available voices:',
-        voices.map(v => `${v.name} (${v.lang})`)
+        voices.map((v) => `${v.name} (${v.lang})`)
       );
 
       const language = utterance.lang.split('-')[0];
 
       const preferredVoice =
         voices.find(
-          v =>
-            v.lang.toLowerCase() === utterance.lang.toLowerCase()
+          (v) =>
+            v.lang.toLowerCase() ===
+            utterance.lang.toLowerCase()
         ) ||
         voices.find(
-          v =>
+          (v) =>
             v.lang.toLowerCase().startsWith(language)
         );
 
@@ -133,7 +130,6 @@ class TTSService {
         resolve();
       };
 
-      // IMPORTANT
       synth.speak(utterance);
 
       console.log(

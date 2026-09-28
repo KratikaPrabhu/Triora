@@ -35,27 +35,31 @@ export const updateSession = asyncWrapper(async (req: Request, res: Response) =>
   });
 });
 
-export const respondSession = asyncWrapper(async (req: Request, res: Response) => {
-  const { text, status, voiceMetrics } = req.body;
-  const sessionId = req.params.id as string;
-  const userId = req.user!._id.toString();
+export const respondSession = asyncWrapper(
+  async (req: Request, res: Response) => {
+    const { text, status, voiceMetrics } = req.body;
 
-  const { session, aiResponse } = await conversationService.processSessionMessage({
-    userId,
-    sessionId,
-    userMessage: text || '',
-    status: status || 'answered',
-    voiceMetrics
-  });
+    const sessionId = req.params.id as string;
+    const userId = req.user!._id.toString();
 
-  res.status(200).json({
-    success: true,
-    data: {
-      action: aiResponse.action,
-      question: aiResponse.reply,
-      reason: aiResponse.reason,
-      metadata: aiResponse.metadata,
-      session
-    }
-  });
-});
+    const { session, aiResponse } =
+      await conversationService.processSessionMessage({
+        userId,
+        sessionId,
+        userMessage: text || '',
+        status: status || 'answered',
+        voiceMetrics
+      });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        session,
+        action: aiResponse.action,
+        question: aiResponse.reply,
+        reason: aiResponse.reason,
+        metadata: aiResponse.metadata
+      }
+    });
+  }
+);
