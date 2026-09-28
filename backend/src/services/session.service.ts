@@ -133,7 +133,9 @@ export class SessionService {
       const formattedMessages = updateData.transcript.map((msg) => ({
         role: msg.role,
         text: msg.text,
-        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+        status: msg.status || 'answered',
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+        ...(msg.voiceMetrics ? { voiceMetrics: msg.voiceMetrics } : {})
       }));
       session.transcript.push(...(formattedMessages as any));
     }

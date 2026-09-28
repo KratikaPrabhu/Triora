@@ -44,11 +44,25 @@ export type SessionStatus = 'created' | 'active' | 'completed' | 'failed';
 
 export type AnswerStatus = 'answered' | 'silent' | 'skipped' | 'recognition_error' | 'cancelled';
 
+export interface IVoiceSample {
+  time: number;
+  frequency: number;
+}
+
+export interface IVoiceMetrics {
+  duration: number;
+  samples: IVoiceSample[];
+  avgFrequency: number;
+  minFrequency: number;
+  maxFrequency: number;
+}
+
 export interface ISessionMessage {
   role: 'user' | 'assistant' | 'system';
   text: string;
   timestamp: Date;
   status?: AnswerStatus;
+  voiceMetrics?: IVoiceMetrics;
 }
 
 export interface ISession {
@@ -75,6 +89,23 @@ export interface IReport {
   emotionalContext: string;
   importantStatements: string[];
   conversationOverview: string;
+  voiceAnalysis?: {
+    totalDuration: number;
+    averageFrequency: number;
+    minFrequency: number;
+    maxFrequency: number;
+    samplesCount: number;
+    samples: Array<{ timeOffset: number; frequency: number }>;
+    responses: Array<{
+      responseIndex: number;
+      questionText: string;
+      responseText: string;
+      duration: number;
+      avgFrequency: number;
+      minFrequency: number;
+      maxFrequency: number;
+    }>;
+  };
   generatedAt?: Date;
   modelName?: string;
   version?: string;

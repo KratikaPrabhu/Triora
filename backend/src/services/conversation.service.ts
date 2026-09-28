@@ -1,12 +1,13 @@
 import conversationEngine, { ConversationEngineOutput } from './gemini/conversationEngine';
 import sessionService from './session.service';
-import { AnswerStatus, ISessionMessage } from '../types';
+import { AnswerStatus, ISessionMessage, IVoiceMetrics } from '../types';
 
 export interface ProcessMessageInput {
   userId: string;
   sessionId: string;
   userMessage: string;
   status?: AnswerStatus;
+  voiceMetrics?: IVoiceMetrics;
 }
 
 export class ConversationService {
@@ -17,7 +18,7 @@ export class ConversationService {
     session: any;
     aiResponse: ConversationEngineOutput;
   }> {
-    const { userId, sessionId, userMessage, status = 'answered' } = input;
+    const { userId, sessionId, userMessage, status = 'answered', voiceMetrics } = input;
 
     // 1. Retrieve session and verify ownership
     let session = await sessionService.getSessionById(userId, sessionId);
@@ -29,14 +30,16 @@ export class ConversationService {
         role: 'user',
         text: userMessage.trim(),
         status: 'answered',
-        timestamp: new Date()
+        timestamp: new Date(),
+        ...(voiceMetrics ? { voiceMetrics } : {})
       });
     } else if (status === 'skipped') {
       userTranscriptItems.push({
         role: 'user',
         text: '',
         status: 'skipped',
-        timestamp: new Date()
+        timestamp: new Date(),
+        ...(voiceMetrics ? { voiceMetrics } : {})
       });
     }
 

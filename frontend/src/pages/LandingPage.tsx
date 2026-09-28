@@ -1,238 +1,240 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/common/Footer';
-import { useLanguage } from '../context/LanguageContext';
-import { useAppSelector } from '../store/hooks';
-import { SUPPORTED_LANGUAGES } from '../config/languages';
-import {
-  Mic,
-  FileText,
-  ShieldCheck,
-  Globe,
-  Sparkles,
-  ArrowRight,
-  HeartHandshake,
-  Activity,
-} from 'lucide-react';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
+import { Button } from '../components/Button';
+import { Icon } from '../components/Icon';
+import '../styles/landing.css';
 
 export const LandingPage: React.FC = () => {
-  const { t } = useLanguage();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
-
   return (
-    <div className="min-h-screen bg-[#090d16] flex flex-col font-sans text-slate-100 selection:bg-teal-500 selection:text-slate-950">
-      <Navbar />
+    <div className="landing-container">
+      <Header />
 
-      <main className="flex-1">
-        {/* HERO SECTION */}
-        <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden bg-gradient-to-b from-slate-950 via-[#090d16] to-[#090d16]">
-          {/* Background Ambient Glows */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-teal-500/15 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-3xl mx-auto text-center space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-950/80 border border-teal-500/30 text-teal-300 text-xs font-semibold shadow-lg shadow-teal-500/10">
-                <Sparkles className="w-4 h-4 text-teal-400" />
-                <span>Voice-First Pre-Therapy Intake Assistant</span>
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-                {t.heroHeadline || "Have a conversation about how you've been feeling before your first therapy appointment."}
-              </h1>
-
-              <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-                {t.heroSub || "Triora guides you through an open-ended, spoken intake session in your preferred language—compiling your thoughts into a structured summary report for your therapist."}
-              </p>
-
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                {isAuthenticated ? (
-                  <Link
-                    to="/dashboard"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-base rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-[1.02]"
-                  >
-                    <span>{t.navDashboard || "Go to Dashboard"}</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/signup"
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-base rounded-2xl transition-all shadow-lg shadow-teal-500/20 hover:scale-[1.02]"
-                    >
-                      <span>{t.getStartedBtn || "Get Started"}</span>
-                      <ArrowRight className="w-5 h-5" />
-                    </Link>
-
-                    <Link
-                      to="/login"
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold text-base rounded-2xl transition-all"
-                    >
-                      {t.signInBtn || "Sign In"}
-                    </Link>
-                  </>
-                )}
-              </div>
-
-              <p className="text-xs text-slate-400 pt-2 flex items-center justify-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-teal-400 shrink-0" />
-                <span>{t.privacyNotice || "Triora is a pre-therapy intake tool, not a diagnostic or medical treatment service."}</span>
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* HOW IT WORKS SECTION */}
-        <section className="py-16 sm:py-24 bg-slate-950 border-y border-slate-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-teal-400">{t.processTitle || "Simple 3-Step Process"}</h2>
-              <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                How Triora Helps You Prepare
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-slate-900/90 rounded-3xl p-8 border border-slate-800 hover:border-teal-500/50 transition-all space-y-4 relative group shadow-xl">
-                <div className="w-12 h-12 rounded-2xl bg-teal-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
-                  1
-                </div>
-                <h3 className="text-xl font-bold text-white">Tell Your Story</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  Speak naturally in your preferred language about what you're experiencing, stress factors, and goals.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/90 rounded-3xl p-8 border border-slate-800 hover:border-teal-500/50 transition-all space-y-4 relative group shadow-xl">
-                <div className="w-12 h-12 rounded-2xl bg-teal-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
-                  2
-                </div>
-                <h3 className="text-xl font-bold text-white">Guided Conversation & Signal Stream</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  Our empathetic AI intake assistant listens, asks clarifying questions, and displays live physiological state indicators.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/90 rounded-3xl p-8 border border-slate-800 hover:border-teal-500/50 transition-all space-y-4 relative group shadow-xl">
-                <div className="w-12 h-12 rounded-2xl bg-teal-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
-                  3
-                </div>
-                <h3 className="text-xl font-bold text-white">Take Summary to Therapist</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  Receive a structured, printable pre-therapy summary report to share with your licensed practitioner.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CORE CAPABILITIES */}
-        <section className="py-16 sm:py-24 bg-[#090d16]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-teal-400">Core Capabilities</h2>
-              <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                {t.benefitsTitle || "Designed for Patient Comfort & Peace of Mind"}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-slate-900/90 rounded-3xl p-6 border border-slate-800 space-y-3 shadow-xl hover:border-slate-700 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center">
-                  <Mic className="w-5 h-5" />
-                </div>
-                <h4 className="text-base font-bold text-white">Voice-First Conversation</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  No tedious typing. Speak freely at your own speed with active voice recognition.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/90 rounded-3xl p-6 border border-slate-800 space-y-3 shadow-xl hover:border-slate-700 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center">
-                  <Globe className="w-5 h-5" />
-                </div>
-                <h4 className="text-base font-bold text-white">Multilingual Support</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Express emotions comfortably in 8 regional languages including Kannada, Hindi, Tamil, Telugu, and more.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/90 rounded-3xl p-6 border border-slate-800 space-y-3 shadow-xl hover:border-slate-700 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <h4 className="text-base font-bold text-white">AI-Generated Summary</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Synthesizes key concerns, themes, and emotional statements into clinical pre-intake notes.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/90 rounded-3xl p-6 border border-slate-800 space-y-3 shadow-xl hover:border-slate-700 transition-all">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <h4 className="text-base font-bold text-white">Physiological Stream</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Real-time autonomic signal graph and state indicator during spoken sessions.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* SUPPORTED LANGUAGES */}
-        <section className="py-16 bg-slate-950 border-t border-slate-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-white">Speak in Your Native Language</h3>
-              <p className="text-sm text-slate-400 max-w-xl mx-auto">
-                Triora supports full voice intake in 8 Indian and global regional languages.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <div
-                  key={lang.code}
-                  className="px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-2xl flex items-center gap-2 text-sm font-semibold text-slate-200 shadow-md"
-                >
-                  <span className="text-base">{lang.flag}</span>
-                  <span>{lang.name}</span>
-                  <span className="text-xs text-slate-400 font-normal">({lang.nativeName})</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* PRIVACY & SAFETY BANNER */}
-        <section className="py-12 bg-slate-950 border-t border-slate-800 text-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 text-xs font-semibold">
-                <HeartHandshake className="w-3.5 h-3.5" />
-                <span>Pre-Therapy Intake Boundary</span>
-              </div>
-              <h3 className="text-xl font-bold">Important Notice to Patients</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Triora is designed exclusively as a pre-therapy intake tool to help you organize your thoughts prior to your first clinical session. Triora is not a replacement for a licensed therapist, does not provide medical diagnoses, and does not handle psychiatric emergencies.
-              </p>
-            </div>
-
-            <Link
-              to={isAuthenticated ? "/dashboard" : "/signup"}
-              className="shrink-0 px-6 py-3.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-sm rounded-xl transition-all shadow-lg shadow-teal-500/20"
-            >
-              {isAuthenticated ? (t.navDashboard || "Go to Dashboard") : "Start Intake Preparation"}
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div>
+          <span className="hero-eyebrow">A calmer first step</span>
+          <h1 className="hero-title">
+            Find the words <br />
+            <span className="editorial-italic">before therapy.</span>
+          </h1>
+          <p className="hero-subtitle">
+            A private, voice-first reflection that helps you understand what you’re feeling—and gives your therapist a clearer place to begin.
+          </p>
+          <div className="hero-ctas">
+            <Link to="/signup">
+              <Button size="lg" variant="primary">Start a private reflection</Button>
             </Link>
+            <a href="#how-it-works">
+              <Button size="lg" variant="outline" icon={<Icon name="PlayCircle" size={20} />}>
+                See how it works
+              </Button>
+            </a>
           </div>
-        </section>
-      </main>
+          <div className="hero-trust-indicators">
+            <div className="trust-item">
+              <Icon name="ShieldCheck" size={16} color="var(--sage)" />
+              <span>Encrypted & private</span>
+            </div>
+            <div className="trust-item">
+              <Icon name="CheckCircle" size={16} color="var(--sage)" />
+              <span>No diagnosis</span>
+            </div>
+            <div className="trust-item">
+              <Icon name="Lock" size={16} color="var(--sage)" />
+              <span>You control sharing</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hero Desktop Visual */}
+        <div className="hero-visual-wrapper">
+          <div className="hero-orb-bg" />
+          <div className="hero-card">
+            <div className="hero-card-header">
+              <div className="hero-card-status">
+                <span className="pulse-dot" />
+                <span>Reflection in progress</span>
+              </div>
+              <span className="hero-card-timer">08:42</span>
+            </div>
+
+            <div className="hero-waveform-sim">
+              <div className="wave-bar" style={{ animationDelay: '0.1s' }} />
+              <div className="wave-bar" style={{ animationDelay: '0.3s' }} />
+              <div className="wave-bar" style={{ animationDelay: '0.5s' }} />
+              <div className="wave-bar" style={{ animationDelay: '0.2s' }} />
+              <div className="wave-bar" style={{ animationDelay: '0.4s' }} />
+              <div className="wave-bar" style={{ animationDelay: '0.6s' }} />
+              <div className="wave-bar" style={{ animationDelay: '0.15s' }} />
+            </div>
+
+            <div className="hero-card-question">
+              "What has been feeling heaviest lately?"
+            </div>
+
+            <div className="hero-card-bottom">
+              <div className="hero-mic-circle">
+                <Icon name="Mic" size={20} />
+              </div>
+              <div className="hero-listening-text">
+                <p>Listening</p>
+                <p>Speak naturally. There’s no right answer.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dark Statement Section */}
+      <section className="statement-section">
+        <p className="statement-kicker">Starting therapy can feel overwhelming.</p>
+        <h2 className="statement-heading">
+          Triora helps you arrive <br />
+          <span className="editorial-italic">already understood.</span>
+        </h2>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="how-it-works-section">
+        <p className="section-eyebrow">HOW IT WORKS</p>
+        <h2 className="section-title">
+          Three gentle steps. <br />
+          <span className="editorial-italic">One clearer beginning.</span>
+        </h2>
+
+        <div className="steps-grid">
+          <div className="step-card">
+            <div className="step-num">01</div>
+            <div className="step-icon-circle">
+              <Icon name="Volume2" size={24} />
+            </div>
+            <h3 className="step-title">Speak freely</h3>
+            <p className="step-desc">
+              Have an open-ended voice conversation in the language that feels most natural.
+            </p>
+          </div>
+
+          <div className="step-card">
+            <div className="step-num">02</div>
+            <div className="step-icon-circle">
+              <Icon name="Sparkles" size={24} />
+            </div>
+            <h3 className="step-title">See the patterns</h3>
+            <p className="step-desc">
+              Triora organizes what you shared into themes, context, and what matters most to you.
+            </p>
+          </div>
+
+          <div className="step-card">
+            <div className="step-num">03</div>
+            <div className="step-icon-circle">
+              <Icon name="Share2" size={24} />
+            </div>
+            <h3 className="step-title">Share on your terms</h3>
+            <p className="step-desc">
+              Review your summary first. Download it or share it with your therapist when you’re ready.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Multilingual Section */}
+      <section className="language-section">
+        <div className="language-container">
+          <div>
+            <p className="section-eyebrow">MULTILINGUAL REFLECTION</p>
+            <h2 className="section-title">
+              Your language. <br />
+              <span className="editorial-italic">Your pace. Your story.</span>
+            </h2>
+            <p style={{ color: 'var(--muted)', fontSize: '1.05rem', lineHeight: 1.6 }}>
+              Expressing emotions is easier in the words closest to home. Triora supports eight Indian languages, with a patient listener that never rushes or interrupts.
+            </p>
+            <div className="lang-tags">
+              <span className="lang-tag">English</span>
+              <span className="lang-tag">हिन्दी</span>
+              <span className="lang-tag">ಕನ್ನಡ</span>
+              <span className="lang-tag">தமிழ்</span>
+              <span className="lang-tag">తెలుగు</span>
+              <span className="lang-tag">മലയാളം</span>
+              <span className="lang-tag">मराठी</span>
+              <span className="lang-tag">বাংলা</span>
+            </div>
+          </div>
+
+          <div className="ring-visualization">
+            <div className="concentric-ring ring-1" />
+            <div className="concentric-ring ring-2" />
+            <div className="concentric-ring ring-3" />
+            <div className="ring-center-mic">
+              <Icon name="Mic" size={26} />
+            </div>
+            <span className="ring-word w-1">मन</span>
+            <span className="ring-word w-2">ಮನಸ್ಸು</span>
+            <span className="ring-word w-3">மனம்</span>
+            <span className="ring-word w-4">mind</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy Section */}
+      <section id="privacy" className="privacy-section">
+        <p className="section-eyebrow">PRIVACY BY DESIGN</p>
+        <h2 className="section-title">
+          Your story stays yours.
+        </h2>
+        <p style={{ color: 'var(--muted)', fontSize: '1.05rem', maxWidth: '600px' }}>
+          Your reflections are encrypted. Nothing is shared without your action, and you can delete your data at any time.
+        </p>
+
+        <div className="privacy-grid">
+          <div className="privacy-card">
+            <div className="privacy-icon">
+              <Icon name="Lock" size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>Encrypted in transit and at rest</h3>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+              Industry-standard encryption guarantees that your private reflections remain strictly secure.
+            </p>
+          </div>
+
+          <div className="privacy-card">
+            <div className="privacy-icon">
+              <Icon name="Key" size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>Short-lived speech tokens</h3>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+              Audio processing uses temporary tokens that expire immediately after your reflection ends.
+            </p>
+          </div>
+
+          <div className="privacy-card">
+            <div className="privacy-icon">
+              <Icon name="ShieldCheck" size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>Clear consent before sharing</h3>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+              Your summary is only accessible to you until you explicitly choose to export or send it to your therapist.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="final-cta-section">
+        <h2 className="final-cta-heading">
+          Take the first step <br />
+          <span className="editorial-italic" style={{ color: 'var(--peach)' }}>in your own words.</span>
+        </h2>
+        <p className="final-cta-sub">About 10–15 minutes. Private by default.</p>
+        <Link to="/signup">
+          <Button variant="white" size="lg">Begin your reflection</Button>
+        </Link>
+      </section>
 
       <Footer />
     </div>
   );
 };
-
-export default LandingPage;

@@ -183,7 +183,8 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
                 userId: userIdStr,
                 sessionId,
                 userMessage: text || '',
-                status: msgStatus
+                status: msgStatus,
+                voiceMetrics: payload.voiceMetrics
               });
 
               if (aiResponse.action === 'complete') {

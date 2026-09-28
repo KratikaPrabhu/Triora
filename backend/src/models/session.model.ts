@@ -34,6 +34,19 @@ const sessionMessageSchema = new Schema(
     timestamp: {
       type: Date,
       default: Date.now
+    },
+    voiceMetrics: {
+      duration: { type: Number },
+      samples: [
+        {
+          time: { type: Number },
+          frequency: { type: Number },
+          _id: false
+        }
+      ],
+      avgFrequency: { type: Number },
+      minFrequency: { type: Number },
+      maxFrequency: { type: Number }
     }
   },
   { _id: false }

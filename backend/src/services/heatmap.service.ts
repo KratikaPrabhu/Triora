@@ -1,36 +1,42 @@
 import mongoose from 'mongoose';
 import sessionService from './session.service';
 import { AppError } from '../middleware/error.middleware';
+import { IVoiceSample, IVoiceMetrics } from '../types';
 
-export interface HeatmapHistoryPoint {
+export interface VoiceFrequencySample {
+  timeOffset: number; // time in seconds from session start or response start
+  frequency: number;  // frequency in Hz (e.g. 180 Hz)
   timestamp: string;
-  conductance: number; // in µS (microsiemens, e.g. 5.0 - 20.0)
-  resistance: number;  // in kΩ (kiloohms, e.g. 50 - 200)
 }
 
-export interface HeatmapDataPoint {
-  timestamp: string;
-  intensity: number; // 0.0 to 1.0
-  emotion: string;
-  topic: string;
+export interface ResponseVoiceHeatmap {
+  responseIndex: number;
+  questionText: string;
+  responseText: string;
+  duration: number;
+  avgFrequency: number;
+  minFrequency: number;
+  maxFrequency: number;
+  samples: IVoiceSample[];
 }
 
 export interface SessionHeatmapResponse {
   sessionId: string;
   userId: string;
-  totalPoints: number;
-  averageIntensity: number;
-  peakIntensityTimestamp: string | null;
-  conductance: number; // Current reading in µS
-  resistance: number;  // Current reading in kΩ
-  timestamp: string;
-  history: HeatmapHistoryPoint[];
-  timeline: HeatmapDataPoint[];
+  totalDuration: number; // total duration of recorded patient speech in seconds
+  averageFrequency: number; // overall average frequency in Hz
+  minFrequency: number;     // overall min frequency in Hz
+  maxFrequency: number;     // overall max frequency in Hz
+  totalSamples: number;
+  samples: VoiceFrequencySample[];
+  responses: ResponseVoiceHeatmap[];
+  label: string;
+  disclaimer: string;
 }
 
 export class HeatmapService {
   /**
-   * Generates or retrieves simulated heat-map & GSR data for a session
+   * Retrieves actual voice frequency metrics and heatmap data for a session
    */
   async getSessionHeatmap(userId: string, sessionId: string): Promise<SessionHeatmapResponse> {
     if (!mongoose.Types.ObjectId.isValid(sessionId)) {
@@ -41,97 +47,79 @@ export class HeatmapService {
 
     // Verify session ownership
     const session = await sessionService.getSessionById(userId, sessionId);
-
     const transcript = session.transcript || [];
-    const timeline: HeatmapDataPoint[] = [];
-    const history: HeatmapHistoryPoint[] = [];
 
-    let totalIntensity = 0;
-    let peakIntensity = -1;
-    let peakTimestamp: string | null = null;
+    const allSamples: VoiceFrequencySample[] = [];
+    const responseHeatmaps: ResponseVoiceHeatmap[] = [];
 
-    const baseTime = session.startedAt || session.createdAt || new Date();
+    let totalDuration = 0;
+    let globalFreqSum = 0;
+    let globalFreqCount = 0;
+    let globalMinFreq = Infinity;
+    let globalMaxFreq = -Infinity;
 
-    if (transcript.length === 0) {
-      // Mock generated points if transcript is empty (for created sessions)
-      for (let i = 0; i < 6; i++) {
-        const pointTime = new Date(new Date(baseTime).getTime() + i * 45000).toISOString();
-        const intensity = parseFloat((0.25 + (i * 0.12) % 0.5).toFixed(2));
-        timeline.push({
-          timestamp: pointTime,
-          intensity,
-          emotion: i % 2 === 0 ? 'calm' : 'reflective',
-          topic: 'general_intake'
-        });
+    let userResponseIndex = 0;
+    let lastAssistantQuestion = 'General Intake';
 
-        const cond = parseFloat((8.0 + intensity * 6.0).toFixed(1));
-        const resis = parseFloat((1000 / cond).toFixed(1));
-        history.push({
-          timestamp: pointTime,
-          conductance: cond,
-          resistance: resis
-        });
+    for (let i = 0; i < transcript.length; i++) {
+      const msg = transcript[i];
 
-        totalIntensity += intensity;
-        if (intensity > peakIntensity) {
-          peakIntensity = intensity;
-          peakTimestamp = pointTime;
+      if (msg.role === 'assistant') {
+        lastAssistantQuestion = msg.text || 'Intake Question';
+      } else if (msg.role === 'user') {
+        userResponseIndex++;
+        const metrics: IVoiceMetrics | undefined = msg.voiceMetrics;
+
+        if (metrics && Array.isArray(metrics.samples) && metrics.samples.length > 0) {
+          totalDuration += metrics.duration || 0;
+
+          metrics.samples.forEach((sample) => {
+            const freq = sample.frequency;
+            if (freq > 0) {
+              globalFreqSum += freq;
+              globalFreqCount++;
+              if (freq < globalMinFreq) globalMinFreq = freq;
+              if (freq > globalMaxFreq) globalMaxFreq = freq;
+
+              allSamples.push({
+                timeOffset: parseFloat(sample.time.toFixed(1)),
+                frequency: Math.round(freq),
+                timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString()
+              });
+            }
+          });
+
+          responseHeatmaps.push({
+            responseIndex: userResponseIndex,
+            questionText: lastAssistantQuestion,
+            responseText: msg.text || '',
+            duration: metrics.duration || 0,
+            avgFrequency: metrics.avgFrequency || Math.round(metrics.samples.reduce((a, b) => a + b.frequency, 0) / metrics.samples.length),
+            minFrequency: metrics.minFrequency || Math.min(...metrics.samples.map(s => s.frequency)),
+            maxFrequency: metrics.maxFrequency || Math.max(...metrics.samples.map(s => s.frequency)),
+            samples: metrics.samples
+          });
         }
       }
-    } else {
-      const emotions = ['anxious', 'hopeful', 'overwhelmed', 'reflective', 'calm', 'distressed'];
-      const topics = ['work_stress', 'sleep', 'relationships', 'emotional_wellbeing', 'coping_mechanisms'];
-
-      transcript.forEach((msg, idx) => {
-        const textLen = msg.text ? msg.text.length : 0;
-        let intensity = msg.role === 'user' ? Math.min(0.95, 0.3 + (textLen % 50) / 100) : 0.25;
-        intensity = parseFloat(intensity.toFixed(2));
-
-        const emotion = emotions[idx % emotions.length];
-        const topic = topics[idx % topics.length];
-        const timestampStr = msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString();
-
-        timeline.push({
-          timestamp: timestampStr,
-          intensity,
-          emotion,
-          topic
-        });
-
-        const cond = parseFloat((7.5 + intensity * 7.5).toFixed(1));
-        const resis = parseFloat((1000 / cond).toFixed(1));
-        history.push({
-          timestamp: timestampStr,
-          conductance: cond,
-          resistance: resis
-        });
-
-        totalIntensity += intensity;
-        if (intensity > peakIntensity) {
-          peakIntensity = intensity;
-          peakTimestamp = timestampStr;
-        }
-      });
     }
 
-    const avgIntensity = timeline.length > 0 ? parseFloat((totalIntensity / timeline.length).toFixed(2)) : 0.4;
-    const latestHistory = history[history.length - 1] || {
-      timestamp: new Date().toISOString(),
-      conductance: 10.5,
-      resistance: 95.2
-    };
+    // Handle edge case where no samples were recorded yet
+    const avgFreq = globalFreqCount > 0 ? Math.round(globalFreqSum / globalFreqCount) : 0;
+    const minFreq = globalMinFreq !== Infinity ? globalMinFreq : 0;
+    const maxFreq = globalMaxFreq !== -Infinity ? globalMaxFreq : 0;
 
     return {
       sessionId: session._id.toString(),
       userId: session.userId.toString(),
-      totalPoints: timeline.length,
-      averageIntensity: avgIntensity,
-      peakIntensityTimestamp: peakTimestamp,
-      conductance: latestHistory.conductance,
-      resistance: latestHistory.resistance,
-      timestamp: latestHistory.timestamp,
-      history,
-      timeline
+      totalDuration: parseFloat(totalDuration.toFixed(1)),
+      averageFrequency: avgFreq,
+      minFrequency: minFreq,
+      maxFrequency: maxFreq,
+      totalSamples: allSamples.length,
+      samples: allSamples,
+      responses: responseHeatmaps,
+      label: 'Voice frequency variation',
+      disclaimer: 'This visualization represents measured changes in vocal frequency during the conversation. It is not a clinical diagnosis or direct measure of emotional state.'
     };
   }
 }

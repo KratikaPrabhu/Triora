@@ -3,6 +3,7 @@ import Report from '../models/report.model';
 import sessionService from './session.service';
 import Session from '../models/session.model';
 import reportGenerator from './gemini/reportGenerator';
+import heatmapService from './heatmap.service';
 import { AppError } from '../middleware/error.middleware';
 
 import logger from '../config/logger';
@@ -49,6 +50,26 @@ export class ReportService {
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const sessionObjectId = new mongoose.Types.ObjectId(sessionId);
 
+    // Fetch voice heatmap metrics calculated from patient's actual recordings
+    const heatmapData = await heatmapService.getSessionHeatmap(userId, sessionId);
+    const voiceAnalysisPayload = {
+      totalDuration: heatmapData.totalDuration,
+      averageFrequency: heatmapData.averageFrequency,
+      minFrequency: heatmapData.minFrequency,
+      maxFrequency: heatmapData.maxFrequency,
+      samplesCount: heatmapData.totalSamples,
+      samples: heatmapData.samples.map(s => ({ timeOffset: s.timeOffset, frequency: s.frequency })),
+      responses: heatmapData.responses.map(r => ({
+        responseIndex: r.responseIndex,
+        questionText: r.questionText,
+        responseText: r.responseText,
+        duration: r.duration,
+        avgFrequency: r.avgFrequency,
+        minFrequency: r.minFrequency,
+        maxFrequency: r.maxFrequency
+      }))
+    };
+
     // Upsert Report document
     let report = await Report.findOne({ userId: userObjectId, sessionId: sessionObjectId });
 
@@ -59,6 +80,7 @@ export class ReportService {
       report.emotionalContext = reportData.emotionalContext;
       report.importantStatements = reportData.importantStatements;
       report.conversationOverview = reportData.conversationOverview;
+      report.voiceAnalysis = voiceAnalysisPayload;
       report.generatedAt = new Date();
       await report.save();
     } else {
@@ -66,6 +88,7 @@ export class ReportService {
         userId: userObjectId,
         sessionId: sessionObjectId,
         ...reportData,
+        voiceAnalysis: voiceAnalysisPayload,
         generatedAt: new Date()
       });
     }

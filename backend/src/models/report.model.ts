@@ -42,6 +42,10 @@ const reportSchema = new Schema<IReportDocument>(
       default: '',
       trim: true
     },
+    voiceAnalysis: {
+      type: Schema.Types.Mixed,
+      default: null
+    },
     generatedAt: {
       type: Date,
       default: Date.now

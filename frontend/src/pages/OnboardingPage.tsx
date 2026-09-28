@@ -1,177 +1,220 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { updateUserProfileState } from '../store/authSlice';
-import onboardingService from '../services/onboarding.service';
-import type { OnboardingData } from '../types';
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/common/Footer';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ErrorAlert from '../components/common/ErrorAlert';
-import StepProgress from '../components/onboarding/StepProgress';
-import Step1Basic from '../components/onboarding/Step1Basic';
-import Step2Background from '../components/onboarding/Step2Background';
-import Step3Preferences from '../components/onboarding/Step3Preferences';
-import { Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Logo } from '../components/Logo';
+import { Button } from '../components/Button';
+import { Icon } from '../components/Icon';
+import { ErrorMessage } from '../components/ErrorMessage';
+import { useAuth } from '../hooks/useAuth';
+import '../styles/auth.css';
+
+const LANGUAGES = [
+  { code: 'en', name: 'English', native: 'English' },
+  { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+  { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+  { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
+  { code: 'te', name: 'Telugu', native: 'తెలుగు' },
+  { code: 'ml', name: 'Malayalam', native: 'മലയാളം' },
+  { code: 'mr', name: 'Marathi', native: 'मराठी' },
+  { code: 'bn', name: 'Bengali', native: 'বাংলা' },
+];
 
 export const OnboardingPage: React.FC = () => {
-  const { user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
+  const { user, updateOnboarding } = useAuth();
   const navigate = useNavigate();
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<OnboardingData>({
-    preferredName: user?.profile?.preferredName || user?.name || '',
-    dateOfBirth: user?.profile?.dateOfBirth ? String(user.profile.dateOfBirth) : '',
-    preferredLanguage: user?.profile?.preferredLanguage || 'English',
-    backgroundInfo: user?.profile?.backgroundInfo || '',
-    previousTherapyExperience: user?.profile?.previousTherapyExperience || '',
-    primaryGoals: user?.profile?.primaryGoals || [],
-    communicationPreference: user?.profile?.communicationPreference || 'voice',
-    consentAcknowledged: user?.profile?.consentAcknowledged || false,
-    termsAccepted: user?.profile?.termsAccepted || false,
-  });
-
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState(1);
+  const [preferredName, setPreferredName] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [consentAcknowledged, setConsentAcknowledged] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    onboardingService
-      .getOnboarding()
-      .then((res) => {
-        if (res) {
-          if (res.currentStep) setCurrentStep(res.currentStep);
-          if (res.profile) {
-            setFormData((prev) => ({
-              ...prev,
-              preferredName: res.profile.preferredName || prev.preferredName,
-              dateOfBirth: res.profile.dateOfBirth ? String(res.profile.dateOfBirth) : prev.dateOfBirth,
-              preferredLanguage: res.profile.preferredLanguage || prev.preferredLanguage,
-              backgroundInfo: res.profile.backgroundInfo || prev.backgroundInfo,
-              previousTherapyExperience: res.profile.previousTherapyExperience || prev.previousTherapyExperience,
-              primaryGoals: res.profile.primaryGoals || prev.primaryGoals,
-              communicationPreference: res.profile.communicationPreference || prev.communicationPreference,
-              consentAcknowledged: res.profile.consentAcknowledged ?? prev.consentAcknowledged,
-              termsAccepted: res.profile.termsAccepted ?? prev.termsAccepted,
-            }));
-          }
-          if (res.isOnboardingComplete) {
-            navigate('/dashboard', { replace: true });
-          }
-        }
-      })
-      .catch((err) => console.warn('Failed to load initial onboarding status:', err))
-      .finally(() => setInitialLoading(false));
-  }, [navigate]);
-
-  const handleChange = (field: keyof OnboardingData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const saveStepProgress = async (nextStepNumber: number) => {
-    setSaving(true);
-    setError(null);
-    try {
-      const payload: OnboardingData & { currentStep: number } = {
-        ...formData,
-        currentStep: nextStepNumber,
-      };
-      const res = await onboardingService.updateOnboarding(payload);
-      if (res.profile) {
-        dispatch(updateUserProfileState(res.profile));
+    if (user) {
+      if (user.profile?.preferredName) {
+        setPreferredName(user.profile.preferredName);
+      } else if (user.name) {
+        setPreferredName(user.name);
       }
-      setCurrentStep(nextStepNumber);
-    } catch (err: any) {
-      setError(err.message || 'Failed to save progress');
-    } finally {
-      setSaving(false);
+      if (user.profile?.preferredLanguage) {
+        setSelectedLanguage(user.profile.preferredLanguage);
+      }
     }
-  };
+  }, [user]);
 
-  const handleStep1Next = () => saveStepProgress(2);
-  const handleStep2Next = () => saveStepProgress(3);
-  const handleStep2Back = () => setCurrentStep(1);
-  const handleStep3Back = () => setCurrentStep(2);
-
-  const handleComplete = async () => {
-    setSaving(true);
+  const handleNext = async () => {
     setError(null);
-    try {
-      const payload = {
-        ...formData,
+    if (step === 1) {
+      if (!preferredName.trim()) {
+        setError('Please enter a name so we know how to address you.');
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      setStep(3);
+    } else if (step === 3) {
+      if (!consentAcknowledged) {
+        setError('Please acknowledge the terms and consent before proceeding.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      const res = await updateOnboarding({
+        preferredName: preferredName.trim(),
+        preferredLanguage: selectedLanguage,
+        consentAcknowledged: true,
+        termsAccepted: true,
         currentStep: 3,
         isOnboardingComplete: true,
-      };
-      const res = await onboardingService.updateOnboarding(payload as any);
-      if (res.profile) {
-        dispatch(updateUserProfileState({ ...res.profile, isOnboardingComplete: true }));
+      });
+      setIsSubmitting(false);
+
+      if (res.success) {
+        navigate('/dashboard');
+      } else {
+        setError(res.error || 'Could not complete onboarding.');
       }
-      navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      setError(err.message || 'Failed to complete onboarding');
-    } finally {
-      setSaving(false);
     }
   };
 
-  if (initialLoading) {
-    return <LoadingSpinner message="Loading your intake profile..." fullScreen />;
-  }
+  const handleBack = () => {
+    setError(null);
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const progressPercent = (step / 3) * 100;
 
   return (
-    <div className="min-h-screen bg-[#090d16] flex flex-col font-sans text-slate-100">
-      <Navbar />
+    <div className="onboarding-page">
+      <header className="onboarding-header">
+        <Logo linkTo="" />
+        <span className="onboarding-step-indicator">Step {step} of 3</span>
+        <Link to="/dashboard" style={{ fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 500 }}>
+          Save & exit
+        </Link>
+      </header>
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 py-8">
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-              <span>Intake Onboarding Setup</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Welcome to Triora
-            </h1>
-            <p className="text-sm text-slate-400 max-w-md mx-auto">
-              Please complete these 3 quick steps to personalize your pre-therapy voice intake experience.
+      <div className="onboarding-progress-bar-track">
+        <div
+          className="onboarding-progress-bar-fill"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+
+      <main className="onboarding-content-card">
+        {error && <ErrorMessage message={error} />}
+
+        {step === 1 && (
+          <div>
+            <p className="auth-kicker">LET’S MAKE THIS YOURS</p>
+            <h1 className="auth-title">What should we call you?</h1>
+            <p className="auth-subtitle">
+              This can be your first name, nickname, or anything that feels comfortable.
             </p>
-          </div>
 
-          <StepProgress currentStep={currentStep} />
-
-          {error && <ErrorAlert title="Save Error" message={error} />}
-
-          <div className="pt-2">
-            {currentStep === 1 && (
-              <Step1Basic data={formData} onChange={handleChange} onNext={handleStep1Next} />
-            )}
-
-            {currentStep === 2 && (
-              <Step2Background
-                data={formData}
-                onChange={handleChange}
-                onNext={handleStep2Next}
-                onBack={handleStep2Back}
+            <div className="form-group" style={{ marginTop: '2rem' }}>
+              <label className="form-label" htmlFor="preferredName">Preferred name</label>
+              <input
+                id="preferredName"
+                type="text"
+                className="form-input"
+                placeholder="Enter your name"
+                value={preferredName}
+                onChange={(e) => setPreferredName(e.target.value)}
+                autoFocus
               />
-            )}
-
-            {currentStep === 3 && (
-              <Step3Preferences
-                data={formData}
-                onChange={handleChange}
-                onComplete={handleComplete}
-                onBack={handleStep3Back}
-                loading={saving}
-              />
-            )}
+            </div>
           </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <p className="auth-kicker">SPEAK NATURALLY</p>
+            <h1 className="auth-title">Which language feels most comfortable?</h1>
+            <p className="auth-subtitle">
+              You can change this before every reflection.
+            </p>
+
+            <div className="language-grid">
+              {LANGUAGES.map((lang) => {
+                const isSelected = selectedLanguage === lang.code;
+                return (
+                  <div
+                    key={lang.code}
+                    className={`language-card-option ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedLanguage(lang.code)}
+                  >
+                    <div>
+                      <span style={{ fontSize: '1.05rem', color: 'var(--ink)' }}>{lang.native}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--muted)', marginLeft: '0.5rem' }}>
+                        ({lang.name})
+                      </span>
+                    </div>
+                    {isSelected && <Icon name="Check" size={18} color="var(--green)" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <p className="auth-kicker">BEFORE WE BEGIN</p>
+            <h1 className="auth-title">A few important boundaries.</h1>
+
+            <div className="boundary-notice-box">
+              <div className="boundary-title">
+                <Icon name="Shield" size={20} />
+                <span>Triora helps you prepare—it does not diagnose.</span>
+              </div>
+              <p style={{ fontSize: '0.9rem', color: 'var(--ink)', lineHeight: 1.6, marginTop: '0.5rem' }}>
+                Your summary may help a therapist understand your experience, but it isn’t medical advice or emergency support.
+              </p>
+            </div>
+
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={consentAcknowledged}
+                onChange={(e) => setConsentAcknowledged(e.target.checked)}
+              />
+              <span>
+                I understand that Triora is a private preparation tool, not a clinical assessment or crisis hotline.
+              </span>
+            </label>
+
+            <div
+              style={{
+                fontSize: '0.85rem',
+                color: 'var(--muted)',
+                backgroundColor: 'var(--paper)',
+                padding: '1rem',
+                borderRadius: 'var(--radius-sm)',
+                marginTop: '1rem',
+              }}
+            >
+              <strong style={{ color: 'var(--ink)' }}>Emergency Notice:</strong> If you are in distress or experiencing a crisis, please reach out to professional emergency services or national crisis hotlines immediately.
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem' }}>
+          {step > 1 ? (
+            <Button variant="outline" onClick={handleBack}>
+              Back
+            </Button>
+          ) : (
+            <div />
+          )}
+
+          <Button variant="primary" onClick={handleNext} isLoading={isSubmitting}>
+            {step === 3 ? 'Complete & enter space' : 'Continue'}
+          </Button>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };
-
-export default OnboardingPage;

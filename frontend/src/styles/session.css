@@ -1,0 +1,198 @@
+/* SESSION PAGE STYLES */
+
+.session-page-container {
+  min-height: 100vh;
+  background-color: var(--paper);
+  display: flex;
+  flex-direction: column;
+}
+
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 3rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.session-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--green);
+  background-color: var(--white);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+}
+
+.session-main-stage {
+  max-width: 800px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.session-timer-display {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 2rem;
+  background-color: var(--white);
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+}
+
+.session-question-card {
+  margin-bottom: 2.5rem;
+  max-width: 680px;
+}
+
+.session-main-question {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 1rem;
+}
+
+.session-prompts-carousel {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 580px;
+}
+
+.prompt-chip {
+  font-size: 0.9rem;
+  color: var(--muted);
+  background-color: var(--white);
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+  font-style: italic;
+}
+
+/* Big Mic Control */
+.mic-button-wrapper {
+  margin: 2.5rem 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mic-circle-btn {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background-color: var(--green);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(49, 95, 80, 0.25);
+  transition: transform var(--transition-normal), background-color var(--transition-normal);
+  position: relative;
+  z-index: 2;
+}
+
+.mic-circle-btn:hover {
+  transform: scale(1.05);
+}
+
+.mic-circle-btn.listening {
+  background-color: var(--peach);
+  color: var(--ink);
+  animation: micPulse 1.8s infinite;
+}
+
+@keyframes micPulse {
+  0% { box-shadow: 0 0 0 0 rgba(230, 180, 134, 0.6); }
+  70% { box-shadow: 0 0 0 25px rgba(230, 180, 134, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(230, 180, 134, 0); }
+}
+
+.mic-status-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 1.25rem;
+}
+
+.mic-hint-text {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+/* Waveform Canvas / Visualizer */
+.waveform-canvas-box {
+  width: 100%;
+  max-width: 520px;
+  height: 60px;
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 1rem;
+  position: relative;
+}
+
+.waveform-bars-flex {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.live-bar {
+  width: 4px;
+  background-color: var(--sage);
+  border-radius: 2px;
+  transition: height 100ms ease;
+}
+
+.simulated-disclaimer {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Transcript preview box */
+.session-transcript-preview {
+  margin-top: 2rem;
+  max-width: 600px;
+  width: 100%;
+  background-color: var(--white);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--ink);
+  min-height: 50px;
+}
+
+.session-finish-btn-row {
+  margin-top: 3rem;
+}
