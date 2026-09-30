@@ -16,6 +16,7 @@ app.use(helmet());
 // Dynamic CORS configuration supporting local Vite ports & credentials
 const allowedOrigins = [
   env.CLIENT_URL,
+  'https://triora-gules.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
@@ -66,8 +67,9 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-// API Routes
+// API Routes (mounted under both /api and / for robustness against missing /api prefix in client URLs)
 app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 // 404 Route Handler
 app.use(notFoundHandler);

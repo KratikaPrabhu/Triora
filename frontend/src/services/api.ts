@@ -1,6 +1,12 @@
 import type { ApiResponse } from '../types/auth';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const getBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const cleanUrl = envUrl.replace(/\/+$/, '');
+  return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+};
+
+const BASE_URL = getBaseUrl();
 
 export const TOKEN_KEY = 'triora_auth_token';
 
