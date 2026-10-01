@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { getSpeechToken } from '../controllers/speech.controller';
+import { getSpeechToken, generateTTSController } from '../controllers/speech.controller';
 import { authenticateJWT } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -21,5 +21,6 @@ const speechLimiter = rateLimit({
 });
 
 router.get('/token', authenticateJWT, speechLimiter, getSpeechToken);
+router.post('/tts', generateTTSController);
 
 export default router;

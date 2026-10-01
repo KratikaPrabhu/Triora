@@ -1,199 +1,199 @@
-// Text-To-Speech Service for Triora
+// Azure Text-To-Speech Service for Triora
+import { getStoredToken } from './api';
+
+const getBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const cleanUrl = envUrl.replace(/\/+$/, '');
+  return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+};
 
 class TTSService {
+  private currentAudio: HTMLAudioElement | null = null;
+  private currentBlobUrl: string | null = null;
+  private currentAbortController: AbortController | null = null;
   private isSpeakingState = false;
+  private currentRequestId = 0;
 
   /**
-   * Call this ONLY from a real user interaction:
-   * Start Reflection / Start Session button.
+   * Unlock audio playback context for mobile/browser autoplay policies on user interaction.
    */
   public unlockAudio(): void {
-    if (!('speechSynthesis' in window)) {
-      console.error('❌ Speech synthesis is not supported');
-      return;
+    try {
+      const audio = new Audio();
+      audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      audio.play().catch(() => {});
+      console.log('[Triora TTS] Audio unlocked for browser playback');
+    } catch (err) {
+      console.warn('[Triora TTS] Audio unlock failed:', err);
     }
-
-    const synth = window.speechSynthesis;
-
-    synth.cancel();
-    synth.resume();
-
-    console.log('🔊 Triora audio unlocked');
   }
 
   /**
-   * Speak AI question aloud.
+   * Speak AI question aloud using Azure Speech TTS via backend API.
    */
-  public speak(
+  public async speak(
     text: string,
     languageCode = 'en',
     onStart?: () => void,
     onEnd?: () => void
   ): Promise<void> {
-    return new Promise((resolve) => {
-      if (!('speechSynthesis' in window)) {
-        console.error('❌ SpeechSynthesis is not supported');
-        this.isSpeakingState = false;
-        onEnd?.();
-        resolve();
+    const trimmedText = text?.trim();
+
+    if (!trimmedText) {
+      console.warn('[Triora TTS] Empty text received. Skipping speech synthesis.');
+      onEnd?.();
+      return;
+    }
+
+    // Increment request ID to cancel/ignore previous stale speech calls
+    const requestId = ++this.currentRequestId;
+
+    // Stop any existing audio or pending fetch
+    this.stopInternal();
+
+    console.log('[Triora TTS] Requesting Azure TTS');
+    console.log('[Triora TTS] Language:', languageCode);
+
+    const abortController = new AbortController();
+    this.currentAbortController = abortController;
+
+    try {
+      const baseUrl = getBaseUrl();
+      const token = getStoredToken();
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${baseUrl}/tts`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ text: trimmedText, languageCode }),
+        signal: abortController.signal,
+      });
+
+      // Handle race condition: user stopped or requested new question while fetching
+      if (requestId !== this.currentRequestId) {
+        console.log('[Triora TTS] Request superseded by newer speech call.');
         return;
       }
 
-      const trimmedText = text?.trim();
-
-      if (!trimmedText) {
-        console.warn('⚠️ TTS received empty text');
-        resolve();
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        const message = errJson?.error?.message || `Azure Speech TTS error (Status ${response.status})`;
+        console.error('[Triora TTS] Azure Speech TTS temporarily unavailable:', message);
+        this.isSpeakingState = false;
+        onEnd?.();
         return;
       }
 
-      console.log('🔊 TTS requested:', trimmedText);
+      const audioBlob = await response.blob();
 
-      const synth = window.speechSynthesis;
-
-      // Stop previous speech
-      synth.cancel();
-
-      // Make sure synthesis is resumed
-      synth.resume();
-
-      
-      this.isSpeakingState = true;
-
-      const utterance = new SpeechSynthesisUtterance(trimmedText);
-
-      utterance.lang = this.getBCP47Language(languageCode);
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      // Get available voices
-      const voices = synth.getVoices();
-
-      console.log(
-        '🎤 Available voices:',
-        voices.map((v) => `${v.name} (${v.lang})`)
-      );
-
-      const language = utterance.lang.split('-')[0];
-
-      const preferredVoice =
-        voices.find(
-          (v) =>
-            v.lang.toLowerCase() ===
-            utterance.lang.toLowerCase()
-        ) ||
-        voices.find(
-          (v) =>
-            v.lang.toLowerCase().startsWith(language)
-        );
-
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-
-        console.log(
-          '🎤 Selected voice:',
-          preferredVoice.name,
-          preferredVoice.lang
-        );
-      } else {
-        console.warn(
-          '⚠️ No matching voice found for',
-          utterance.lang
-        );
+      if (requestId !== this.currentRequestId) {
+        return;
       }
 
-      utterance.onstart = () => {
-        console.log('🔊 TRIORA TTS STARTED');
+      const blobUrl = URL.createObjectURL(audioBlob);
+      this.currentBlobUrl = blobUrl;
 
-        this.isSpeakingState = true;
-        onStart?.();
-      };
+      const audio = new Audio(blobUrl);
+      this.currentAudio = audio;
 
-      utterance.onend = () => {
-        console.log('🔊 TRIORA TTS FINISHED');
+      return new Promise<void>((resolve) => {
+        audio.onplay = () => {
+          if (requestId !== this.currentRequestId) return;
+          console.log('[Triora TTS] Playing Azure audio');
+          console.log('[Triora TTS] Playback started');
+          this.isSpeakingState = true;
+          onStart?.();
+        };
 
-        this.isSpeakingState = false;
-        onEnd?.();
-        resolve();
-      };
+        audio.onended = () => {
+          if (requestId === this.currentRequestId) {
+            console.log('[Triora TTS] Playback finished');
+            this.cleanupAudio();
+            onEnd?.();
+          }
+          resolve();
+        };
 
-      utterance.onerror = (event) => {
-        console.error(
-          '❌ TRIORA TTS ERROR:',
-          event.error
-        );
+        audio.onerror = (e) => {
+          console.error('[Triora TTS] Audio playback error:', e);
+          if (requestId === this.currentRequestId) {
+            this.cleanupAudio();
+            onEnd?.();
+          }
+          resolve();
+        };
 
-        this.isSpeakingState = false;
-        onEnd?.();
-        resolve();
-      };
+        audio.play().catch((err) => {
+          console.error('[Triora TTS] Audio autoplay play() failed:', err);
+          if (requestId === this.currentRequestId) {
+            this.cleanupAudio();
+            onEnd?.();
+          }
+          resolve();
+        });
+      });
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        console.log('[Triora TTS] Azure TTS request cancelled');
+        return;
+      }
 
-      synth.speak(utterance);
-
-      console.log(
-        '🔊 speechSynthesis.speak() called',
-        {
-          speaking: synth.speaking,
-          pending: synth.pending,
-          paused: synth.paused
-        }
-      );
-    });
+      console.error('[Triora TTS] Azure Speech TTS temporarily unavailable:', err?.message || err);
+      this.isSpeakingState = false;
+      onEnd?.();
+    }
   }
 
   /**
-   * Stop current speech.
+   * Stop current speech and cancel pending requests.
    */
   public stop(): void {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-
-    this.isSpeakingState = false;
-
-    console.log('🔇 Triora TTS stopped');
+    this.currentRequestId++;
+    this.stopInternal();
+    console.log('[Triora TTS] Speech stopped');
   }
 
   public isSpeaking(): boolean {
-    if ('speechSynthesis' in window) {
-      return (
-        window.speechSynthesis.speaking ||
-        this.isSpeakingState
-      );
-    }
-
     return this.isSpeakingState;
   }
 
   /**
-   * Debug test.
+   * Debug test voice.
    */
   public testVoice(): void {
-    console.log('🧪 Testing Triora voice');
-
-    this.speak(
-      'Hello. This is Triora. Can you hear me?',
-      'en'
-    );
+    console.log('[Triora TTS] Testing Azure voice synthesis');
+    this.speak('Hello. This is Triora powered by Azure Speech. Can you hear me?', 'en');
   }
 
-  private getBCP47Language(code: string): string {
-    const langMap: Record<string, string> = {
-      en: 'en-US',
-      hi: 'hi-IN',
-      kn: 'kn-IN',
-      ta: 'ta-IN',
-      te: 'te-IN',
-      ml: 'ml-IN',
-      mr: 'mr-IN',
-      bn: 'bn-IN'
-    };
+  private stopInternal(): void {
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      this.currentAbortController = null;
+    }
 
-    return (
-      langMap[code.toLowerCase()] ||
-      'en-US'
-    );
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+      } catch (_) {}
+      this.currentAudio = null;
+    }
+
+    this.cleanupAudio();
+  }
+
+  private cleanupAudio(): void {
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
+    }
+    this.isSpeakingState = false;
   }
 }
 
