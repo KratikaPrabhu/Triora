@@ -194,7 +194,7 @@ export async function runFailuresAndHeatmapTests() {
     console.error('❌ Failures & Heatmap test failed:', err.message);
     return false;
   } finally {
-    server.close();
+    try { if (server) server.close(); } catch (_) {}
   }
 }
 

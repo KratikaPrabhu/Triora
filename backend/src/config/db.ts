@@ -2,19 +2,42 @@ import mongoose from 'mongoose';
 import env from './env';
 import logger from './logger';
 
-export const connectDB = async (): Promise<typeof mongoose | undefined> => {
+let isEventListenerAttached = false;
+
+function attachMongoListeners() {
+  if (isEventListenerAttached) return;
+  isEventListenerAttached = true;
+
+  mongoose.connection.on('connected', () => {
+    logger.info(`[MongoDB] Connected: ${mongoose.connection.host}/${mongoose.connection.name}`);
+  });
+
+  mongoose.connection.on('error', (err) => {
+    logger.error(`[MongoDB] Error: ${err.message}`);
+  });
+
+  mongoose.connection.on('disconnected', () => {
+    logger.warn('[MongoDB] Disconnected');
+  });
+
+  mongoose.connection.on('reconnected', () => {
+    logger.info('[MongoDB] Reconnected');
+  });
+}
+
+export const connectDB = async (): Promise<typeof mongoose> => {
+  attachMongoListeners();
+  logger.info('[MongoDB] Connecting...');
+
   try {
     const conn = await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000
+      serverSelectionTimeoutMS: 5000,
+      bufferCommands: false,
     });
-    logger.info(`MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
     return conn;
   } catch (error: any) {
-    logger.error(`MongoDB connection error: ${error.message}`);
-    if (env.NODE_ENV === 'production') {
-      process.exit(1);
-    }
-    return undefined;
+    logger.error(`[MongoDB] Error: ${error.message}`);
+    throw error;
   }
 };
 

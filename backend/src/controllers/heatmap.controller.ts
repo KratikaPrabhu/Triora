@@ -8,7 +8,7 @@ export class HeatmapController {
    * Fetch simulated heat-map analysis for a session
    */
   getSessionHeatmap = asyncWrapper(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const userId = req.user!.id;
+    const userId = req.user!._id.toString();
     const sessionId = req.params.id as string;
 
     const heatmap = await heatmapService.getSessionHeatmap(userId, sessionId);

@@ -11,9 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 3rem;
-  max-width: 1100px;
-  margin: 0 auto;
+  padding: 1.5rem 2rem;
   width: 100%;
 }
 
@@ -25,15 +23,29 @@
   font-weight: 600;
   color: var(--green);
   background-color: var(--white);
-  padding: 0.35rem 0.85rem;
+  padding: 0.4rem 1rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--line);
+}
+
+.pulse-dot-active {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .session-main-stage {
   max-width: 800px;
   width: 100%;
-  margin: 2rem auto;
+  margin: 0 auto 4rem auto;
   padding: 0 1.5rem;
   display: flex;
   flex-direction: column;
@@ -44,52 +56,51 @@
 }
 
 .session-timer-display {
-  font-family: monospace;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
   letter-spacing: 0.05em;
   margin-bottom: 2rem;
   background-color: var(--white);
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.25rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--line);
+  display: inline-block;
 }
 
-.session-question-card {
-  margin-bottom: 2.5rem;
-  max-width: 680px;
+.session-headline-box {
+  margin-bottom: 1rem;
 }
 
 .session-main-question {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: var(--ink);
   line-height: 1.35;
   margin-bottom: 1rem;
 }
 
-.session-prompts-carousel {
-  margin-top: 1.5rem;
+.tap-hear-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  max-width: 580px;
+  cursor: pointer;
+  margin: 0 auto 3rem auto;
 }
 
-.prompt-chip {
-  font-size: 0.9rem;
-  color: var(--muted);
-  background-color: var(--white);
-  padding: 0.6rem 1.25rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--line);
-  font-style: italic;
+.tap-hear-btn:hover {
+  color: var(--ink);
 }
 
 /* Big Mic Control */
 .mic-button-wrapper {
-  margin: 2.5rem 0;
+  margin: 0 0 1rem 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -105,7 +116,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(49, 95, 80, 0.25);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(49, 95, 80, 0.25);
   transition: transform var(--transition-normal), background-color var(--transition-normal);
   position: relative;
   z-index: 2;
@@ -116,45 +129,45 @@
 }
 
 .mic-circle-btn.listening {
-  background-color: var(--peach);
-  color: var(--ink);
+  background-color: var(--green-dark);
   animation: micPulse 1.8s infinite;
 }
 
 @keyframes micPulse {
-  0% { box-shadow: 0 0 0 0 rgba(230, 180, 134, 0.6); }
-  70% { box-shadow: 0 0 0 25px rgba(230, 180, 134, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(230, 180, 134, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(49, 95, 80, 0.4); }
+  70% { box-shadow: 0 0 0 25px rgba(49, 95, 80, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(49, 95, 80, 0); }
 }
 
 .mic-status-label {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--ink);
-  margin-top: 1.25rem;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .mic-hint-text {
   font-size: 0.85rem;
   color: var(--muted);
-  margin-top: 0.35rem;
+  margin-top: 0.5rem;
 }
 
 /* Waveform Canvas / Visualizer */
 .waveform-canvas-box {
   width: 100%;
   max-width: 520px;
-  height: 60px;
+  height: 70px;
   background-color: var(--white);
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  margin-top: 2rem;
+  border-radius: 16px;
+  margin-top: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   padding: 0 1rem;
-  position: relative;
 }
 
 .waveform-bars-flex {
@@ -174,8 +187,9 @@
 .simulated-disclaimer {
   font-size: 0.75rem;
   color: var(--muted);
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   font-style: italic;
+  line-height: 1.5;
 }
 
 /* Transcript preview box */
@@ -184,15 +198,12 @@
   max-width: 600px;
   width: 100%;
   background-color: var(--white);
-  border: 1px dashed var(--line);
-  border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
   text-align: left;
-  font-size: 0.9rem;
-  color: var(--ink);
-  min-height: 50px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 .session-finish-btn-row {
-  margin-top: 3rem;
+  margin-top: 2.5rem;
 }

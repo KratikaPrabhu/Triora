@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+import { speechService } from '../services/speechService';
 
 interface SpeechState {
   isListening: boolean;
@@ -19,7 +21,7 @@ export function useSpeech(languageCode = 'en') {
     frequencySamples: [],
   });
 
-  const recognitionRef = useRef<any>(null);
+  const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -27,7 +29,7 @@ export function useSpeech(languageCode = 'en') {
   const startTimeRef = useRef<number>(0);
   const samplesRef = useRef<Array<{ time: number; frequency: number }>>([]);
 
-  // Language mapping to speech recognition BCP-47 tags
+  // Language mapping to speech recognition BCP-47 tags according to requirement
   const getLocaleForLanguage = useCallback((code: string): string => {
     const langMap: Record<string, string> = {
       en: 'en-US',
@@ -57,7 +59,7 @@ export function useSpeech(languageCode = 'en') {
     }
   }, []);
 
-  const startAudioAnalysis = useCallback(async () => {
+  const startAudioAnalysis = useCallback(async (): Promise<MediaStream | null> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
@@ -103,99 +105,166 @@ export function useSpeech(languageCode = 'en') {
       };
 
       analyze();
+      return stream;
     } catch (err: any) {
-      console.warn('Microphone audio analysis failed:', err.message);
+      console.warn('[STT] Microphone audio access error:', err.message || err);
+      return null;
     }
   }, []);
 
+  const stopListening = useCallback(() => {
+    if (recognizerRef.current) {
+      console.log('[STT] Stopping recognition');
+      try {
+        recognizerRef.current.stopContinuousRecognitionAsync(
+          () => {
+            console.log('[STT] Recognition stopped');
+            recognizerRef.current?.close();
+            recognizerRef.current = null;
+            setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
+          },
+          (err) => {
+            console.warn('[STT] Error stopping Azure recognizer:', err);
+            recognizerRef.current = null;
+            setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
+          }
+        );
+      } catch (err) {
+        recognizerRef.current = null;
+        setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
+      }
+    } else {
+      setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
+    }
+    stopAudioAnalysis();
+  }, [stopAudioAnalysis]);
+
   const startListening = useCallback(async () => {
-    setState((prev) => ({ ...prev, error: null, transcript: '', interimTranscript: '' }));
+    console.log('[STT] Microphone button clicked');
+    setState((prev) => ({ ...prev, error: null, interimTranscript: '' }));
 
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
+    // Request microphone permission first
+    console.log('[STT] Initializing Azure Speech');
+    const stream = await startAudioAnalysis();
+    if (!stream) {
+      console.warn('[STT] Recognition canceled: Microphone access blocked');
       setState((prev) => ({
         ...prev,
-        error: 'Speech recognition is not supported in this browser. You can type your response instead.',
+        error: 'Microphone access is blocked. Please allow microphone access for Triora and try again.',
+        isListening: false,
       }));
-      await startAudioAnalysis();
-      setState((prev) => ({ ...prev, isListening: true }));
       return;
     }
 
+    const locale = getLocaleForLanguage(languageCode);
+    console.log(`[STT] Language: ${locale}`);
+
     try {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = getLocaleForLanguage(languageCode);
-
-      recognition.onstart = () => {
-        setState((prev) => ({ ...prev, isListening: true, error: null }));
-      };
-
-      recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        let interimText = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcriptChunk = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcriptChunk + ' ';
-          } else {
-            interimText += transcriptChunk;
-          }
-        }
-
+      // Retrieve Azure Speech token from backend endpoint
+      const tokenRes = await speechService.getSpeechToken(languageCode);
+      if (!tokenRes.success || !tokenRes.data?.token) {
+        const errorCategory = tokenRes.error?.message || 'missing credentials';
+        console.error(`[STT] Recognition canceled: AuthenticationFailure (${errorCategory})`);
         setState((prev) => ({
           ...prev,
-          transcript: prev.transcript + finalTranscript,
-          interimTranscript: interimText,
+          error: `Azure Speech STT error: Unable to fetch speech token (${errorCategory})`,
+          isListening: false,
         }));
-      };
+        stopAudioAnalysis();
+        return;
+      }
 
-      recognition.onerror = (event: any) => {
-        if (event.error !== 'no-speech') {
-          setState((prev) => ({ ...prev, error: `Speech recognition error: ${event.error}` }));
+      const { token, region } = tokenRes.data;
+
+      let speechConfig: SpeechSDK.SpeechConfig;
+      if (token.startsWith('mock-azure-speech-token')) {
+        console.warn('[STT] Recognition canceled: AuthenticationFailure (mock token returned, missing AZURE_SPEECH_KEY on backend)');
+        setState((prev) => ({
+          ...prev,
+          error: 'Azure Speech credentials (AZURE_SPEECH_KEY) missing or unconfigured on backend environment.',
+          isListening: false,
+        }));
+        stopAudioAnalysis();
+        return;
+      } else {
+        speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region || 'centralindia');
+      }
+
+      speechConfig.speechRecognitionLanguage = locale;
+      console.log(`[STT] speechConfig.speechRecognitionLanguage = ${speechConfig.speechRecognitionLanguage}`);
+
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+      recognizerRef.current = recognizer;
+
+      recognizer.recognizing = (_s, e) => {
+        if (e.result && e.result.text) {
+          console.log(`[STT] Recognizing: ${e.result.text}`);
+          setState((prev) => ({
+            ...prev,
+            interimTranscript: e.result.text,
+          }));
         }
       };
 
-      recognition.onend = () => {
-        // Automatically restart if user hasn't explicitly stopped listening
-        if (recognitionRef.current?.shouldContinue) {
-          try {
-            recognition.start();
-          } catch {
-            setState((prev) => ({ ...prev, isListening: false }));
-          }
-        } else {
-          setState((prev) => ({ ...prev, isListening: false }));
+      recognizer.recognized = (_s, e) => {
+        if (e.result && e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech && e.result.text) {
+          console.log(`[STT] Recognized: ${e.result.text}`);
+          setState((prev) => ({
+            ...prev,
+            transcript: prev.transcript ? `${prev.transcript} ${e.result.text}` : e.result.text,
+            interimTranscript: '',
+          }));
         }
       };
 
-      recognitionRef.current = recognition;
-      recognitionRef.current.shouldContinue = true;
-      recognition.start();
-      await startAudioAnalysis();
+      recognizer.canceled = (_s, e) => {
+        console.warn(`[STT] Recognition canceled: ${e.reason} - ${e.errorDetails}`);
+        let safeError = e.errorDetails || e.reason?.toString() || 'canceled';
+        if (safeError.includes('401') || safeError.includes('403') || safeError.includes('Auth')) {
+          safeError = 'AuthenticationFailure (401/403 invalid Azure Speech credentials)';
+        }
+        setState((prev) => ({
+          ...prev,
+          error: `Azure Speech error: ${safeError}`,
+          isListening: false,
+        }));
+        stopListening();
+      };
+
+      recognizer.sessionStopped = () => {
+        console.log('[STT] Recognition stopped');
+        setState((prev) => ({ ...prev, isListening: false }));
+        stopAudioAnalysis();
+      };
+
+      console.log('[STT] Starting recognition');
+      recognizer.startContinuousRecognitionAsync(
+        () => {
+          setState((prev) => ({ ...prev, isListening: true, error: null }));
+        },
+        (err) => {
+          console.error('[STT] Failed to start continuous recognition:', err);
+          console.log(`[STT] Recognition canceled: ${err}`);
+          setState((prev) => ({
+            ...prev,
+            error: `Could not start Azure speech recognition: ${err}`,
+            isListening: false,
+          }));
+          stopAudioAnalysis();
+        }
+      );
     } catch (err: any) {
+      console.error('[STT] Azure Speech SDK setup error:', err);
+      console.log(`[STT] Recognition canceled: ${err.message || err}`);
       setState((prev) => ({
         ...prev,
-        error: `Could not start speech recognition: ${err.message}`,
+        error: `Could not start Azure speech recognition: ${err.message || err}`,
         isListening: false,
       }));
+      stopAudioAnalysis();
     }
-  }, [getLocaleForLanguage, languageCode, startAudioAnalysis]);
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.shouldContinue = false;
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-    }
-    stopAudioAnalysis();
-    setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
-  }, [stopAudioAnalysis]);
+  }, [getLocaleForLanguage, languageCode, startAudioAnalysis, stopAudioAnalysis, stopListening]);
 
   const resetTranscript = useCallback(() => {
     setState((prev) => ({

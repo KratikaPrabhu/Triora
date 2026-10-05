@@ -208,7 +208,6 @@ export async function runWebSocketTests(): Promise<boolean> {
     failedCount++;
   } finally {
     server.close();
-    await mongoose.disconnect();
     process.stdout.write(`\n--- WEBSOCKET TEST SUMMARY ---\nPassed: ${passedCount}\nFailed: ${failedCount}\n`);
     return failedCount === 0;
   }

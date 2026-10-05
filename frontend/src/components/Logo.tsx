@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LogoProps {
   variant?: 'dark' | 'light' | 'green';
@@ -14,6 +15,8 @@ export const Logo: React.FC<LogoProps> = ({
   linkTo = '/',
   className = '',
 }) => {
+  const { t } = useLanguage();
+
   const getScale = () => {
     switch (size) {
       case 'sm': return { markHeight: 20, fontSize: '1.15rem' };
@@ -72,7 +75,7 @@ export const Logo: React.FC<LogoProps> = ({
           letterSpacing: '-0.03em',
         }}
       >
-        triora
+        {t.logoName || 'triora'}
       </span>
     </div>
   );

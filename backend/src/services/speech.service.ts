@@ -24,9 +24,25 @@ export class SpeechService {
     const locale = langObj.locale;
     const recLocales = recognitionLocales(langCode || 'en');
 
+    const hasKey = Boolean(env.AZURE_SPEECH_KEY);
+    const keyLength = env.AZURE_SPEECH_KEY ? env.AZURE_SPEECH_KEY.length : 0;
+    const tokenHost = `${region}.api.cognitive.microsoft.com`;
+
+    logger.info(`[Azure Speech] Key configured: ${hasKey}`);
+    logger.info(`[Azure Speech] Key length: ${keyLength}`);
+    logger.info(`[Azure Speech] Region: ${region}`);
+    logger.info(`[Azure Speech] Token endpoint host: ${tokenHost}`);
+
+    if (hasKey) {
+      logger.info('AZURE SPEECH KEY: CONFIGURED');
+    } else {
+      logger.info('AZURE SPEECH KEY: MISSING');
+    }
+
     // Issue Azure Speech authorization token when subscription key is present
-    if (!env.AZURE_SPEECH_KEY) {
-      logger.warn(`AZURE_SPEECH_KEY not set. Returning fallback mock token for language '${langObj.code}'`);
+    const isMockMode = !env.AZURE_SPEECH_KEY || process.env.MOCK_MODE === 'true';
+    if (isMockMode) {
+      logger.warn(`AZURE_SPEECH_KEY not set or MOCK_MODE active. Returning fallback token for language '${langObj.code}'`);
       return {
         token: `mock-azure-speech-token-${Date.now()}`,
         region,
@@ -40,7 +56,7 @@ export class SpeechService {
     // Production Azure Speech token request
     return new Promise((resolve, reject) => {
       const options: https.RequestOptions = {
-        hostname: `${region}.api.cognitive.microsoft.com`,
+        hostname: tokenHost,
         path: '/sts/v1.0/issueToken',
         method: 'POST',
         headers: {
@@ -63,9 +79,13 @@ export class SpeechService {
               expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString()
             });
           } else {
-            logger.error(`Azure Speech Services token endpoint returned status code ${res.statusCode}`);
-            const error: AppError = new Error('Failed to retrieve speech authorization token from Azure Speech Services.');
-            error.statusCode = 502;
+            let errorMsg = `Azure Speech Services token endpoint returned status code ${res.statusCode}`;
+            if (res.statusCode === 401 || res.statusCode === 403) {
+              errorMsg = `AuthenticationFailure (${res.statusCode}): Invalid Azure Speech subscription key or region.`;
+            }
+            logger.error(`[Azure Speech STT] ${errorMsg} - Response: ${data}`);
+            const error: AppError = new Error(errorMsg);
+            error.statusCode = res.statusCode === 401 || res.statusCode === 403 ? 401 : 502;
             reject(error);
           }
         });
@@ -130,9 +150,10 @@ export class SpeechService {
             logger.info(`[Azure TTS] Audio generated successfully (${audioBuffer.length} bytes)`);
             resolve(audioBuffer);
           } else {
-            logger.error(`[Azure TTS] Endpoint returned status code ${res.statusCode}`);
-            const error: AppError = new Error('Azure Speech TTS temporarily unavailable.');
-            error.statusCode = 503;
+            const responseText = Buffer.concat(chunks).toString('utf-8');
+            logger.error(`[Azure TTS] Endpoint returned status code ${res.statusCode}: ${responseText}`);
+            const error: AppError = new Error(`Azure Speech TTS unavailable (${res.statusCode}).`);
+            error.statusCode = res.statusCode === 401 || res.statusCode === 403 ? 401 : 503;
             reject(error);
           }
         });

@@ -118,9 +118,9 @@ export async function runSpeechTests(): Promise<boolean> {
     // 2. Security Check: Ensures secrets are NOT present in response
     const rawResponseBody = JSON.stringify(resAuth.body);
     const secretLeaked =
-      rawResponseBody.includes(process.env.JWT_SECRET || 'SECRET_KEY_NOT_FOUND') ||
-      rawResponseBody.includes(process.env.AZURE_SPEECH_KEY || 'AZURE_KEY_NOT_FOUND') ||
-      rawResponseBody.includes(process.env.GEMINI_API_KEY || 'GEMINI_KEY_NOT_FOUND');
+      Boolean(process.env.JWT_SECRET && rawResponseBody.includes(process.env.JWT_SECRET)) ||
+      Boolean(process.env.AZURE_SPEECH_KEY && rawResponseBody.includes(process.env.AZURE_SPEECH_KEY)) ||
+      Boolean(process.env.GEMINI_API_KEY && rawResponseBody.includes(process.env.GEMINI_API_KEY));
     assert(
       secretLeaked === false,
       '2. Security verification: AZURE_SPEECH_KEY / GEMINI_API_KEY / JWT_SECRET are never exposed'
@@ -142,7 +142,6 @@ export async function runSpeechTests(): Promise<boolean> {
     failedCount++;
   } finally {
     server.close();
-    await mongoose.disconnect();
     process.stdout.write(`\n--- SPEECH TEST SUMMARY ---\nPassed: ${passedCount}\nFailed: ${failedCount}\n`);
     return failedCount === 0;
   }

@@ -61,7 +61,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="auth-form-container">
           <p className="auth-kicker">WELCOME BACK</p>
-          <h1 className="auth-title">Continue your reflection.</h1>
+          <h1 className="auth-title">Continue your conversation.</h1>
           <p className="auth-subtitle">Log in to access your sessions and reports.</p>
 
           {error && <ErrorMessage message={error} />}

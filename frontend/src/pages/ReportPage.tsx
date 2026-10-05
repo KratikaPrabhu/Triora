@@ -5,12 +5,14 @@ import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
 import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { useLanguage } from '../context/LanguageContext';
 import { reportService } from '../services/reportService';
 import type { Report } from '../types/report';
 import '../styles/report.css';
 
 export const ReportPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { t } = useLanguage();
 
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -52,7 +54,7 @@ export const ReportPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <Loading fullScreen message="Loading reflection report..." />;
+    return <Loading fullScreen message={t.synthesizingSummary} />;
   }
 
   if (error || !report) {
@@ -67,7 +69,7 @@ export const ReportPage: React.FC = () => {
             />
             <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
               <Link to="/dashboard">
-                <Button variant="primary">Return to Dashboard</Button>
+                <Button variant="primary">{t.returnToDashboard}</Button>
               </Link>
             </div>
           </div>
@@ -90,7 +92,7 @@ export const ReportPage: React.FC = () => {
 
         <div className="report-toolbar-actions">
           <Button variant="outline" size="sm" icon={<Icon name="Printer" size={16} />} onClick={handlePrint}>
-            Print
+            {t.print}
           </Button>
 
           <Button
@@ -99,12 +101,12 @@ export const ReportPage: React.FC = () => {
             icon={<Icon name={shareCopied ? 'Check' : 'Share2'} size={16} />}
             onClick={handleShare}
           >
-            {shareCopied ? 'Link copied!' : 'Share with therapist'}
+            {shareCopied ? t.linkCopied : t.shareWithTherapist}
           </Button>
 
           <Link to="/dashboard">
             <Button variant="ghost" size="sm">
-              Dashboard
+              {t.goToDashboard}
             </Button>
           </Link>
         </div>
@@ -114,12 +116,12 @@ export const ReportPage: React.FC = () => {
       <div className="report-document-container">
         {/* Header */}
         <div className="report-header-section">
-          <p className="report-eyebrow">TRIORA REFLECTION SUMMARY</p>
-          <h1 className="report-main-title">Reflection Summary</h1>
+          <p className="report-eyebrow">TRIORA {(t.reportSummaryTitle || 'Conversation Summary').toUpperCase()}</p>
+          <h1 className="report-main-title">{t.reportSummaryTitle || 'Conversation Summary'}</h1>
           <div className="report-meta-row">
             <span>Date: {formattedDate}</span>
             <span>•</span>
-            <span>Private Intake Document</span>
+            <span>{t.privateIntakeDoc}</span>
           </div>
         </div>
 
@@ -127,75 +129,46 @@ export const ReportPage: React.FC = () => {
         <div className="report-disclaimer-box">
           <Icon name="Info" size={18} color="var(--sage)" />
           <span>
-            This summary was generated from your conversation. Review and edit it before sharing with your therapist.
+            {t.reportNotice}
           </span>
         </div>
 
         {/* Summary Overview */}
         <div className="report-section-block">
-          <p className="report-section-label">IN YOUR WORDS</p>
-          <h2 className="report-section-heading">Summary Overview</h2>
+          <p className="report-section-label">{t.inYourWords}</p>
+          <h2 className="report-section-heading">{t.summaryOverview}</h2>
           <p className="report-body-text">{report.summary}</p>
         </div>
 
-        {/* Key Themes */}
+        {/* Key Themes & Insights */}
         {report.keyThemes && report.keyThemes.length > 0 && (
           <div className="report-section-block">
-            <p className="report-section-label">WHAT FEELS MOST IMPORTANT</p>
-            <h2 className="report-section-heading">Key Themes</h2>
-            <ul className="statements-bullet-list">
-              {report.keyThemes.map((theme, idx) => (
-                <li key={idx} className="statement-bullet-item">
-                  {theme}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Emotional Context */}
-        {report.emotionalContext && (
-          <div className="report-section-block">
-            <p className="report-section-label">EMOTIONAL CONTEXT</p>
-            <h2 className="report-section-heading">Emotional Themes</h2>
-            <p className="report-body-text">{report.emotionalContext}</p>
-            <div className="theme-tags-list">
-              {report.concerns?.map((concern, idx) => (
-                <span key={idx} className="theme-pill-tag">
-                  {concern}
-                </span>
+            <h2 className="report-section-heading">Key Themes & Context</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+              {report.keyThemes.map((theme: string, idx: number) => (
+                <div key={idx} style={{ padding: '0.85rem 1rem', backgroundColor: 'var(--paper)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--line)' }}>
+                  <p style={{ fontSize: '0.95rem', color: 'var(--ink)', fontWeight: 500 }}>• {theme}</p>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Context & Patterns */}
-        {report.conversationOverview && (
+        {/* Action Items / Concerns */}
+        {report.concerns && report.concerns.length > 0 && (
           <div className="report-section-block">
-            <p className="report-section-label">CONTEXT AND PATTERNS</p>
-            <h2 className="report-section-heading">Context & Background</h2>
-            <p className="report-body-text">{report.conversationOverview}</p>
-          </div>
-        )}
-
-        {/* Important Statements */}
-        {report.importantStatements && report.importantStatements.length > 0 && (
-          <div className="report-section-block">
-            <p className="report-section-label">WHAT YOU HOPE TO GET FROM THERAPY</p>
-            <h2 className="report-section-heading">Reflective Statements</h2>
-            <ul className="statements-bullet-list">
-              {report.importantStatements.map((stmt, idx) => (
-                <li key={idx} className="statement-bullet-item">
-                  "{stmt}"
-                </li>
+            <h2 className="report-section-heading">Points for Your Therapist</h2>
+            <ul style={{ paddingLeft: '1.25rem', marginTop: '0.75rem', color: 'var(--ink)' }}>
+              {report.concerns.map((item: string, idx: number) => (
+                <li key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.95rem' }}>{item}</li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Safety Note */}
-        <div className="safety-notice-card">
-          <strong style={{ color: 'var(--ink)' }}>Safety & Clinical Notice:</strong> This summary is a non-clinical preparation document generated from self-reported reflection. It is not a diagnostic assessment, psychological evaluation, or medical advice.
+        {/* Notice */}
+        <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid var(--line)', fontSize: '0.8rem', color: 'var(--muted)' }}>
+          <strong style={{ color: 'var(--ink)' }}>Safety & Clinical Notice:</strong> This summary is a non-clinical preparation document generated from self-reported input. It is not a diagnostic assessment, psychological evaluation, or medical advice.
         </div>
       </div>
     </div>

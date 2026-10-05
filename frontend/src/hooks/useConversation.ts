@@ -22,9 +22,14 @@ export type ConversationState =
   | 'ERROR'
   | 'completed';
 
-const WS_BASE_URL =
-  import.meta.env.VITE_WS_URL ||
-  'ws://localhost:5000/ws/conversation';
+const getWsBaseUrl = () => {
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}/ws/conversation`;
+  }
+  return 'ws://localhost:5000/ws/conversation';
+};
 
 export function useConversation(
   sessionId: string | null,
@@ -168,6 +173,9 @@ export function useConversation(
             '[WS] AI response:',
             data.text
           );
+          console.log('[Reflection] Backend response:', data);
+          console.log('[Reflection] Next question:', data.text);
+          console.log('[Reflection] TTS starting');
 
           // NOW the request is actually finished.
           isRequestInFlightRef.current = false;
@@ -293,7 +301,7 @@ export function useConversation(
     setStatus('STARTING');
 
     const wsUrl =
-      `${WS_BASE_URL}?token=${encodeURIComponent(token)}`;
+      `${getWsBaseUrl()}?token=${encodeURIComponent(token)}`;
 
     const ws = new WebSocket(wsUrl);
 
@@ -575,11 +583,14 @@ export function useConversation(
           false;
 
         const data = res.data;
+        console.log('[Reflection] Backend response:', res);
 
         if (
           res.success &&
           data
         ) {
+          console.log('[Reflection] Next question:', data.question);
+          console.log('[Reflection] TTS starting');
 
           if (
             data.action === 'complete'

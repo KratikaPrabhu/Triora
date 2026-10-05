@@ -4,9 +4,12 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
+import { useLanguage } from '../context/LanguageContext';
 import '../styles/landing.css';
 
 export const LandingPage: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="landing-container">
       <Header />
@@ -14,36 +17,36 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section className="hero-section">
         <div>
-          <span className="hero-eyebrow">A calmer first step</span>
+          <span className="hero-eyebrow">{t.heroEyebrow}</span>
           <h1 className="hero-title">
-            Find the words <br />
-            <span className="editorial-italic">before therapy.</span>
+            {t.heroTitleLine1} <br />
+            <span className="editorial-italic">{t.heroTitleLine2}</span>
           </h1>
           <p className="hero-subtitle">
-            A private, voice-first reflection that helps you understand what you’re feeling—and gives your therapist a clearer place to begin.
+            {t.heroSubtitle}
           </p>
           <div className="hero-ctas">
             <Link to="/signup">
-              <Button size="lg" variant="primary">Start a private reflection</Button>
+              <Button size="lg" variant="primary">{t.startConversation}</Button>
             </Link>
             <a href="#how-it-works">
               <Button size="lg" variant="outline" icon={<Icon name="PlayCircle" size={20} />}>
-                See how it works
+                {t.seeHowItWorks}
               </Button>
             </a>
           </div>
           <div className="hero-trust-indicators">
             <div className="trust-item">
               <Icon name="ShieldCheck" size={16} color="var(--sage)" />
-              <span>Encrypted & private</span>
+              <span>{t.encryptedAndPrivate}</span>
             </div>
             <div className="trust-item">
               <Icon name="CheckCircle" size={16} color="var(--sage)" />
-              <span>No diagnosis</span>
+              <span>{t.noDiagnosis}</span>
             </div>
             <div className="trust-item">
               <Icon name="Lock" size={16} color="var(--sage)" />
-              <span>You control sharing</span>
+              <span>{t.youControlSharing}</span>
             </div>
           </div>
         </div>
@@ -55,7 +58,7 @@ export const LandingPage: React.FC = () => {
             <div className="hero-card-header">
               <div className="hero-card-status">
                 <span className="pulse-dot" />
-                <span>Reflection in progress</span>
+                <span>{t.conversationInProgress}</span>
               </div>
               <span className="hero-card-timer">08:42</span>
             </div>
@@ -71,7 +74,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             <div className="hero-card-question">
-              "What has been feeling heaviest lately?"
+              {t.heroCardQuestion}
             </div>
 
             <div className="hero-card-bottom">
@@ -79,8 +82,8 @@ export const LandingPage: React.FC = () => {
                 <Icon name="Mic" size={20} />
               </div>
               <div className="hero-listening-text">
-                <p>Listening</p>
-                <p>Speak naturally. There’s no right answer.</p>
+                <p>{t.listening}</p>
+                <p>{t.speakNaturally}</p>
               </div>
             </div>
           </div>
@@ -89,19 +92,19 @@ export const LandingPage: React.FC = () => {
 
       {/* Dark Statement Section */}
       <section className="statement-section">
-        <p className="statement-kicker">Starting therapy can feel overwhelming.</p>
+        <p className="statement-kicker">{t.statementKicker}</p>
         <h2 className="statement-heading">
-          Triora helps you arrive <br />
-          <span className="editorial-italic">already understood.</span>
+          {t.statementHeadingLine1} <br />
+          <span className="editorial-italic">{t.statementHeadingLine2}</span>
         </h2>
       </section>
 
       {/* How It Works Section */}
       <section id="how-it-works" className="how-it-works-section">
-        <p className="section-eyebrow">HOW IT WORKS</p>
+        <p className="section-eyebrow">{t.howItWorksEyebrow}</p>
         <h2 className="section-title">
-          Three gentle steps. <br />
-          <span className="editorial-italic">One clearer beginning.</span>
+          {t.howItWorksTitleLine1} <br />
+          <span className="editorial-italic">{t.howItWorksTitleLine2}</span>
         </h2>
 
         <div className="steps-grid">
@@ -110,9 +113,9 @@ export const LandingPage: React.FC = () => {
             <div className="step-icon-circle">
               <Icon name="Volume2" size={24} />
             </div>
-            <h3 className="step-title">Speak freely</h3>
+            <h3 className="step-title">{t.step1Title}</h3>
             <p className="step-desc">
-              Have an open-ended voice conversation in the language that feels most natural.
+              {t.step1Desc}
             </p>
           </div>
 
@@ -121,9 +124,9 @@ export const LandingPage: React.FC = () => {
             <div className="step-icon-circle">
               <Icon name="Sparkles" size={24} />
             </div>
-            <h3 className="step-title">See the patterns</h3>
+            <h3 className="step-title">{t.step2Title}</h3>
             <p className="step-desc">
-              Triora organizes what you shared into themes, context, and what matters most to you.
+              {t.step2Desc}
             </p>
           </div>
 
@@ -132,9 +135,9 @@ export const LandingPage: React.FC = () => {
             <div className="step-icon-circle">
               <Icon name="Share2" size={24} />
             </div>
-            <h3 className="step-title">Share on your terms</h3>
+            <h3 className="step-title">{t.step3Title}</h3>
             <p className="step-desc">
-              Review your summary first. Download it or share it with your therapist when you’re ready.
+              {t.step3Desc}
             </p>
           </div>
         </div>
@@ -144,13 +147,13 @@ export const LandingPage: React.FC = () => {
       <section className="language-section">
         <div className="language-container">
           <div>
-            <p className="section-eyebrow">MULTILINGUAL REFLECTION</p>
+            <p className="section-eyebrow">{t.multilingualEyebrow}</p>
             <h2 className="section-title">
-              Your language. <br />
-              <span className="editorial-italic">Your pace. Your story.</span>
+              {t.multilingualTitleLine1} <br />
+              <span className="editorial-italic">{t.multilingualTitleLine2}</span>
             </h2>
             <p style={{ color: 'var(--muted)', fontSize: '1.05rem', lineHeight: 1.6 }}>
-              Expressing emotions is easier in the words closest to home. Triora supports eight Indian languages, with a patient listener that never rushes or interrupts.
+              {t.multilingualDesc}
             </p>
             <div className="lang-tags">
               <span className="lang-tag">English</span>
@@ -181,12 +184,12 @@ export const LandingPage: React.FC = () => {
 
       {/* Privacy Section */}
       <section id="privacy" className="privacy-section">
-        <p className="section-eyebrow">PRIVACY BY DESIGN</p>
+        <p className="section-eyebrow">{t.privacyEyebrow}</p>
         <h2 className="section-title">
-          Your story stays yours.
+          {t.privacyTitle}
         </h2>
         <p style={{ color: 'var(--muted)', fontSize: '1.05rem', maxWidth: '600px' }}>
-          Your reflections are encrypted. Nothing is shared without your action, and you can delete your data at any time.
+          {t.privacySubtitle}
         </p>
 
         <div className="privacy-grid">
@@ -194,9 +197,9 @@ export const LandingPage: React.FC = () => {
             <div className="privacy-icon">
               <Icon name="Lock" size={24} />
             </div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>Encrypted in transit and at rest</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t.privacyCard1Title}</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-              Industry-standard encryption guarantees that your private reflections remain strictly secure.
+              {t.privacyCard1Desc}
             </p>
           </div>
 
@@ -204,9 +207,9 @@ export const LandingPage: React.FC = () => {
             <div className="privacy-icon">
               <Icon name="Key" size={24} />
             </div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>Short-lived speech tokens</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t.privacyCard2Title}</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-              Audio processing uses temporary tokens that expire immediately after your reflection ends.
+              {t.privacyCard2Desc}
             </p>
           </div>
 
@@ -214,9 +217,9 @@ export const LandingPage: React.FC = () => {
             <div className="privacy-icon">
               <Icon name="ShieldCheck" size={24} />
             </div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>Clear consent before sharing</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t.privacyCard3Title}</h3>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-              Your summary is only accessible to you until you explicitly choose to export or send it to your therapist.
+              {t.privacyCard3Desc}
             </p>
           </div>
         </div>
@@ -225,12 +228,12 @@ export const LandingPage: React.FC = () => {
       {/* Final CTA */}
       <section className="final-cta-section">
         <h2 className="final-cta-heading">
-          Take the first step <br />
-          <span className="editorial-italic" style={{ color: 'var(--peach)' }}>in your own words.</span>
+          {t.finalCtaTitleLine1} <br />
+          <span className="editorial-italic" style={{ color: 'var(--peach)' }}>{t.finalCtaTitleLine2}</span>
         </h2>
-        <p className="final-cta-sub">About 10–15 minutes. Private by default.</p>
+        <p className="final-cta-sub">{t.finalCtaSub}</p>
         <Link to="/signup">
-          <Button variant="white" size="lg">Begin your reflection</Button>
+          <Button variant="white" size="lg">{t.beginConversation}</Button>
         </Link>
       </section>
 

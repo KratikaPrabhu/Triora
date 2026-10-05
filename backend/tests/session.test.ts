@@ -245,7 +245,6 @@ export async function runSessionTests(): Promise<boolean> {
     failedCount++;
   } finally {
     server.close();
-    await mongoose.disconnect();
     process.stdout.write(`\n--- SESSION TEST SUMMARY ---\nPassed: ${passedCount}\nFailed: ${failedCount}\n`);
     return failedCount === 0;
   }

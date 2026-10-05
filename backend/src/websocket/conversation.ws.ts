@@ -2,6 +2,7 @@ import { Server } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import url from 'url';
 import { verifyToken } from '../utils/jwt.util';
+import mongoose from 'mongoose';
 import User from '../models/user.model';
 import conversationService from '../services/conversation.service';
 import sessionService from '../services/session.service';
@@ -32,6 +33,13 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
       if (!token) {
         logger.warn('WebSocket connection rejected: No authentication token provided.');
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      if (mongoose.connection.readyState !== 1) {
+        logger.error('WebSocket connection rejected: Database is currently unavailable.');
+        socket.write('HTTP/1.1 503 Service Unavailable\r\n\r\n');
         socket.destroy();
         return;
       }

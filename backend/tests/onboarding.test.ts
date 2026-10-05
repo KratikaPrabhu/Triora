@@ -194,7 +194,6 @@ export async function runOnboardingTests(): Promise<boolean> {
     failedCount++;
   } finally {
     server.close();
-    await mongoose.disconnect();
     process.stdout.write(`\n--- ONBOARDING TEST SUMMARY ---\nPassed: ${passedCount}\nFailed: ${failedCount}\n`);
     return failedCount === 0;
   }

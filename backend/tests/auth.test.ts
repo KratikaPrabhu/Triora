@@ -228,7 +228,6 @@ export async function runAuthTests(): Promise<boolean> {
     failedCount++;
   } finally {
     server.close();
-    await mongoose.disconnect();
     process.stdout.write(`\n--- AUTH TEST SUMMARY ---\nPassed: ${passedCount}\nFailed: ${failedCount}\n`);
     return failedCount === 0;
   }

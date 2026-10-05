@@ -7,7 +7,7 @@ export function runHealthTest(): Promise<boolean> {
       const port = (server.address() as any).port;
       process.stdout.write(`Health test server running on port ${port}\n`);
 
-      http.get(`http://localhost:${port}/api/health`, (res) => {
+      http.get(`http://127.0.0.1:${port}/api/health`, (res) => {
         let data = '';
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
@@ -23,11 +23,11 @@ export function runHealthTest(): Promise<boolean> {
               process.stdout.write('✅ PASS: GET /api/health verification passed!\n');
               server.close(() => resolve(true));
             } else {
-              process.stderr.write('❌ FAIL: Response payload missing required fields or invalid status code.\n');
+              process.stderr.write(`❌ FAIL: Health check failed (Status ${res.statusCode}, data: ${data})\n`);
               server.close(() => resolve(false));
             }
           } catch (e) {
-            process.stderr.write(`❌ FAIL: Invalid JSON returned from health endpoint. ${e}\n`);
+            process.stderr.write(`❌ FAIL: Invalid JSON returned from health endpoint. ${e} (Data: ${data})\n`);
             server.close(() => resolve(false));
           }
         });

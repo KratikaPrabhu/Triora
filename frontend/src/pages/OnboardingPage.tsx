@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../context/LanguageContext';
 import '../styles/auth.css';
 
 const LANGUAGES = [
@@ -20,6 +21,7 @@ const LANGUAGES = [
 
 export const OnboardingPage: React.FC = () => {
   const { user, updateOnboarding } = useAuth();
+  const { setLanguage } = useLanguage();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
@@ -59,6 +61,7 @@ export const OnboardingPage: React.FC = () => {
       }
 
       setIsSubmitting(true);
+      setLanguage(selectedLanguage as any);
       const res = await updateOnboarding({
         preferredName: preferredName.trim(),
         preferredLanguage: selectedLanguage,
@@ -134,7 +137,7 @@ export const OnboardingPage: React.FC = () => {
             <p className="auth-kicker">SPEAK NATURALLY</p>
             <h1 className="auth-title">Which language feels most comfortable?</h1>
             <p className="auth-subtitle">
-              You can change this before every reflection.
+              You can change this before every conversation.
             </p>
 
             <div className="language-grid">

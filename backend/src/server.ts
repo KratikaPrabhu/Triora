@@ -7,7 +7,15 @@ import { initConversationWebSocket } from './websocket/conversation.ws';
 const PORT = env.PORT || 5000;
 
 async function startServer() {
-  await connectDB();
+  try {
+    await connectDB();
+    logger.info('[MongoDB] Connection confirmed before server startup.');
+  } catch (err: any) {
+    logger.error(`[Server] Startup aborted due to MongoDB connection failure: ${err.message}`);
+    if (env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  }
 
   const server = app.listen(PORT, () => {
     logger.info(`Server running in ${env.NODE_ENV} mode on port ${PORT}`);
@@ -33,4 +41,3 @@ async function startServer() {
 }
 
 startServer();
-
