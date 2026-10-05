@@ -53,7 +53,7 @@ export const ReportsListPage: React.FC = () => {
 
           {isLoading ? (
             <div style={{ padding: '2rem', display: 'flex', justifyContent: 'center' }}>
-              <Loading size="md" color="var(--green)" />
+              <Loading />
             </div>
           ) : sessions.length === 0 ? (
             <div className="empty-state-box">

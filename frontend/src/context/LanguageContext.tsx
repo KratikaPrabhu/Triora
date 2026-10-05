@@ -110,6 +110,11 @@ export interface Translations {
   shareWithTherapist?: string;
   linkCopied?: string;
   returnToDashboard?: string;
+  logoName?: string;
+  footerSlogan?: string;
+  terms?: string;
+  contact?: string;
+  footerDisclaimer?: string;
 }
 
 const TRANSLATIONS: Record<LanguageCode, Translations> = {
