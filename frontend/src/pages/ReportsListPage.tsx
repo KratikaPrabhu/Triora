@@ -78,16 +78,19 @@ export const ReportsListPage: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span className="status-badge">
-                        {sess.reportId || sess.status === 'completed' ? t.reportReady : t.inProgress}
-                      </span>
-                      {(sess.reportId || sess.status === 'completed') && (
-                        <Link to={`/report/${sess.reportId || sess._id}`}>
-                          <Button size="sm" variant="outline" icon={<Icon name="FileText" size={14} />}>
-                            {t.viewReport}
-                          </Button>
-                        </Link>
-                      )}
+                        {(sess.reportId || sess.status === 'completed') ? (
+                          <Link to={`/report/${sess.reportId || sess._id}`}>
+                            <Button size="sm" variant="outline" icon={<Icon name="FileText" size={14} />}>
+                              Download PDF
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Link to={`/session?id=${sess._id}`}>
+                            <Button size="sm" variant="primary" icon={<Icon name="Mic" size={14} />}>
+                              Resume Session
+                            </Button>
+                          </Link>
+                        )}
                     </div>
                   </div>
                 );

@@ -6,7 +6,7 @@ export interface ProcessMessageInput {
   userId: string;
   sessionId: string;
   userMessage: string;
-  status?: AnswerStatus;
+  status?: AnswerStatus | 'completed';
   voiceMetrics?: IVoiceMetrics;
 }
 
@@ -24,6 +24,27 @@ export class ConversationService {
     let session = await sessionService.getSessionById(userId, sessionId);
 
     // 2. Persist patient response to session transcript FIRST
+    
+    if (status === 'completed') {
+      const updatedSession = await sessionService.updateSession(userId, sessionId, {
+        status: 'completed'
+      });
+      return {
+        session: updatedSession,
+        aiResponse: {
+          action: 'complete',
+          reply: '',
+          metadata: {
+            intent: 'Session manually completed',
+            topic: 'N/A',
+            shouldContinue: false,
+            totalQuestions: session.transcript?.length || 0,
+            sessionEnded: true
+          }
+        }
+      };
+    }
+
     const userTranscriptItems: ISessionMessage[] = [];
     if (status === 'answered' && userMessage.trim()) {
       userTranscriptItems.push({

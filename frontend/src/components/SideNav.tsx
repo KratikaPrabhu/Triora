@@ -52,7 +52,7 @@ export const SideNav: React.FC = () => {
         </div>
         <nav className="sidebar-nav">
           <NavLink
-            to="/"
+            to="/dashboard"
             end
             className={({ isActive }: { isActive: boolean }) => `sidebar-link ${isActive ? 'active' : ''}`}
           >
@@ -60,13 +60,7 @@ export const SideNav: React.FC = () => {
             <span>{t.overview}</span>
           </NavLink>
 
-          <NavLink
-            to="/session"
-            className={({ isActive }: { isActive: boolean }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <Icon name="Mic" size={18} />
-            <span>{t.conversations}</span>
-          </NavLink>
+
 
           <NavLink
             to="/reports"

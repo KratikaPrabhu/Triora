@@ -38,8 +38,12 @@ export const Header: React.FC = () => {
       <header className="landing-header">
       <Logo linkTo="/" />
       <nav className="landing-nav">
-        <a href="#how-it-works" className="landing-nav-link">{t.howItWorks}</a>
-        <a href="#privacy" className="landing-nav-link">{t.privacy}</a>
+        <a href="#how-it-works">
+          <Button variant="outline">{t.howItWorks}</Button>
+        </a>
+        <a href="#privacy">
+          <Button variant="outline">{t.privacy}</Button>
+        </a>
 
         <div className="language-selector-wrapper" ref={dropdownRef}>
           <button

@@ -66,6 +66,30 @@ export const DashboardPage: React.FC = () => {
 
   const displayName = user?.profile?.preferredName || user?.name || 'User';
 
+  // Compute graph data (Last 7 Days)
+  const last7Days = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const chartData = last7Days.map(date => {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const count = sessions.filter(s => {
+      const sDate = new Date(s.createdAt);
+      return sDate >= date && sDate < nextDay;
+    }).length;
+    
+    return {
+      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      count
+    };
+  });
+
+  const maxCount = Math.max(1, ...chartData.map(d => d.count));
+
   return (
     <div className="dashboard-layout">
       <SideNav />
@@ -116,83 +140,91 @@ export const DashboardPage: React.FC = () => {
 
         {/* Grid Layout */}
         <div className="dashboard-grid">
-          {/* Recent Conversations */}
-          <div className="dashboard-card-box" id="reflections">
-            <div className="card-box-header">
-              <h3 className="card-box-title">{t.recentConversations}</h3>
-              {sessions.length > 0 && (
-                <span className="card-box-link">{t.viewAll} ({sessions.length})</span>
-              )}
-            </div>
-
-            {isLoading ? (
-              <Loading message={t.inProgress} />
-            ) : sessions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--muted)' }}>
-                <Icon name="MicOff" size={32} color="var(--sage)" style={{ marginBottom: '0.75rem' }} />
-                <p style={{ fontWeight: 600, color: 'var(--ink)' }}>{t.noConversationsYet}</p>
-                <p style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
-                  {t.whenYouStartSession}
-                </p>
-              </div>
-            ) : (
-              <div>
-                {sessions.map((sess) => {
-                  const sessDate = new Date(sess.createdAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  });
-
-                  return (
-                    <div key={sess._id} className="reflection-item-row">
-                      <div className="reflection-item-info">
-                        <p>{t.conversations} • {sess.language?.toUpperCase() || 'EN'}</p>
-                        <p>{sessDate} • Status: {sess.status}</p>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <span className="status-badge">
-                          {sess.reportId || sess.status === 'completed' ? t.reportReady : t.inProgress}
-                        </span>
-                        {(sess.reportId || sess.status === 'completed') && (
-                          <Link to={`/report/${sess.reportId || sess._id}`}>
-                            <Button size="sm" variant="outline" icon={<Icon name="FileText" size={14} />}>
-                              {t.viewReport}
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar / Appointment Card */}
-          <div className="dashboard-card-box" id="reports">
+          {/* Activity Graph */}
+          <div className="dashboard-card-box" id="graph">
             <div className="card-box-header">
               <h3 className="card-box-title" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {t.nextAppointment}
+                Activity Graph (Last 7 Days)
+              </h3>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '230px', marginTop: '2rem', padding: '0 1rem' }}>
+              {chartData.map((data, i) => {
+                const heightPercentage = Math.max(5, (data.count / maxCount) * 100);
+                return (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', width: '12%', height: '100%' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--green, #2C5F4B)', minHeight: '1.2rem' }}>
+                      {data.count > 0 ? data.count : ''}
+                    </div>
+                    <div 
+                      style={{ 
+                        width: '100%', 
+                        maxWidth: '40px',
+                        backgroundColor: data.count > 0 ? 'var(--green, #2C5F4B)' : 'var(--sage, #A3B8A8)', 
+                        height: `${heightPercentage}%`, 
+                        borderRadius: '4px 4px 0 0',
+                        transition: 'height 0.3s ease',
+                        opacity: data.count > 0 ? 1 : 0.3
+                      }} 
+                    />
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted, #6B7280)' }}>
+                      {data.label}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div style={{ width: '100%', textAlign: 'center', marginTop: '1.5rem', marginBottom: '0.25rem', fontSize: '1rem', color: 'var(--ink, #1A1C1B)', fontWeight: 600, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <Icon name="BarChart2" size={18} color="var(--green, #2C5F4B)" />
+              Number of conversations taken
+            </div>
+          </div>
+
+          {/* Statistics Card */}
+          <div className="dashboard-card-box" id="statistics">
+            <div className="card-box-header">
+              <h3 className="card-box-title" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {t.yourActivity || 'Your Activity'}
               </h3>
             </div>
 
-            <div className="appointment-empty-box">
-              <Icon name="Calendar" size={32} color="var(--sage)" style={{ marginBottom: '0.75rem' }} />
-              <p>{t.noAppointmentAdded}</p>
-              <p>{t.addDateToKeepPrep}</p>
-              <Button size="sm" variant="outline" disabled title="Appointment feature coming soon">
-                {t.addAppointment}
-              </Button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--surface-light, #F8FAF9)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ background: 'var(--surface, #FFFFFF)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}>
+                    <Icon name="Activity" size={20} color="var(--green, #2C5F4B)" />
+                  </div>
+                  <span style={{ fontWeight: 600, color: 'var(--ink, #1A1C1B)' }}>Total Sessions</span>
+                </div>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--green, #2C5F4B)' }}>{sessions.length}</span>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--surface-light, #F8FAF9)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ background: 'var(--surface, #FFFFFF)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}>
+                    <Icon name="FileText" size={20} color="var(--green, #2C5F4B)" />
+                  </div>
+                  <span style={{ fontWeight: 600, color: 'var(--ink, #1A1C1B)' }}>Completed Reports</span>
+                </div>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--green, #2C5F4B)' }}>
+                  {sessions.filter(s => s.status === 'completed' || s.reportId).length}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--surface-light, #F8FAF9)', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ background: 'var(--surface, #FFFFFF)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}>
+                    <Icon name="MessageCircle" size={20} color="var(--green, #2C5F4B)" />
+                  </div>
+                  <span style={{ fontWeight: 600, color: 'var(--ink, #1A1C1B)' }}>Voice Messages Sent</span>
+                </div>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--green, #2C5F4B)' }}>
+                  {sessions.reduce((acc, sess) => acc + (sess.transcript?.filter(m => m.role === 'user' && m.text?.trim()?.length > 0).length || 0), 0)}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Crisis Support Notice */}
-        <div className="crisis-banner">
-          <Icon name="HeartPulse" size={20} color="var(--sage)" />
-          <span>{t.crisisNotice}</span>
         </div>
       </main>
     </div>

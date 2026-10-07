@@ -142,14 +142,14 @@ export const SessionPage: React.FC = () => {
         </div>
         <div>
           <Link to="/dashboard">
-            <Button size="sm" variant="outline" style={{ borderRadius: 'var(--radius-full)', fontWeight: 600 }}>Save & exit</Button>
+            <Button size="sm" variant="outline" style={{ borderRadius: 'var(--radius-full)', fontWeight: 600 }}>{t.saveAndExit || 'Save & exit'}</Button>
           </Link>
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="session-main-stage">
-        {(speechError || errorState) && (
+        {(speechError || errorState) && !((speechError || errorState)?.includes('Azure')) && (
           <div className="session-error-banner">
             <Icon name="AlertCircle" size={16} />
             <span>{speechError || errorState}</span>
@@ -163,7 +163,7 @@ export const SessionPage: React.FC = () => {
         </div>
 
         <button className="tap-hear-btn">
-          <Icon name="Volume2" size={16} /> Tap to hear question
+          <Icon name="Volume2" size={16} /> {t.tapToHear || 'Tap to hear question'}
         </button>
 
         {/* Primary Interaction Area: Big Orb Button */}
@@ -180,10 +180,10 @@ export const SessionPage: React.FC = () => {
         
         <p className="mic-status-label">
           <Icon name="Mic" size={16} color="var(--muted)" />
-          Your turn — tap to speak
+          {t.yourTurnTap || 'Your turn — tap to speak'}
         </p>
         <p className="mic-hint-text">
-          Speak naturally. There's no rush.
+          {t.speakNaturally || "Speak naturally. There's no rush."}
         </p>
 
         {/* Waveform Visualizer */}
@@ -205,8 +205,8 @@ export const SessionPage: React.FC = () => {
         </div>
 
         <p className="simulated-disclaimer">
-          Reflective activity · simulated visualization.<br />
-          The visual trace is simulated and is not a medical measurement.
+          {t.reflectiveActivity || 'Reflective activity · simulated visualization.'}<br />
+          {t.visualTraceDisclaimer || 'The visual trace is simulated and is not a medical measurement.'}
         </p>
 
         {/* Live Transcript Display */}
@@ -218,7 +218,7 @@ export const SessionPage: React.FC = () => {
                 : (transcript ? (interimTranscript ? `${transcript} ${interimTranscript}` : transcript) : interimTranscript)
             }
             onChange={(e) => setManualText(e.target.value)}
-            placeholder="Or type your reflection here if you prefer not to speak..."
+            placeholder={t.typePlaceholder || 'Or type your reflection here if you prefer not to speak...'}
             style={{
               width: '100%',
               border: 'none',
@@ -242,8 +242,8 @@ export const SessionPage: React.FC = () => {
 
         {/* Finish button */}
         <div className="session-finish-btn-row">
-          <Button style={{ backgroundColor: 'var(--sage-light)', color: 'var(--green)', borderRadius: 'var(--radius-full)', fontWeight: 600 }} onClick={handleCompleteSession}>
-            {t.finishAndSummary}
+          <Button variant="primary" size="lg" style={{ borderRadius: 'var(--radius-full)', fontWeight: 600 }} onClick={handleCompleteSession}>
+            {t.finishAndSummary || 'Finish & generate summary'}
           </Button>
         </div>
       </main>
