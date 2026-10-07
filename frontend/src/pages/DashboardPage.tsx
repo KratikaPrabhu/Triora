@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SideNav } from '../components/SideNav';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
-import { Loading } from '../components/Loading';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,7 +16,6 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,10 +23,8 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   const fetchSessions = async () => {
-    setIsLoading(true);
     setError(null);
     const res = await sessionService.getSessions();
-    setIsLoading(false);
 
     if (res.success && res.data?.sessions) {
       setSessions(res.data.sessions);

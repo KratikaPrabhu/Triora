@@ -115,6 +115,12 @@ export interface Translations {
   terms?: string;
   contact?: string;
   footerDisclaimer?: string;
+  saveAndExit?: string;
+  tapToHear?: string;
+  yourTurnTap?: string;
+  reflectiveActivity?: string;
+  visualTraceDisclaimer?: string;
+  yourActivity?: string;
 }
 
 const TRANSLATIONS: Record<LanguageCode, Translations> = {
