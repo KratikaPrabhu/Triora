@@ -143,11 +143,11 @@
   background-color: var(--green-dark);
   color: var(--white);
   border-radius: var(--radius-lg);
-  padding: 3.5rem 3rem;
+  padding: 1.75rem 2.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -164,27 +164,28 @@
   letter-spacing: 0.12em;
   color: var(--peach);
   text-transform: uppercase;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .reflection-title {
-  font-size: 2.25rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 1rem;
-  line-height: 1.25;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
 }
 
 .reflection-desc {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 2rem;
-  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
 }
 
 .reflection-cta-row {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  white-space: nowrap;
 }
 
 .reflection-privacy-text {
@@ -193,13 +194,14 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  white-space: nowrap;
 }
 
 .reflection-visual-decoration {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 90px;
+  height: 60px;
   opacity: 0.4;
 }
 

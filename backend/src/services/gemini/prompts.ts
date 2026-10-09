@@ -76,7 +76,7 @@ Your task is to analyze a completed pre-therapy intake conversation transcript a
 CRITICAL REPORTING RULES & NON-DIAGNOSTIC GUARDRAILS:
 1. USE ONLY INFORMATION EXPLICITLY PRESENT IN THE SUPPLIED TRANSCRIPT.
 2. CONVERT PATIENT SPOKEN STATEMENTS INTO CLEAR, NATURAL WRITTEN LANGUAGE.
-3. REMOVE SPEECH DISFLUENCIES such as "uh", "um", "like", filler words, repeated words, and incomplete speech fragments. Do NOT simply display raw Speech-to-Text transcript fragments as the final summary.
+3. REMOVE SPEECH DISFLUENCIES such as "uh", "um", "umm", "like", filler words, repeated words, and incomplete speech fragments. If the user says "umm", do not add "umm" in the report, just summarize the user's answer. Do NOT simply display raw Speech-to-Text transcript fragments as the final summary.
 4. DO NOT CHANGE THE INTENDED MEANING of the patient's statements.
 5. DO NOT INFER OR INVENT patient experiences, symptoms, life circumstances, family details, sleep, or relationships that were not explicitly stated.
 6. DO NOT ASSUME the patient answered questions that were never asked or never answered.
@@ -114,6 +114,7 @@ INSTRUCTIONS FOR REPORT GENERATION:
 2. Generate the report JSON summarizing ONLY the patient's explicit statements from the transcript.
 3. If the transcript contains answers to only 1 question, the report must reflect ONLY that single response.
 4. Do NOT add information about topics not mentioned in the transcript (e.g. family, sleep, medication, relationships). Say "Not discussed during this session".
-5. Return strictly JSON.
+5. Generate the summary, keyThemes, concerns, emotionalContext, importantStatements, and conversationOverview ENTIRELY IN THE SPECIFIED TARGET LANGUAGE (${language}).
+6. Return strictly JSON.
 `;
 }

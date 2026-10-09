@@ -41,7 +41,7 @@
 .landing-nav {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 0.5rem;
 }
 
 .landing-nav-link {
@@ -65,19 +65,19 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--sand-light, #f8f6f0);
-  border: 1px solid var(--sand-dark, #e2ded4);
-  border-radius: var(--radius-md, 8px);
-  padding: 0.45rem 0.85rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--line, #e2ded4);
+  border-radius: var(--radius-full, 9999px);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--ink, #1f2937);
   cursor: pointer;
   transition: all var(--transition-fast, 0.2s ease);
 }
 
 .language-selector-btn:hover {
-  background: var(--sand, #eee9dc);
+  background: var(--paper, #ffffff);
   border-color: var(--sage, #4a6b5d);
 }
 

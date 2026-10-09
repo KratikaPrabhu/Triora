@@ -93,12 +93,17 @@ export class ConversationService {
     // 5. Update session status and append assistant response to transcript
     const newStatus = aiResponse.action === 'complete' ? 'completed' : (session.status === 'created' ? 'active' : session.status);
 
+    const currentTokens = session.metadata?.totalTokenUsage || 0;
+    const newTokens = aiResponse.metadata?.tokenUsage?.totalTokenCount || 0;
+
     const updatedSession = await sessionService.updateSession(userId, sessionId, {
       status: newStatus,
       transcript: aiTranscriptItems,
       metadata: {
+        ...session.metadata,
         lastIntent: aiResponse.metadata.intent,
-        lastTopic: aiResponse.metadata.topic
+        lastTopic: aiResponse.metadata.topic,
+        totalTokenUsage: currentTokens + newTokens
       }
     });
 

@@ -21,6 +21,11 @@ export interface ConversationEngineOutput {
     questionNumber?: number;
     totalQuestions: number;
     sessionEnded: boolean;
+    tokenUsage?: {
+      promptTokenCount: number;
+      candidatesTokenCount: number;
+      totalTokenCount: number;
+    };
   };
 }
 
@@ -276,6 +281,9 @@ export class ConversationEngine {
         const response: any = await Promise.race([generatePromise, timeoutPromise]);
         logger.info(`[Gemini] Request completed`);
         logger.info(`[Gemini] Response received`);
+        
+        const tokenUsage = response.usageMetadata || { promptTokenCount: 0, candidatesTokenCount: 0, totalTokenCount: 0 };
+        logger.info(`[Gemini] Token Usage - Prompt: ${tokenUsage.promptTokenCount}, Candidates: ${tokenUsage.candidatesTokenCount}, Total: ${tokenUsage.totalTokenCount}`);
 
         const rawText = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -300,7 +308,8 @@ export class ConversationEngine {
               shouldContinue: false,
               questionNumber: nextQuestionNum,
               totalQuestions: MAX_QUESTIONS,
-              sessionEnded: true
+              sessionEnded: true,
+              tokenUsage
             }
           };
         }
@@ -328,7 +337,8 @@ export class ConversationEngine {
             shouldContinue: true,
             questionNumber: nextQuestionNum,
             totalQuestions: MAX_QUESTIONS,
-            sessionEnded: false
+            sessionEnded: false,
+            tokenUsage
           }
         };
       } catch (err: any) {

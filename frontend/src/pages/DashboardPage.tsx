@@ -111,7 +111,7 @@ export const DashboardPage: React.FC = () => {
             <div className="reflection-cta-row">
               <Button
                 variant="white"
-                size="lg"
+                size="md"
                 icon={<Icon name="Mic" size={20} color="var(--green)" />}
                 onClick={handleStartReflection}
               >

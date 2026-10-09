@@ -595,7 +595,10 @@ export function useConversation(
           if (
             data.action === 'complete'
           ) {
-
+            setCurrentQuestion(data.question || '');
+            if (data.question) {
+              speakCurrentQuestion(data.question);
+            }
             setStatus('completed');
 
           } else {

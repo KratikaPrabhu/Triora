@@ -197,6 +197,16 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
 
               if (aiResponse.action === 'complete') {
                 await sessionService.updateSession(userIdStr, sessionId, { status: 'completed' });
+                // Emit the final message so the user hears it
+                sendEvent(ws, {
+                  type: 'assistant_message',
+                  sessionId,
+                  text: aiResponse.reply,
+                  action: aiResponse.action,
+                  metadata: aiResponse.metadata,
+                  timestamp: new Date().toISOString()
+                });
+                // Then signal session completion
                 sendEvent(ws, {
                   type: 'session_completed',
                   sessionId,

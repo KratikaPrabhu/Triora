@@ -9,6 +9,7 @@ import { useConversation } from '../hooks/useConversation';
 import { useLanguage } from '../context/LanguageContext';
 import { reportService } from '../services/reportService';
 import { sessionService } from '../services/sessionService';
+import { ttsService } from '../services/ttsService';
 import '../styles/session.css';
 
 export const SessionPage: React.FC = () => {
@@ -22,6 +23,7 @@ export const SessionPage: React.FC = () => {
   const [manualText, setManualText] = useState<string>('');
   const [generatingReport, setGeneratingReport] = useState<boolean>(false);
   const [errorState, setErrorState] = useState<string | null>(null);
+  const hasSpokenInitialRef = React.useRef(false);
 
   // Initialize or fetch session if id not in URL
   useEffect(() => {
@@ -64,10 +66,27 @@ export const SessionPage: React.FC = () => {
   const {
     status: convStatus,
     messages,
+    currentQuestion,
     sendMessage,
+    speakCurrentQuestion,
   } = useConversation(sessionId, language || 'en');
 
+  // Auto-play the first question when session becomes ready
+  useEffect(() => {
+    if (convStatus === 'WAITING_FOR_USER' && messages.length === 0 && !hasSpokenInitialRef.current) {
+      hasSpokenInitialRef.current = true;
+      speakCurrentQuestion(currentQuestion);
+    }
+  }, [convStatus, messages.length, currentQuestion, speakCurrentQuestion]);
+
+  useEffect(() => {
+    if (convStatus === 'completed' && !generatingReport) {
+      handleCompleteSession();
+    }
+  }, [convStatus]);
+
   const handleMicClick = () => {
+    ttsService.unlockAudio();
     if (isListening) {
       stopListening();
     } else {
@@ -127,9 +146,10 @@ export const SessionPage: React.FC = () => {
   }
 
   // Get the last AI message as the prompt.
-  const currentPrompt = messages.length > 0
-    ? messages[messages.length - 1].text
-    : t.sessionHeadline;
+  const assistantMessages = messages.filter(m => m.role === 'assistant');
+  const currentPrompt = assistantMessages.length > 0
+    ? assistantMessages[assistantMessages.length - 1].text
+    : currentQuestion;
 
   return (
     <div className="session-page-container">
@@ -162,7 +182,10 @@ export const SessionPage: React.FC = () => {
           <h1 className="session-main-question">"{currentPrompt}"</h1>
         </div>
 
-        <button className="tap-hear-btn">
+        <button className="tap-hear-btn" onClick={() => {
+          ttsService.unlockAudio();
+          speakCurrentQuestion(currentPrompt);
+        }}>
           <Icon name="Volume2" size={16} /> {t.tapToHear || 'Tap to hear question'}
         </button>
 

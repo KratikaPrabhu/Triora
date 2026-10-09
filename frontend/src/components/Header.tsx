@@ -10,6 +10,7 @@ export const Header: React.FC = () => {
   const { user, updateOnboarding } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,6 +21,26 @@ export const Header: React.FC = () => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['how-it-works', 'privacy'];
+      let current = '';
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= window.innerHeight / 2 && rect.bottom >= 100) {
+            current = section;
+          }
+        }
+      }
+      setActiveSection(current);
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleSelectLanguage = async (code: LanguageCode) => {
@@ -39,10 +60,10 @@ export const Header: React.FC = () => {
       <Logo linkTo="/" />
       <nav className="landing-nav">
         <a href="#how-it-works">
-          <Button variant="outline">{t.howItWorks}</Button>
+          <Button variant={activeSection === 'how-it-works' ? 'secondary' : 'outline'}>{t.howItWorks}</Button>
         </a>
         <a href="#privacy">
-          <Button variant="outline">{t.privacy}</Button>
+          <Button variant={activeSection === 'privacy' ? 'secondary' : 'outline'}>{t.privacy}</Button>
         </a>
 
         <div className="language-selector-wrapper" ref={dropdownRef}>
@@ -81,7 +102,9 @@ export const Header: React.FC = () => {
           </Link>
         ) : (
           <>
-            <Link to="/login" className="landing-nav-link">{t.logIn}</Link>
+            <Link to="/login">
+              <Button variant="outline">{t.logIn}</Button>
+            </Link>
             <Link to="/signup">
               <Button variant="primary">{t.getStarted}</Button>
             </Link>

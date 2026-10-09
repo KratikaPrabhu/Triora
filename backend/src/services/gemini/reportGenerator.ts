@@ -82,7 +82,7 @@ export class ReportGenerator {
       }
 
       const cleanedMsgs = userMsgs.map((msg) =>
-        msg.replace(/\b(uh|um|like)\b/gi, '').replace(/\s+/g, ' ').trim()
+        msg.replace(/\b(uh|um|umm|like)\b/gi, '').replace(/\s+/g, ' ').trim()
       );
 
       return {
