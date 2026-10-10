@@ -40,7 +40,7 @@ export class SpeechService {
     }
 
     // Issue Azure Speech authorization token when subscription key is present
-    const isMockMode = !env.AZURE_SPEECH_KEY || process.env.MOCK_MODE === 'true';
+    const isMockMode = !env.AZURE_SPEECH_KEY || env.MOCK_MODE;
     if (isMockMode) {
       logger.warn(`AZURE_SPEECH_KEY not set or MOCK_MODE active. Returning fallback token for language '${langObj.code}'`);
       return {

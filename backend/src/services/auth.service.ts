@@ -119,6 +119,7 @@ export class AuthService {
     const googlePayload = await verifyGoogleToken(token);
     const { sub: googleId, email, name } = googlePayload;
 
+    let isNewUser = false;
     let user = await User.findOne({
       $or: [{ googleId }, { email }]
     });
@@ -132,6 +133,7 @@ export class AuthService {
       }
       await user.save();
     } else {
+      isNewUser = true;
       user = await User.create({
         name: name || email.split('@')[0],
         email,
@@ -144,7 +146,8 @@ export class AuthService {
 
     return {
       token: jwtToken,
-      user: user.toJSON()
+      user: user.toJSON(),
+      isNewUser
     };
   }
 

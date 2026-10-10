@@ -53,7 +53,7 @@ export const authService = {
   async updateOnboarding(profileData: any): Promise<ApiResponse<any>> {
     return apiRequest<any>('/onboarding', {
       method: 'PATCH',
-      body: JSON.stringify({ profile: profileData }),
+      body: JSON.stringify(profileData),
     });
   },
 

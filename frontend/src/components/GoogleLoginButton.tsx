@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 interface GoogleLoginButtonProps {
-  onSuccess?: (user: any) => void;
+  onSuccess?: (user: any, isNewUser?: boolean) => void;
   onError?: (errorMessage: string) => void;
 }
 
@@ -38,7 +38,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       try {
         const res = await googleLogin(response.credential);
         if (res.success && res.user) {
-          if (onSuccess) onSuccess(res.user);
+          if (onSuccess) onSuccess(res.user, res.isNewUser);
         } else {
           const msg = "Google sign-in couldn't be completed. Please try again.";
           setErrorText(msg);
