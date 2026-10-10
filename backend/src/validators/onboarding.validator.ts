@@ -7,6 +7,7 @@ export const onboardingSchema = z.object({
   dateOfBirth: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: 'Invalid date of birth format'
   }).optional(),
+  gender: z.string().optional(),
   preferredLanguage: z.string().min(2).max(10).optional(),
   
   // Step 2: Background

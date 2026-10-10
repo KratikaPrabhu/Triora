@@ -76,7 +76,13 @@ export const SignupPage: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <GoogleLoginButton
-              onSuccess={() => navigate('/onboarding')}
+              onSuccess={(user) => {
+                if (user?.profile?.isOnboardingComplete) {
+                  navigate('/dashboard');
+                } else {
+                  navigate('/onboarding');
+                }
+              }}
               onError={(msg) => setError(msg)}
             />
           </div>

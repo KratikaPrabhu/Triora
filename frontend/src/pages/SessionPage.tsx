@@ -160,114 +160,120 @@ export const SessionPage: React.FC = () => {
           <Icon name="Mic" size={14} />
           <span>Your turn • Realtime</span>
         </div>
-        <div>
           <Link to="/dashboard">
-            <Button size="sm" variant="outline" style={{ borderRadius: 'var(--radius-full)', fontWeight: 600 }}>{t.saveAndExit || 'Save & exit'}</Button>
+            <Button size="sm" variant="outline">{t.saveAndExit || 'Save & exit'}</Button>
           </Link>
-        </div>
       </header>
 
       {/* Main Content Area */}
       <main className="session-main-stage">
         {(speechError || errorState) && !((speechError || errorState)?.includes('Azure')) && (
-          <div className="session-error-banner">
+          <div className="session-error-banner" style={{ position: 'absolute', top: '5rem', width: '100%', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
             <Icon name="AlertCircle" size={16} />
             <span>{speechError || errorState}</span>
           </div>
         )}
 
-        <div className="session-timer-display">{formatTimer(timerSeconds)}</div>
+        <div className="session-content-grid">
+          {/* Left Column */}
+          <div className="session-col-left">
+            <div className="session-timer-display">{formatTimer(timerSeconds)}</div>
 
-        <div className="session-headline-box">
-          <h1 className="session-main-question">"{currentPrompt}"</h1>
-        </div>
+            <div className="session-headline-box">
+              <h1 className="session-main-question">"{currentPrompt}"</h1>
+            </div>
 
-        <button className="tap-hear-btn" onClick={() => {
-          ttsService.unlockAudio();
-          speakCurrentQuestion(currentPrompt);
-        }}>
-          <Icon name="Volume2" size={16} /> {t.tapToHear || 'Tap to hear question'}
-        </button>
+            <button className="tap-hear-btn" onClick={() => {
+              ttsService.unlockAudio();
+              speakCurrentQuestion(currentPrompt);
+            }} style={{ marginBottom: '1.5rem' }}>
+              <Icon name="Volume2" size={16} /> {t.tapToHear || 'Tap to hear question'}
+            </button>
 
-        {/* Primary Interaction Area: Big Orb Button */}
-        <div className="mic-button-wrapper">
-          <button
-            type="button"
-            className={`mic-circle-btn ${isListening ? 'listening' : ''}`}
-            onClick={handleMicClick}
-            aria-label={isListening ? 'Stop recording' : 'Start recording'}
-          >
-            <Icon name={isListening ? 'Square' : 'Mic'} size={42} color="var(--white)" />
-          </button>
-        </div>
-        
-        <p className="mic-status-label">
-          <Icon name="Mic" size={16} color="var(--muted)" />
-          {t.yourTurnTap || 'Your turn — tap to speak'}
-        </p>
-        <p className="mic-hint-text">
-          {t.speakNaturally || "Speak naturally. There's no rush."}
-        </p>
-
-        {/* Waveform Visualizer */}
-        <div className="waveform-canvas-box">
-          <div className="waveform-bars-flex">
-            {[30, 45, 20, 60, 80, 50, 70, 40, 90, 65, 35, 55, 75, 25, 45, 30, 50, 20].map((defaultHeight, idx) => {
-              const dynamicHeight = isListening
-                ? Math.max(10, Math.min(50, (volumeLevel * (idx % 3 + 1)) / 2))
-                : defaultHeight / 2;
-              return (
-                <div
-                  key={idx}
-                  className="live-bar"
-                  style={{ height: `${dynamicHeight}px` }}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <p className="simulated-disclaimer">
-          {t.reflectiveActivity || 'Reflective activity · simulated visualization.'}<br />
-          {t.visualTraceDisclaimer || 'The visual trace is simulated and is not a medical measurement.'}
-        </p>
-
-        {/* Live Transcript Display */}
-        <div className="session-transcript-preview">
-          <textarea
-            value={
-              manualText
-                ? (interimTranscript ? `${manualText} ${interimTranscript}` : manualText)
-                : (transcript ? (interimTranscript ? `${transcript} ${interimTranscript}` : transcript) : interimTranscript)
-            }
-            onChange={(e) => setManualText(e.target.value)}
-            placeholder={t.typePlaceholder || 'Or type your reflection here if you prefer not to speak...'}
-            style={{
-              width: '100%',
-              border: 'none',
-              outline: 'none',
-              resize: 'none',
-              background: 'transparent',
-              fontFamily: 'inherit',
-              fontSize: '1rem',
-              color: 'var(--ink)',
-            }}
-            rows={2}
-          />
-          {(manualText || transcript || interimTranscript) && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-              <Button size="sm" variant="primary" onClick={handleSendResponse} disabled={convStatus === 'PROCESSING'}>
-                {t.sendConversation}
+            {/* Finish button */}
+            <div className="session-finish-btn-row">
+              <Button variant="primary" size="lg" onClick={handleCompleteSession}>
+                {t.finishAndSummary || 'Finish & generate summary'}
               </Button>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Finish button */}
-        <div className="session-finish-btn-row">
-          <Button variant="primary" size="lg" style={{ borderRadius: 'var(--radius-full)', fontWeight: 600 }} onClick={handleCompleteSession}>
-            {t.finishAndSummary || 'Finish & generate summary'}
-          </Button>
+          {/* Right Column */}
+          <div className="session-col-right">
+            {/* Primary Interaction Area: Big Orb Button */}
+            <div className="mic-button-wrapper">
+              <button
+                type="button"
+                className={`mic-circle-btn ${isListening ? 'listening' : ''}`}
+                onClick={handleMicClick}
+                aria-label={isListening ? 'Stop recording' : 'Start recording'}
+              >
+                <Icon name={isListening ? 'Square' : 'Mic'} size={42} color="var(--white)" />
+              </button>
+            </div>
+            
+            <p className="mic-status-label">
+              <Icon name="Mic" size={16} color="var(--muted)" />
+              {t.yourTurnTap || 'Your turn — tap to speak'}
+            </p>
+            <p className="mic-hint-text">
+              {t.speakNaturally || "Speak naturally. There's no rush."}
+            </p>
+
+            {/* Waveform Visualizer */}
+            <div className="waveform-canvas-box">
+              <div className="waveform-bars-flex">
+                {[30, 45, 20, 60, 80, 50, 70, 40, 90, 65, 35, 55, 75, 25, 45, 30, 50, 20].map((defaultHeight, idx) => {
+                  const dynamicHeight = isListening
+                    ? Math.max(10, Math.min(50, (volumeLevel * (idx % 3 + 1)) / 2))
+                    : defaultHeight / 2;
+                  return (
+                    <div
+                      key={idx}
+                      className="live-bar"
+                      style={{ height: `${dynamicHeight}px` }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            <p className="simulated-disclaimer">
+              {t.reflectiveActivity || 'Reflective activity · simulated visualization.'}<br />
+              {t.visualTraceDisclaimer || 'The visual trace is simulated and is not a medical measurement.'}
+            </p>
+
+            {/* Live Transcript Display */}
+            <div className="session-transcript-preview">
+              <textarea
+                value={
+                  manualText
+                    ? (interimTranscript ? `${manualText} ${interimTranscript}` : manualText)
+                    : (transcript ? (interimTranscript ? `${transcript} ${interimTranscript}` : transcript) : interimTranscript)
+                }
+                onChange={(e) => setManualText(e.target.value)}
+                placeholder={t.typePlaceholder || 'Or type your reflection here if you prefer not to speak...'}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  background: 'transparent',
+                  fontFamily: 'inherit',
+                  fontSize: '1rem',
+                  color: 'var(--ink)',
+                }}
+                rows={2}
+              />
+              {(manualText || transcript || interimTranscript) && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <Button size="sm" variant="primary" onClick={handleSendResponse} disabled={convStatus === 'PROCESSING'}>
+                    {t.sendConversation}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </main>
     </div>

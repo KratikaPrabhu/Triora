@@ -147,6 +147,19 @@ export class AuthService {
       user: user.toJSON()
     };
   }
+
+  async deleteAccount(userId: string) {
+    const user = await User.findById(userId);
+    if (!user) {
+      const error: AppError = new Error('User profile not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    return { message: 'Account deleted successfully' };
+  }
 }
 
 export default new AuthService();

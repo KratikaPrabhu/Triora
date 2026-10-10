@@ -15,6 +15,7 @@ export interface IUserProfile {
   bio: string;
   preferredName: string;
   dateOfBirth: Date | null;
+  gender: string;
   backgroundInfo: string;
   previousTherapyExperience: 'none' | 'some' | 'extensive' | 'prefer_not_to_say' | '';
   primaryGoals: string[];

@@ -12,6 +12,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { SessionPage } from './pages/SessionPage';
 import { ReportPage } from './pages/ReportPage';
 import { ReportsListPage } from './pages/ReportsListPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 import './styles/globals.css';
@@ -66,6 +67,14 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ReportsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

@@ -38,6 +38,7 @@ export class OnboardingService {
     const allowedKeys: (keyof IUserProfile)[] = [
       'preferredName',
       'dateOfBirth',
+      'gender',
       'preferredLanguage',
       'backgroundInfo',
       'previousTherapyExperience',

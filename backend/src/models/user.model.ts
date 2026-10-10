@@ -41,6 +41,7 @@ const userSchema = new Schema<IUserDocument>(
       // Step 1: Basic Information
       preferredName: { type: String, default: '' },
       dateOfBirth: { type: Date, default: null },
+      gender: { type: String, default: '' },
       // Step 2: Background
       backgroundInfo: { type: String, default: '' },
       previousTherapyExperience: {

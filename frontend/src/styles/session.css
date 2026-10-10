@@ -1,7 +1,8 @@
 /* SESSION PAGE STYLES */
 
 .session-page-container {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--paper);
   display: flex;
   flex-direction: column;
@@ -11,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 2.5rem;
   width: 100%;
 }
 
@@ -43,16 +44,42 @@
 }
 
 .session-main-stage {
-  max-width: 800px;
+  max-width: 1200px;
   width: 100%;
-  margin: 0 auto 4rem auto;
-  padding: 0 1.5rem;
+  margin: 0 auto;
+  padding: 1rem 2.5rem 2rem;
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.session-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.session-col-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.session-col-right {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  flex: 1;
-  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.4);
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.03);
+  border: 1px solid rgba(255,255,255,0.8);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 .session-timer-display {
@@ -71,27 +98,30 @@
 
 .session-headline-box {
   margin-bottom: 1rem;
+  max-height: 45vh;
+  overflow-y: auto;
+  padding-right: 1rem;
 }
 
 .session-main-question {
-  font-size: 2.25rem;
+  font-size: clamp(1.75rem, 4.5vh, 2.5rem);
   font-weight: 700;
   color: var(--ink);
   line-height: 1.35;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .tap-hear-btn {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  margin: 0 auto 3rem auto;
+  margin-bottom: 3rem;
 }
 
 .tap-hear-btn:hover {
@@ -108,8 +138,8 @@
 }
 
 .mic-circle-btn {
-  width: 110px;
-  height: 110px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   background-color: var(--green);
   color: var(--white);
@@ -159,15 +189,18 @@
 .waveform-canvas-box {
   width: 100%;
   max-width: 520px;
-  height: 70px;
+  height: 55px;
+  min-height: 55px;
+  max-height: 55px;
   background-color: var(--white);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  margin-top: 1.5rem;
+  border-radius: 12px;
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 1rem;
+  overflow: hidden;
 }
 
 .waveform-bars-flex {
@@ -194,16 +227,15 @@
 
 /* Transcript preview box */
 .session-transcript-preview {
-  margin-top: 2rem;
-  max-width: 600px;
+  margin-top: 1.5rem;
   width: 100%;
   background-color: var(--white);
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
   text-align: left;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border: 1px solid var(--line);
 }
 
 .session-finish-btn-row {
-  margin-top: 2.5rem;
+  margin-top: 0;
 }

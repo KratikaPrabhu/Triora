@@ -9,7 +9,7 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  googleLogin: (credential: string) => Promise<{ success: boolean; error?: string }>;
+  googleLogin: (credential: string) => Promise<{ success: boolean; error?: string; user?: User }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   updateOnboarding: (data: any) => Promise<{ success: boolean; error?: string }>;
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (res.success && res.data) {
       setUser(res.data.user);
       setToken(res.data.token);
-      return { success: true };
+      return { success: true, user: res.data.user };
     }
     return { success: false, error: res.error?.message || 'Google login failed.' };
   };

@@ -26,6 +26,8 @@ export const OnboardingPage: React.FC = () => {
 
   const [step, setStep] = useState(1);
   const [preferredName, setPreferredName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [consentAcknowledged, setConsentAcknowledged] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,17 @@ export const OnboardingPage: React.FC = () => {
         setPreferredName(user.profile.preferredName);
       } else if (user.name) {
         setPreferredName(user.name);
+      }
+      if (user.profile?.dateOfBirth) {
+        try {
+          const dob = new Date(user.profile.dateOfBirth);
+          if (!isNaN(dob.getTime())) {
+            setDateOfBirth(dob.toISOString().split('T')[0]);
+          }
+        } catch (e) {}
+      }
+      if ((user.profile as any)?.gender) {
+        setGender((user.profile as any).gender);
       }
       if (user.profile?.preferredLanguage) {
         setSelectedLanguage(user.profile.preferredLanguage);
@@ -62,14 +75,19 @@ export const OnboardingPage: React.FC = () => {
 
       setIsSubmitting(true);
       setLanguage(selectedLanguage as any);
-      const res = await updateOnboarding({
+      const payload: any = {
         preferredName: preferredName.trim(),
         preferredLanguage: selectedLanguage,
+        gender: gender.trim(),
         consentAcknowledged: true,
         termsAccepted: true,
         currentStep: 3,
         isOnboardingComplete: true,
-      });
+      };
+      if (dateOfBirth) {
+        payload.dateOfBirth = new Date(dateOfBirth).toISOString();
+      }
+      const res = await updateOnboarding(payload);
       setIsSubmitting(false);
 
       if (res.success) {
@@ -92,11 +110,17 @@ export const OnboardingPage: React.FC = () => {
   return (
     <div className="onboarding-page">
       <header className="onboarding-header">
-        <Logo linkTo="" />
-        <span className="onboarding-step-indicator">Step {step} of 3</span>
-        <Link to="/dashboard" style={{ fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 500 }}>
-          Save & exit
-        </Link>
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
+          <Logo linkTo="" />
+        </div>
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+          <span className="onboarding-step-indicator">Step {step} of 3</span>
+        </div>
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+          <Link to="/dashboard" style={{ fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 500 }}>
+            Save & exit
+          </Link>
+        </div>
       </header>
 
       <div className="onboarding-progress-bar-track">
@@ -111,10 +135,10 @@ export const OnboardingPage: React.FC = () => {
 
         {step === 1 && (
           <div>
-            <p className="auth-kicker">LET’S MAKE THIS YOURS</p>
-            <h1 className="auth-title">What should we call you?</h1>
+            <p className="auth-kicker">LET’S GET TO KNOW YOU</p>
+            <h1 className="auth-title">Tell us a bit about yourself.</h1>
             <p className="auth-subtitle">
-              This can be your first name, nickname, or anything that feels comfortable.
+              We use this information to personalize your experience.
             </p>
 
             <div className="form-group" style={{ marginTop: '2rem' }}>
@@ -128,6 +152,34 @@ export const OnboardingPage: React.FC = () => {
                 onChange={(e) => setPreferredName(e.target.value)}
                 autoFocus
               />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="dateOfBirth">Date of Birth</label>
+              <input
+                id="dateOfBirth"
+                type="date"
+                className="form-input"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="gender">Gender</label>
+              <select
+                id="gender"
+                className="form-input"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non-binary">Non-binary</option>
+                <option value="prefer-not-to-say">Prefer not to say</option>
+                <option value="other">Other</option>
+              </select>
             </div>
           </div>
         )}

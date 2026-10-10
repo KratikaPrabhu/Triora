@@ -41,3 +41,11 @@ export const googleAuth = asyncWrapper(async (req: Request, res: Response) => {
     data: result
   });
 });
+
+export const deleteAccount = asyncWrapper(async (req: Request, res: Response) => {
+  const result = await authService.deleteAccount(req.user!._id.toString());
+  res.status(200).json({
+    success: true,
+    data: result
+  });
+});

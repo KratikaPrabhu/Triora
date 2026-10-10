@@ -68,7 +68,13 @@ export const LoginPage: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <GoogleLoginButton
-              onSuccess={() => navigate('/dashboard')}
+              onSuccess={(user) => {
+                if (user?.profile?.isOnboardingComplete) {
+                  navigate('/dashboard');
+                } else {
+                  navigate('/onboarding');
+                }
+              }}
               onError={(msg) => setError(msg)}
             />
           </div>

@@ -29,5 +29,6 @@ router.post('/google', authLimiter, validateBody(googleAuthSchema), authControll
 // Protected endpoints
 router.get('/me', authenticateJWT, authController.getMe);
 router.patch('/profile', authenticateJWT, validateBody(updateProfileSchema), authController.updateProfile);
+router.delete('/me', authenticateJWT, authController.deleteAccount);
 
 export default router;

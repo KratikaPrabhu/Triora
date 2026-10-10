@@ -532,9 +532,20 @@ export function useConversation(
       setStatus('PROCESSING');
 
       // ------------------------------------------
+      // Fallback Timeout for Stuck Requests
+      // ------------------------------------------
+      setTimeout(() => {
+        if (isRequestInFlightRef.current) {
+          console.error('[WS] Request timed out after 20 seconds. Clearing stuck state.');
+          isRequestInFlightRef.current = false;
+          setErrorMessage("We're experiencing delays connecting to the AI. Please try sending your response again.");
+          setStatus('ERROR');
+        }
+      }, 20000);
+
+      // ------------------------------------------
       // WebSocket ONLY
       // ------------------------------------------
-
       const ws = wsRef.current;
 
       if (

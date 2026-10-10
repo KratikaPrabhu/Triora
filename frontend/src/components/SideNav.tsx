@@ -1,36 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
 import { Icon } from './Icon';
 import { useAuth } from '../hooks/useAuth';
-import { useLanguage, LANGUAGES, type LanguageCode } from '../context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export const SideNav: React.FC = () => {
-  const { user, logout, updateOnboarding } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user, logout } = useAuth();
+  const { t } = useLanguage();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelectLanguage = async (code: LanguageCode) => {
-    setLanguage(code);
-    setIsOpen(false);
-
-    if (user) {
-      await updateOnboarding({ preferredLanguage: code });
-    }
-  };
-
-  const currentLangObj = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0];
 
   const getInitials = (name?: string) => {
     if (!name) return 'T';
@@ -71,58 +62,28 @@ export const SideNav: React.FC = () => {
           </NavLink>
         </nav>
 
-        {/* Sidebar Language Dropdown */}
-        <div style={{ marginTop: '1.5rem', padding: '0 0.5rem' }}>
-          <div className="language-selector-wrapper" ref={dropdownRef} style={{ width: '100%' }}>
-            <button
-              type="button"
-              className="language-selector-btn"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-expanded={isOpen}
-              aria-label="Select language"
-              style={{ width: '100%', justifyContent: 'space-between' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Icon name="Globe" size={16} />
-                <span>{currentLangObj.native}</span>
-              </div>
-              <Icon name="ChevronDown" size={14} className={`chevron-icon ${isOpen ? 'open' : ''}`} />
-            </button>
-
-            {isOpen && (
-              <div className="language-dropdown-menu" style={{ left: 0, right: 0, width: '100%' }}>
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.code}
-                    type="button"
-                    className={`language-dropdown-item ${language === lang.code ? 'active' : ''}`}
-                    onClick={() => handleSelectLanguage(lang.code)}
-                  >
-                    <span className="lang-native">{lang.native}</span>
-                    <span className="lang-name">{lang.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
-      <div className="sidebar-user-footer">
-        <div className="user-info-row">
-          <div className="user-avatar">{getInitials(displayName)}</div>
-          <div className="user-details">
-            <p>{displayName}</p>
-            <p>Patient account</p>
+      <div className="sidebar-user-footer" ref={menuRef} style={{ position: 'relative' }}>
+        {isMenuOpen && (
+          <div style={{ position: 'absolute', bottom: 'calc(100% + 0.5rem)', left: 0, right: 0, backgroundColor: 'var(--white)', border: '1px solid var(--line)', borderRadius: 'var(--radius-md)', padding: '0.5rem', boxShadow: 'var(--shadow-md)', zIndex: 50 }}>
+            <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink)', fontSize: '0.95rem', borderRadius: 'var(--radius-sm)' }}>
+              <Icon name="User" size={16} /> View Profile
+            </button>
+            <button onClick={() => { logout(); setIsMenuOpen(false); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink)', fontSize: '0.95rem', borderRadius: 'var(--radius-sm)' }}>
+              <Icon name="LogOut" size={16} /> Log Out
+            </button>
           </div>
-        </div>
-        <button
-          onClick={logout}
-          className="logout-btn"
-          title="Log out"
-          aria-label="Log out"
-        >
-          <Icon name="LogOut" size={18} />
+        )}
+        <button onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <div className="user-info-row" style={{ margin: 0 }}>
+            <div className="user-avatar">{getInitials(displayName)}</div>
+            <div className="user-details" style={{ textAlign: 'left' }}>
+              <p>{displayName}</p>
+              <p>Patient account</p>
+            </div>
+          </div>
+          <Icon name="ChevronUp" size={16} color="var(--muted)" />
         </button>
       </div>
     </aside>

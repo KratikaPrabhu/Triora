@@ -6,6 +6,7 @@ export interface UserProfile {
   bio?: string;
   preferredName?: string;
   dateOfBirth?: string | null;
+  gender?: string;
   backgroundInfo?: string;
   previousTherapyExperience?: 'none' | 'some' | 'extensive' | 'prefer_not_to_say' | '';
   primaryGoals?: string[];

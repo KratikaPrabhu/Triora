@@ -101,41 +101,50 @@ export const DashboardPage: React.FC = () => {
 
         {error && <ErrorMessage message={error} onRetry={fetchSessions} />}
 
-        {/* Start Conversation Large Dark Green Card */}
-        <section className="reflection-start-card">
-          <div className="reflection-start-content">
-            <p className="reflection-kicker">{t.privateSpaceToTalk}</p>
-            <h2 className="reflection-title">{t.whatsOnYourMind}</h2>
-            <p className="reflection-desc">{t.speakFreely1015}</p>
+        <div className="dashboard-grid">
+          {/* Start Conversation Large Dark Green Card */}
+          <section className="reflection-start-card" style={{ marginBottom: 0 }}>
+            <div className="reflection-start-content">
+              <p className="reflection-kicker">{t.privateSpaceToTalk}</p>
+              <h2 className="reflection-title">{t.whatsOnYourMind}</h2>
+              <p className="reflection-desc">{t.speakFreely1015}</p>
 
-            <div className="reflection-cta-row">
-              <Button
-                variant="white"
-                size="md"
-                icon={<Icon name="Mic" size={20} color="var(--green)" />}
-                onClick={handleStartReflection}
-              >
-                {t.startConversation}
-              </Button>
-              <div className="reflection-privacy-text">
-                <Icon name="Lock" size={16} />
-                <span>{t.nothingSharedWithoutYou}</span>
+              <div className="reflection-cta-row">
+                <Button
+                  variant="white"
+                  size="md"
+                  icon={<Icon name="Mic" size={20} color="var(--green)" />}
+                  onClick={handleStartReflection}
+                >
+                  {t.startConversation}
+                </Button>
+                <div className="reflection-privacy-text">
+                  <div style={{ flexShrink: 0 }}><Icon name="Lock" size={16} /></div>
+                  <span>{t.nothingSharedWithoutYou}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="reflection-visual-decoration">
-            <div className="deco-bar" style={{ height: '40px' }} />
-            <div className="deco-bar" style={{ height: '70px' }} />
-            <div className="deco-bar" style={{ height: '50px' }} />
-            <div className="deco-bar" style={{ height: '85px' }} />
-            <div className="deco-bar" style={{ height: '30px' }} />
-            <div className="deco-bar" style={{ height: '60px' }} />
-          </div>
-        </section>
+            <div className="reflection-bottom-tip">
+              <div className="tip-icon">
+                <Icon name="Heart" size={18} color="var(--peach)" />
+              </div>
+              <div className="tip-content">
+                <span className="tip-title">Preparation Tip</span>
+                <p>Focus on how you've been feeling physically this week. Small details give great context to your therapist.</p>
+              </div>
+            </div>
 
-        {/* Grid Layout */}
-        <div className="dashboard-grid">
+            <div className="reflection-visual-decoration">
+              <div className="deco-bar" style={{ height: '60px' }} />
+              <div className="deco-bar" style={{ height: '110px' }} />
+              <div className="deco-bar" style={{ height: '80px' }} />
+              <div className="deco-bar" style={{ height: '140px' }} />
+              <div className="deco-bar" style={{ height: '50px' }} />
+              <div className="deco-bar" style={{ height: '90px' }} />
+            </div>
+          </section>
+
           {/* Activity Graph */}
           <div className="dashboard-card-box" id="graph">
             <div className="card-box-header">
@@ -143,8 +152,7 @@ export const DashboardPage: React.FC = () => {
                 Activity Graph (Last 7 Days)
               </h3>
             </div>
-            
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '230px', marginTop: '2rem', padding: '0 1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flex: 1, minHeight: 0, marginTop: '1rem', padding: '0 1rem' }}>
               {chartData.map((data, i) => {
                 const heightPercentage = Math.max(5, (data.count / maxCount) * 100);
                 return (
@@ -170,55 +178,9 @@ export const DashboardPage: React.FC = () => {
                 );
               })}
             </div>
-            
-            <div style={{ width: '100%', textAlign: 'center', marginTop: '1.5rem', marginBottom: '0.25rem', fontSize: '1rem', color: 'var(--ink, #1A1C1B)', fontWeight: 600, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '100%', textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem', color: 'var(--ink, #1A1C1B)', fontWeight: 600, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexShrink: 0 }}>
               <Icon name="BarChart2" size={18} color="var(--green, #2C5F4B)" />
               Number of conversations taken
-            </div>
-          </div>
-
-          {/* Statistics Card */}
-          <div className="dashboard-card-box" id="statistics">
-            <div className="card-box-header">
-              <h3 className="card-box-title" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {t.yourActivity || 'Your Activity'}
-              </h3>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--surface-light, #F8FAF9)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ background: 'var(--surface, #FFFFFF)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}>
-                    <Icon name="Activity" size={20} color="var(--green, #2C5F4B)" />
-                  </div>
-                  <span style={{ fontWeight: 600, color: 'var(--ink, #1A1C1B)' }}>Total Sessions</span>
-                </div>
-                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--green, #2C5F4B)' }}>{sessions.length}</span>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--surface-light, #F8FAF9)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ background: 'var(--surface, #FFFFFF)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}>
-                    <Icon name="FileText" size={20} color="var(--green, #2C5F4B)" />
-                  </div>
-                  <span style={{ fontWeight: 600, color: 'var(--ink, #1A1C1B)' }}>Completed Reports</span>
-                </div>
-                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--green, #2C5F4B)' }}>
-                  {sessions.filter(s => s.status === 'completed' || s.reportId).length}
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--surface-light, #F8FAF9)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ background: 'var(--surface, #FFFFFF)', padding: '0.5rem', borderRadius: '8px', display: 'flex' }}>
-                    <Icon name="MessageCircle" size={20} color="var(--green, #2C5F4B)" />
-                  </div>
-                  <span style={{ fontWeight: 600, color: 'var(--ink, #1A1C1B)' }}>Voice Messages Sent</span>
-                </div>
-                <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--green, #2C5F4B)' }}>
-                  {sessions.reduce((acc, sess) => acc + (sess.transcript?.filter(m => m.role === 'user' && m.text?.trim()?.length > 0).length || 0), 0)}
-                </span>
-              </div>
             </div>
           </div>
         </div>
