@@ -76,7 +76,7 @@ export const SignupPage: React.FC = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <GoogleLoginButton
-              onSuccess={(user, isNewUser) => {
+              onSuccess={(_, isNewUser) => {
                 if (isNewUser) {
                   navigate('/onboarding');
                 } else {
