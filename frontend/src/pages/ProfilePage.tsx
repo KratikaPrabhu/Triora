@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { SideNav } from '../components/SideNav';
 import { Icon } from '../components/Icon';
 import { Button } from '../components/Button';
@@ -10,8 +9,7 @@ import '../styles/dashboard.css';
 
 export const ProfilePage: React.FC = () => {
   const { user, logout, updateOnboarding } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
-  const navigate = useNavigate();
+  const { language, setLanguage } = useLanguage();
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
