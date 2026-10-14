@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SideNav } from '../components/SideNav';
-import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { useAuth } from '../hooks/useAuth';
@@ -17,6 +16,9 @@ export const DashboardPage: React.FC = () => {
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [graphMode, setGraphMode] = useState<'sessions' | 'messages'>('sessions');
+  const [dateRange, setDateRange] = useState<'7' | '30'>('7');
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
 
   useEffect(() => {
     fetchSessions();
@@ -49,138 +51,333 @@ export const DashboardPage: React.FC = () => {
 
   const getGreetingTime = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return t.goodMorning;
-    if (hour < 18) return t.goodAfternoon;
-    return t.goodEvening;
+    if (hour < 12) return t.goodMorning || 'Good morning';
+    if (hour < 18) return t.goodAfternoon || 'Good afternoon';
+    return t.goodEvening || 'Good evening';
   };
-
-  const formattedDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
 
   const displayName = user?.profile?.preferredName || user?.name || 'User';
 
-  // Compute graph data (Last 7 Days)
-  const last7Days = Array.from({ length: 7 }).map((_, i) => {
+  // Compute metrics based on dateRange (7 days vs 30 days)
+  const daysCount = parseInt(dateRange, 10);
+  const cutoffDate = useMemo(() => {
     const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
+    d.setDate(d.getDate() - (daysCount - 1));
     d.setHours(0, 0, 0, 0);
     return d;
-  });
+  }, [daysCount]);
 
-  const chartData = last7Days.map(date => {
-    const nextDay = new Date(date);
-    nextDay.setDate(nextDay.getDate() + 1);
-    const count = sessions.filter(s => {
-      const sDate = new Date(s.createdAt);
-      return sDate >= date && sDate < nextDay;
-    }).length;
-    
-    return {
-      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      count
-    };
-  });
+  const filteredSessions = useMemo(() => {
+    return sessions.filter(s => new Date(s.createdAt) >= cutoffDate);
+  }, [sessions, cutoffDate]);
 
-  const maxCount = Math.max(1, ...chartData.map(d => d.count));
+  const totalSessionsCount = filteredSessions.length;
+  const completedReportsCount = filteredSessions.filter(s => s.reportId || s.status === 'completed').length;
+  const voiceMessagesCount = filteredSessions.reduce((acc, s) => {
+    const userMsgs = (s.transcript || []).filter(m => m.role === 'user').length;
+    return acc + userMsgs;
+  }, 0);
+
+  // Compute daily graph data for Sun -> Sat of current / last 7 days
+  const last7Days = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      d.setHours(0, 0, 0, 0);
+      return d;
+    });
+  }, []);
+
+  const chartData = useMemo(() => {
+    return last7Days.map(date => {
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const daySessions = sessions.filter(s => {
+        const sDate = new Date(s.createdAt);
+        return sDate >= date && sDate < nextDay;
+      });
+
+      let count = 0;
+      if (graphMode === 'sessions') {
+        count = daySessions.length;
+      } else {
+        count = daySessions.reduce((acc, s) => {
+          return acc + (s.transcript || []).filter(m => m.role === 'user').length;
+        }, 0);
+      }
+
+      return {
+        label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        count
+      };
+    });
+  }, [last7Days, sessions, graphMode]);
+
+  const maxChartCount = Math.max(3, ...chartData.map(d => d.count));
 
   return (
-    <div className="dashboard-layout">
+    <div className="dashboard-layout dashboard-layout--fit">
       <SideNav />
 
-      <main className="dashboard-main">
-        <div className="dashboard-header-top">
-          <p className="dashboard-date">{formattedDate}</p>
-          <h1 className="dashboard-greeting">
-            {getGreetingTime()}, {displayName}.
-          </h1>
-          <p className="dashboard-subtext">{t.takeAMoment}</p>
-        </div>
+      <main className="dashboard-main dashboard-main--fit">
+        {/* Top Header Section with Greeting, Botanical accent, and Wellness Badge */}
+        <header className="dash-header">
+          <div className="dash-header-left">
+            <div className="dash-greeting-line">
+              <span className="dash-greeting-text">
+                {getGreetingTime()}, <strong className="dash-user-name">{displayName}</strong>
+              </span>
+              <span className="dash-leaf-accent" aria-hidden="true">🌿</span>
+            </div>
+            <p className="dash-supportive-sub">Take a moment. There’s no rush here.</p>
+          </div>
+
+          <div className="dash-header-right">
+            {/* Wellness Badge */}
+            <div className="wellness-badge">
+              <span className="wellness-badge-icon" aria-hidden="true">☀️</span>
+              <span className="wellness-badge-text">You're doing great</span>
+              <span className="wellness-badge-heart" aria-hidden="true">♡</span>
+            </div>
+
+            {/* Notification Bell */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                className="notification-bell-btn"
+                onClick={() => setShowNotificationPopup(!showNotificationPopup)}
+                aria-label="View notifications"
+                title="Notifications"
+              >
+                <Icon name="Bell" size={19} color="var(--forest-heading)" />
+                <span className="notification-dot" />
+              </button>
+
+              {showNotificationPopup && (
+                <div className="notification-popover">
+                  <div className="popover-header">
+                    <h4>Notifications</h4>
+                    <button onClick={() => setShowNotificationPopup(false)} className="popover-close">✕</button>
+                  </div>
+                  <div className="popover-body">
+                    <div className="popover-item">
+                      <p className="popover-item-title">Welcome to Triora</p>
+                      <p className="popover-item-time">A safe place to organize your thoughts before therapy.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
 
         {error && <ErrorMessage message={error} onRetry={fetchSessions} />}
 
-        <div className="dashboard-grid">
-          {/* Start Conversation Large Dark Green Card */}
-          <section className="reflection-start-card" style={{ marginBottom: 0 }}>
-            <div className="reflection-start-content">
-              <p className="reflection-kicker">{t.privateSpaceToTalk}</p>
-              <h2 className="reflection-title">{t.whatsOnYourMind}</h2>
-              <p className="reflection-desc">{t.speakFreely1015}</p>
+        {/* 2x2 Dashboard Grid:
+            Row 1: "What's been on your mind?" (left) + "Your well-being matters" (right)
+            Row 2: "Activity Graph (Last 7 Days)" (left) + "Your Activity" (right)
+        */}
+        <div className="dash-2x2-grid">
+          {/* Row 1, Col 1: Hero Conversation Card */}
+          <section className="dash-hero-card">
+            <div
+              className="dash-hero-artwork"
+              style={{
+                backgroundImage: `url('/images/triora-hero-landscape.png')`
+              }}
+              aria-hidden="true"
+            />
 
-              <div className="reflection-cta-row">
-                <Button
-                  variant="white"
-                  size="md"
-                  icon={<Icon name="Mic" size={20} color="var(--green)" />}
+            <div className="dash-hero-content">
+              <span className="dash-hero-eyebrow">A PRIVATE SPACE TO TALK</span>
+              <h1 className="dash-hero-heading">What’s been on your mind?</h1>
+              <p className="dash-hero-desc">
+                Speak freely for 10–15 minutes. Triora will listen and help organize what you share with your therapist to understand.
+              </p>
+
+              <div className="dash-hero-cta-row">
+                <button
+                  type="button"
+                  className="dash-hero-start-btn"
                   onClick={handleStartReflection}
                 >
-                  {t.startConversation}
-                </Button>
-                <div className="reflection-privacy-text">
-                  <div style={{ flexShrink: 0 }}><Icon name="Lock" size={16} /></div>
-                  <span>{t.nothingSharedWithoutYou}</span>
+                  <Icon name="Mic" size={17} color="#FFFFFF" />
+                  <span>Start conversation</span>
+                </button>
+
+                <div className="dash-hero-privacy">
+                  <Icon name="Lock" size={14} color="var(--forest-heading)" />
+                  <span>Nothing is shared</span>
                 </div>
               </div>
             </div>
+          </section>
 
-            <div className="reflection-bottom-tip">
-              <div className="tip-icon">
-                <Icon name="Heart" size={18} color="var(--peach)" />
+          {/* Row 1, Col 2: Well-being Card */}
+          <div className="dash-card dash-wellbeing-card">
+            <div
+              className="wellbeing-botanical-art"
+              style={{
+                backgroundImage: `url('/images/triora-botanical.png')`
+              }}
+              aria-hidden="true"
+            />
+
+            <div className="wellbeing-leaf-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M19.5 4.5c-7 0-12 5-12 12 7 0 12-5 12-12z"
+                  stroke="var(--forest-dark)"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M7.5 16.5L14 10"
+                  stroke="var(--forest-dark)"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            <h3 className="wellbeing-heading">Your well-being matters</h3>
+            <p className="wellbeing-body">
+              Your thoughts and feelings deserve to be heard. Take your time, one question at a time, and share what feels right for you.
+            </p>
+
+            <div className="wellbeing-divider" />
+
+            <p className="wellbeing-handwritten">
+              You are not alone <span className="heart-pink">♡</span>
+            </p>
+          </div>
+
+          {/* Row 2, Col 1: Activity Graph Card */}
+          <section className="dash-card dash-graph-card">
+            <div className="dash-card-header">
+              <div className="dash-card-title-group">
+                <div className="dash-icon-box">
+                  <Icon name="Mic" size={16} color="var(--forest-dark)" />
+                </div>
+                <h3 className="dash-card-title">Activity Graph (Last 7 Days)</h3>
               </div>
-              <div className="tip-content">
-                <span className="tip-title">Preparation Tip</span>
-                <p>Focus on how you've been feeling physically this week. Small details give great context to your therapist.</p>
+
+              {/* Segmented Controls */}
+              <div className="segmented-control" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={graphMode === 'sessions'}
+                  className={`segmented-btn ${graphMode === 'sessions' ? 'active' : ''}`}
+                  onClick={() => setGraphMode('sessions')}
+                >
+                  Sessions
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={graphMode === 'messages'}
+                  className={`segmented-btn ${graphMode === 'messages' ? 'active' : ''}`}
+                  onClick={() => setGraphMode('messages')}
+                >
+                  Messages
+                </button>
               </div>
             </div>
 
-            <div className="reflection-visual-decoration">
-              <div className="deco-bar" style={{ height: '60px' }} />
-              <div className="deco-bar" style={{ height: '110px' }} />
-              <div className="deco-bar" style={{ height: '80px' }} />
-              <div className="deco-bar" style={{ height: '140px' }} />
-              <div className="deco-bar" style={{ height: '50px' }} />
-              <div className="deco-bar" style={{ height: '90px' }} />
+            {/* Bar Chart Container */}
+            <div className="chart-wrapper">
+              <div className="chart-grid-lines" aria-hidden="true">
+                <div className="chart-grid-line" />
+                <div className="chart-grid-line" />
+                <div className="chart-grid-line" />
+              </div>
+
+              <div className="chart-bars-row">
+                {chartData.map((bar, idx) => {
+                  const heightPercent = bar.count > 0 ? Math.min(100, Math.max(16, (bar.count / maxChartCount) * 100)) : 6;
+                  return (
+                    <div key={idx} className="chart-col">
+                      <div className="chart-value-label">
+                        {bar.count > 0 ? bar.count : ''}
+                      </div>
+                      <div className="chart-bar-slot">
+                        <div
+                          className={`chart-bar-fill ${bar.count > 0 ? 'filled' : 'empty'}`}
+                          style={{ height: `${heightPercent}%` }}
+                          title={`${bar.label}: ${bar.count} ${graphMode}`}
+                        />
+                      </div>
+                      <div className="chart-x-label">{bar.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="dash-card-footer">
+              <Icon name="BarChart2" size={14} color="var(--text-muted)" />
+              <span>
+                {graphMode === 'sessions' ? 'Number of conversations taken' : 'Number of voice messages recorded'}
+              </span>
             </div>
           </section>
 
-          {/* Activity Graph */}
-          <div className="dashboard-card-box" id="graph">
-            <div className="card-box-header">
-              <h3 className="card-box-title" style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Activity Graph (Last 7 Days)
-              </h3>
+          {/* Row 2, Col 2: Your Activity Card */}
+          <div className="dash-card dash-activity-card">
+            <div className="dash-card-header">
+              <div className="dash-card-title-group">
+                <Icon name="Calendar" size={17} color="var(--forest-dark)" />
+                <h3 className="dash-card-title">Your Activity</h3>
+              </div>
+
+              {/* Date-range dropdown */}
+              <div className="date-select-wrapper">
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value as any)}
+                  className="date-select"
+                >
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+                <Icon name="ChevronDown" size={13} color="var(--text-muted)" className="date-select-chevron" />
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flex: 1, minHeight: 0, marginTop: '1rem', padding: '0 1rem' }}>
-              {chartData.map((data, i) => {
-                const heightPercentage = Math.max(5, (data.count / maxCount) * 100);
-                return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', width: '12%', height: '100%' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--green, #2C5F4B)', minHeight: '1.2rem' }}>
-                      {data.count > 0 ? data.count : ''}
-                    </div>
-                    <div 
-                      style={{ 
-                        width: '100%', 
-                        maxWidth: '40px',
-                        backgroundColor: data.count > 0 ? 'var(--green, #2C5F4B)' : 'var(--sage, #A3B8A8)', 
-                        height: `${heightPercentage}%`, 
-                        borderRadius: '4px 4px 0 0',
-                        transition: 'height 0.3s ease',
-                        opacity: data.count > 0 ? 1 : 0.3
-                      }} 
-                    />
-                    <div style={{ fontSize: '0.8rem', color: 'var(--muted, #6B7280)' }}>
-                      {data.label}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ width: '100%', textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem', color: 'var(--ink, #1A1C1B)', fontWeight: 600, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexShrink: 0 }}>
-              <Icon name="BarChart2" size={18} color="var(--green, #2C5F4B)" />
-              Number of conversations taken
+
+            {/* 3 Metric Rows */}
+            <div className="metric-rows-list">
+              <div className="metric-row">
+                <div className="metric-row-icon pulse-icon">
+                  <Icon name="Activity" size={17} color="var(--forest-dark)" />
+                </div>
+                <div className="metric-row-content">
+                  <span className="metric-row-label">Total Sessions</span>
+                  <span className="metric-row-val">{totalSessionsCount}</span>
+                </div>
+              </div>
+
+              <div className="metric-row">
+                <div className="metric-row-icon doc-icon">
+                  <Icon name="FileText" size={17} color="var(--forest-dark)" />
+                </div>
+                <div className="metric-row-content">
+                  <span className="metric-row-label">Completed Reports</span>
+                  <span className="metric-row-val">{completedReportsCount}</span>
+                </div>
+              </div>
+
+              <div className="metric-row">
+                <div className="metric-row-icon msg-icon">
+                  <Icon name="MessageSquare" size={17} color="var(--forest-dark)" />
+                </div>
+                <div className="metric-row-content">
+                  <span className="metric-row-label">Voice Messages Sent</span>
+                  <span className="metric-row-val">{voiceMessagesCount}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -188,3 +385,4 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+

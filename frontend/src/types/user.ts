@@ -8,7 +8,9 @@ export interface UserProfile {
   dateOfBirth?: string | null;
   gender?: string;
   backgroundInfo?: string;
-  previousTherapyExperience?: 'none' | 'some' | 'extensive' | 'prefer_not_to_say' | '';
+  previousTherapyExperience?: 'none' | 'some' | 'extensive' | 'prefer_not_to_say' | string;
+  underProfessionalCare?: 'yes' | 'no' | 'previously' | 'prefer_not_to_say' | string;
+  howDidYouHearAboutUs?: string;
   primaryGoals?: string[];
   communicationPreference?: 'voice' | 'text' | 'both' | '';
   consentAcknowledged?: boolean;

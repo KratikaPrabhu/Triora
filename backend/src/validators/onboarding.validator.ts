@@ -13,6 +13,8 @@ export const onboardingSchema = z.object({
   // Step 2: Background
   backgroundInfo: z.string().max(2000).optional(),
   previousTherapyExperience: z.enum(['none', 'some', 'extensive', 'prefer_not_to_say', '']).optional(),
+  underProfessionalCare: z.string().optional(),
+  howDidYouHearAboutUs: z.string().optional(),
   primaryGoals: z.array(z.string()).optional(),
 
   // Step 3: Preferences & Consents

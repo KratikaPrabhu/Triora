@@ -1,0 +1,415 @@
+/* ========================================================
+   TRIORA AI REPORTS PAGE STYLES
+   Directly integrates with .dashboard-layout and <SideNav />
+   Palette:
+     Deep teal: #0B4D46
+     Dark forest green: #123F39
+     Warm cream: #FAF8F3 / #FAF9F5
+     Pale sage: #E5F0E9
+     Soft mint: #D6E9DD
+     Secondary text: #647C83
+======================================================== */
+
+.reports-page-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 1.25rem 2.5rem 5rem 2.5rem;
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+}
+
+/* ========================================================
+   1. MAIN REPORTS HEADER SECTION (TOP ROW)
+======================================================== */
+.reports-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.reports-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+}
+
+.reports-header-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background-color: #E5F0E9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(11, 77, 70, 0.05);
+}
+
+.reports-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.reports-title {
+  font-size: 2.15rem;
+  font-weight: 700;
+  color: #123F39;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.15rem 0;
+  line-height: 1.15;
+}
+
+.reports-subtitle {
+  font-size: 0.95rem;
+  color: #647C83;
+  margin: 0;
+  font-weight: 400;
+}
+
+.reports-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ========================================================
+   2. RECENT CONVERSATIONS CARD (FULL WIDTH)
+======================================================== */
+.reports-conversations-card {
+  width: 100%;
+  max-width: 100%;
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  padding: 1.85rem 2.25rem;
+  border: 1px solid rgba(229, 240, 233, 0.9);
+  box-shadow: 0 4px 20px rgba(11, 77, 70, 0.035);
+  box-sizing: border-box;
+}
+
+.reports-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #123F39;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.5rem 0;
+}
+
+/* Compact Metadata Summary Row */
+.reports-meta-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #647C83;
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-bottom: 1.35rem;
+  flex-wrap: wrap;
+}
+
+.reports-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reports-meta-sep {
+  color: #D6E9DD;
+  font-weight: 300;
+  margin: 0 0.15rem;
+}
+
+.reports-meta-bullet {
+  color: #647C83;
+  font-size: 0.75rem;
+}
+
+.reports-meta-status-text {
+  color: #0B4D46;
+  font-weight: 600;
+}
+
+/* Conversation Rows List */
+.reports-rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reports-row-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.95rem 1.35rem;
+  background-color: #FFFFFF;
+  border: 1px solid #EAEFEA;
+  border-radius: 16px;
+  transition: all 160ms ease;
+  gap: 1rem;
+  box-sizing: border-box;
+}
+
+.reports-row-card:hover {
+  border-color: #D6E9DD;
+  background-color: #FAFBF9;
+  box-shadow: 0 3px 12px rgba(11, 77, 70, 0.045);
+  transform: translateY(-1px);
+}
+
+.reports-row-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.reports-row-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #E5F0E9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 150ms ease;
+}
+
+.reports-row-card:hover .reports-row-avatar {
+  background-color: #D6E9DD;
+}
+
+.reports-row-text-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.reports-row-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #123F39;
+  line-height: 1.3;
+}
+
+.reports-row-meta-line {
+  font-size: 0.82rem;
+  color: #647C83;
+  font-weight: 500;
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.reports-status-indicator {
+  font-weight: 600;
+}
+
+.reports-status-indicator.active {
+  color: #0B4D46;
+}
+
+.reports-status-indicator.completed {
+  color: #315F50;
+}
+
+.reports-status-indicator.created {
+  color: #647C83;
+}
+
+.reports-status-indicator.failed {
+  color: #C25450;
+}
+
+.reports-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* ========================================================
+   3. ACTION BUTTONS: RESUME SESSION vs DOWNLOAD PDF
+======================================================== */
+.reports-action-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* Resume Session Button: Deep Teal Solid Pill */
+.reports-resume-btn {
+  background-color: #0B4D46;
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-full, 9999px);
+  padding: 0.52rem 1.25rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 160ms ease;
+  box-shadow: 0 2px 6px rgba(11, 77, 70, 0.18);
+  white-space: nowrap;
+}
+
+.reports-resume-btn:hover {
+  background-color: #123F39;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(11, 77, 70, 0.28);
+}
+
+/* Download PDF Button: Clean Outlined Pill with Document Icon */
+.reports-download-btn {
+  background-color: #FFFFFF;
+  color: #0B4D46;
+  border: 1.5px solid #0B4D46;
+  border-radius: var(--radius-full, 9999px);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 160ms ease;
+  box-shadow: 0 1px 4px rgba(11, 77, 70, 0.06);
+  white-space: nowrap;
+}
+
+.reports-download-btn:hover {
+  background-color: #E5F0E9;
+  color: #123F39;
+  border-color: #123F39;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(11, 77, 70, 0.12);
+}
+
+.reports-row-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0B4D46;
+  text-decoration: none;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.reports-row-arrow-btn:hover {
+  transform: translateX(3px);
+  color: #123F39;
+  background-color: rgba(229, 240, 233, 0.5);
+}
+
+/* ========================================================
+   4. EMPTY & LOADING STATES
+======================================================== */
+.reports-empty-box {
+  padding: 3.5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.reports-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #E5F0E9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.reports-empty-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #123F39;
+  margin-bottom: 0.35rem;
+}
+
+.reports-empty-desc {
+  font-size: 0.92rem;
+  color: #647C83;
+  max-width: 420px;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.reports-loading-box {
+  padding: 3.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.reports-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #E5F0E9;
+  border-top-color: #0B4D46;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.reports-loading-text {
+  font-size: 0.92rem;
+  color: #647C83;
+  font-weight: 500;
+}
+
+/* ========================================================
+   5. RESPONSIVE DESIGN (TABLET & MOBILE)
+======================================================== */
+@media (max-width: 880px) {
+  .reports-page-main {
+    padding: 1.25rem 1.25rem 6rem 1.25rem;
+  }
+  .reports-conversations-card {
+    padding: 1.35rem 1.15rem;
+    border-radius: 16px;
+  }
+  .reports-top-bar {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 580px) {
+  .reports-row-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+  .reports-row-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .reports-action-link {
+    flex: 1;
+  }
+  .reports-resume-btn,
+  .reports-download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .reports-title {
+    font-size: 1.85rem;
+  }
+}

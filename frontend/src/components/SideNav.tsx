@@ -22,7 +22,6 @@ export const SideNav: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-
   const getInitials = (name?: string) => {
     if (!name) return 'T';
     return name
@@ -36,57 +35,131 @@ export const SideNav: React.FC = () => {
   const displayName = user?.profile?.preferredName || user?.name || 'User';
 
   return (
-    <aside className="sidebar">
-      <div>
-        <div className="sidebar-logo-area">
-          <Logo linkTo="/dashboard" />
-        </div>
-        <nav className="sidebar-nav">
-          <NavLink
-            to="/dashboard"
-            end
-            className={({ isActive }: { isActive: boolean }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <Icon name="LayoutDashboard" size={18} />
-            <span>{t.overview}</span>
-          </NavLink>
-
-
-
-          <NavLink
-            to="/reports"
-            className={({ isActive }: { isActive: boolean }) => `sidebar-link ${isActive ? 'active' : ''}`}
-          >
-            <Icon name="FileText" size={18} />
-            <span>{t.reports}</span>
-          </NavLink>
-        </nav>
-
-      </div>
-
-      <div className="sidebar-user-footer" ref={menuRef} style={{ position: 'relative' }}>
-        {isMenuOpen && (
-          <div style={{ position: 'absolute', bottom: 'calc(100% + 0.5rem)', left: 0, right: 0, backgroundColor: 'var(--white)', border: '1px solid var(--line)', borderRadius: 'var(--radius-md)', padding: '0.5rem', boxShadow: 'var(--shadow-md)', zIndex: 50 }}>
-            <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink)', fontSize: '0.95rem', borderRadius: 'var(--radius-sm)' }}>
-              <Icon name="User" size={16} /> View Profile
-            </button>
-            <button onClick={() => { logout(); setIsMenuOpen(false); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink)', fontSize: '0.95rem', borderRadius: 'var(--radius-sm)' }}>
-              <Icon name="LogOut" size={16} /> Log Out
-            </button>
+    <>
+      {/* Mobile Top App Bar */}
+      <header className="mobile-app-header">
+        <Logo linkTo="/dashboard" />
+        <button
+          onClick={() => navigate('/profile')}
+          className="mobile-avatar-btn"
+          aria-label="View profile"
+        >
+          <div className="user-avatar" style={{ width: '34px', height: '34px', fontSize: '0.85rem' }}>
+            {getInitials(displayName)}
           </div>
-        )}
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <div className="user-info-row" style={{ margin: 0 }}>
+        </button>
+      </header>
+
+      {/* Desktop Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-top-group">
+          {/* Proper Logo Header with card styling and subtle border */}
+          <header className="sidebar-header-card">
+            <Logo linkTo="/dashboard" />
+          </header>
+
+          <nav className="sidebar-nav">
+            <NavLink
+              to="/dashboard"
+              end
+              className={({ isActive }: { isActive: boolean }) => `sidebar-btn-item ${isActive ? 'active' : ''}`}
+            >
+              <div className="sidebar-btn-icon-box">
+                <Icon name="LayoutDashboard" size={18} />
+              </div>
+              <span className="sidebar-btn-label">{t.overview || 'Dashboard'}</span>
+              <div className="sidebar-btn-indicator" />
+            </NavLink>
+
+            <NavLink
+              to="/reports"
+              className={({ isActive }: { isActive: boolean }) => `sidebar-btn-item ${isActive ? 'active' : ''}`}
+            >
+              <div className="sidebar-btn-icon-box">
+                <Icon name="FileText" size={18} />
+              </div>
+              <span className="sidebar-btn-label">{t.reports || 'Reports'}</span>
+              <div className="sidebar-btn-indicator" />
+            </NavLink>
+          </nav>
+        </div>
+
+        {/* Botanical Foliage Decor in Sidebar */}
+        <div className="sidebar-botanical-wrapper">
+          <img
+            src="/images/triora-botanical.png"
+            alt=""
+            aria-hidden="true"
+            className="sidebar-botanical-img"
+          />
+        </div>
+
+        {/* Bottom Pinned User Profile & Logout */}
+        <div className="sidebar-user-footer" ref={menuRef}>
+          {isMenuOpen && (
+            <div className="sidebar-user-popup">
+              <button
+                onClick={() => { navigate('/profile'); setIsMenuOpen(false); }}
+                className="sidebar-user-popup-item"
+              >
+                <Icon name="User" size={16} /> View Profile
+              </button>
+              <button
+                onClick={() => { logout(); setIsMenuOpen(false); }}
+                className="sidebar-user-popup-item logout"
+              >
+                <Icon name="LogOut" size={16} /> Log Out
+              </button>
+            </div>
+          )}
+
+          <div className="user-info-row" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             <div className="user-avatar">{getInitials(displayName)}</div>
-            <div className="user-details" style={{ textAlign: 'left' }}>
-              <p>{displayName}</p>
-              <p>Patient account</p>
+            <div className="user-details">
+              <p className="user-name">{displayName}</p>
+              <p className="user-sub">Patient account</p>
             </div>
           </div>
-          <Icon name="ChevronUp" size={16} color="var(--muted)" />
-        </button>
-      </div>
-    </aside>
+
+          <button
+            onClick={() => { logout(); }}
+            className="logout-direct-btn"
+            title="Log Out"
+            aria-label="Log Out"
+          >
+            <Icon name="LogOut" size={17} />
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav">
+        <NavLink
+          to="/dashboard"
+          end
+          className={({ isActive }: { isActive: boolean }) => `mobile-bottom-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Icon name="LayoutDashboard" size={20} />
+          <span>{t.overview}</span>
+        </NavLink>
+
+        <NavLink
+          to="/reports"
+          className={({ isActive }: { isActive: boolean }) => `mobile-bottom-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Icon name="FileText" size={20} />
+          <span>{t.reports}</span>
+        </NavLink>
+
+        <NavLink
+          to="/profile"
+          className={({ isActive }: { isActive: boolean }) => `mobile-bottom-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <Icon name="User" size={20} />
+          <span>Profile</span>
+        </NavLink>
+      </nav>
+    </>
   );
 };
 

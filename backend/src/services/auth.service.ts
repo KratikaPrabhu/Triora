@@ -7,6 +7,12 @@ export interface SignupInput {
   name: string;
   email: string;
   password: string;
+  phone?: string;
+  emergencyContact?: string;
+  previousTherapy?: string;
+  previousTherapyExperience?: 'none' | 'some' | 'extensive' | 'prefer_not_to_say' | '';
+  underProfessionalCare?: string;
+  howDidYouHearAboutUs?: string;
 }
 
 export interface LoginInput {
@@ -20,7 +26,17 @@ export interface GoogleLoginInput {
 }
 
 export class AuthService {
-  async signup({ name, email, password }: SignupInput) {
+  async signup({
+    name,
+    email,
+    password,
+    phone,
+    emergencyContact,
+    previousTherapy,
+    previousTherapyExperience,
+    underProfessionalCare,
+    howDidYouHearAboutUs
+  }: SignupInput) {
     const normalizedEmail = email.toLowerCase().trim();
 
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -33,11 +49,20 @@ export class AuthService {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
+    const prevTherapy = previousTherapyExperience || (previousTherapy ? (previousTherapy as any) : '');
+
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       passwordHash,
-      authProvider: 'local'
+      authProvider: 'local',
+      profile: {
+        phone: phone ? phone.trim() : '',
+        emergencyContact: emergencyContact ? emergencyContact.trim() : '',
+        previousTherapyExperience: prevTherapy,
+        underProfessionalCare: underProfessionalCare ? (underProfessionalCare.trim() as any) : '',
+        howDidYouHearAboutUs: howDidYouHearAboutUs ? howDidYouHearAboutUs.trim() : ''
+      }
     });
 
     const token = generateToken(user);

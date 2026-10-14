@@ -3,7 +3,13 @@ import { z } from 'zod';
 export const signupSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   email: z.string().email('Invalid email address').transform((val) => val.toLowerCase().trim()),
-  password: z.string().min(6, 'Password must be at least 6 characters')
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  phone: z.string().optional(),
+  emergencyContact: z.string().optional(),
+  previousTherapy: z.string().optional(),
+  previousTherapyExperience: z.enum(['none', 'some', 'extensive', 'prefer_not_to_say', '']).optional(),
+  underProfessionalCare: z.string().optional(),
+  howDidYouHearAboutUs: z.string().optional()
 });
 
 export const loginSchema = z.object({
@@ -18,7 +24,15 @@ export const updateProfileSchema = z.object({
     preferredLanguage: z.string().optional(),
     age: z.number().optional(),
     emergencyContact: z.string().optional(),
-    bio: z.string().optional()
+    bio: z.string().optional(),
+    preferredName: z.string().optional(),
+    dateOfBirth: z.string().optional(),
+    gender: z.string().optional(),
+    backgroundInfo: z.string().optional(),
+    previousTherapy: z.string().optional(),
+    previousTherapyExperience: z.enum(['none', 'some', 'extensive', 'prefer_not_to_say', '']).optional(),
+    underProfessionalCare: z.string().optional(),
+    howDidYouHearAboutUs: z.string().optional()
   }).optional()
 });
 

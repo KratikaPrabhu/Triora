@@ -18,6 +18,8 @@ export interface IUserProfile {
   gender: string;
   backgroundInfo: string;
   previousTherapyExperience: 'none' | 'some' | 'extensive' | 'prefer_not_to_say' | '';
+  underProfessionalCare?: 'yes' | 'no' | 'previously' | 'prefer_not_to_say' | '';
+  howDidYouHearAboutUs?: string;
   primaryGoals: string[];
   communicationPreference: 'voice' | 'text' | 'both' | '';
   consentAcknowledged: boolean;

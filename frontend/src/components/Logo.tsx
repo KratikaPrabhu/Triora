@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 interface LogoProps {
   variant?: 'dark' | 'light' | 'green';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   linkTo?: string;
   className?: string;
 }
@@ -21,6 +21,7 @@ export const Logo: React.FC<LogoProps> = ({
     switch (size) {
       case 'sm': return { markHeight: 20, fontSize: '1.15rem' };
       case 'lg': return { markHeight: 32, fontSize: '1.75rem' };
+      case 'xl': return { markHeight: 44, fontSize: '2.4rem' };
       default: return { markHeight: 26, fontSize: '1.4rem' };
     }
   };

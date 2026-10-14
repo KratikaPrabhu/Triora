@@ -2,11 +2,28 @@ import { apiRequest, setStoredToken, removeStoredToken } from './api';
 import type { AuthResponse, ApiResponse } from '../types/auth';
 import type { User } from '../types/user';
 
+export interface SignupData {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  emergencyContact?: string;
+  previousTherapyExperience?: string;
+  underProfessionalCare?: string;
+  howDidYouHearAboutUs?: string;
+}
+
 export const authService = {
-  async signup(name: string, email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+  async signup(data: SignupData | string, maybeEmail?: string, maybePassword?: string): Promise<ApiResponse<AuthResponse>> {
+    let payload: any;
+    if (typeof data === 'string') {
+      payload = { name: data, email: maybeEmail, password: maybePassword };
+    } else {
+      payload = data;
+    }
     const res = await apiRequest<AuthResponse>('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify(payload),
     });
 
     if (res.success && res.data?.token) {

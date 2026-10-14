@@ -49,6 +49,12 @@ const userSchema = new Schema<IUserDocument>(
         enum: ['none', 'some', 'extensive', 'prefer_not_to_say', ''],
         default: ''
       },
+      underProfessionalCare: {
+        type: String,
+        enum: ['yes', 'no', 'previously', 'prefer_not_to_say', ''],
+        default: ''
+      },
+      howDidYouHearAboutUs: { type: String, default: '' },
       primaryGoals: { type: [String], default: [] },
       // Step 3: Preferences & Consents
       communicationPreference: {

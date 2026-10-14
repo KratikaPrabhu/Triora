@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Logo } from '../components/Logo';
-import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
 import { Loading } from '../components/Loading';
 import { useSpeech } from '../hooks/useSpeech';
@@ -23,7 +22,7 @@ export const SessionPage: React.FC = () => {
   const [manualText, setManualText] = useState<string>('');
   const [generatingReport, setGeneratingReport] = useState<boolean>(false);
   const [errorState, setErrorState] = useState<string | null>(null);
-  const hasSpokenInitialRef = React.useRef(false);
+  const hasSpokenInitialRef = useRef(false);
 
   // Initialize or fetch session if id not in URL
   useEffect(() => {
@@ -38,7 +37,7 @@ export const SessionPage: React.FC = () => {
     }
   }, [sessionIdFromUrl, language]);
 
-  // Session timer
+  // Session elapsed timer
   useEffect(() => {
     const interval = setInterval(() => {
       setTimerSeconds((prev) => prev + 1);
@@ -142,140 +141,196 @@ export const SessionPage: React.FC = () => {
   };
 
   if (generatingReport) {
-    return <Loading fullScreen message={t.synthesizingSummary || 'Synthesizing...'} />;
+    return <Loading fullScreen message={t.synthesizingSummary || 'Synthesizing your summary report...'} />;
   }
 
-  // Get the last AI message as the prompt.
-  const assistantMessages = messages.filter(m => m.role === 'assistant');
-  const currentPrompt = assistantMessages.length > 0
+  // Get the last AI message as the prompt, with clean fallback
+  const assistantMessages = messages.filter((m) => m.role === 'assistant');
+  const rawPrompt = assistantMessages.length > 0
     ? assistantMessages[assistantMessages.length - 1].text
     : currentQuestion;
+  const currentPrompt = rawPrompt.replace(/^["“”']|["“”']$/g, '');
 
   return (
     <div className="session-page-container">
-      {/* Session Top Bar */}
-      <header className="session-header">
-        <Logo linkTo="/dashboard" />
-        <div className="session-status-badge">
-          <Icon name="Mic" size={14} />
-          <span>Your turn • Realtime</span>
-        </div>
-          <Link to="/dashboard">
-            <Button size="sm" variant="outline">{t.saveAndExit || 'Save & exit'}</Button>
-          </Link>
+      {/* Session Top Navigation Bar */}
+      <header className="session-navbar-wrapper">
+        <nav className="session-navbar" aria-label="Session Navigation">
+          {/* Logo on Left */}
+          <div className="session-nav-left">
+            <Logo linkTo="/dashboard" />
+          </div>
+
+          {/* Center Realtime Status Badge */}
+          <div className="session-nav-center">
+            <div className="session-status-badge">
+              <Icon name="Mic" size={14} color="#0B4D46" />
+              <span>Your turn · Realtime</span>
+              <span className="session-realtime-dot" />
+            </div>
+          </div>
+
+          {/* Save & Exit Button on Right */}
+          <div className="session-nav-right">
+            <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+              <button type="button" className="session-save-exit-btn">
+                <Icon name="LogOut" size={15} color="#123F39" />
+                <span>{t.saveAndExit || 'Save & exit'}</span>
+              </button>
+            </Link>
+          </div>
+        </nav>
       </header>
 
       {/* Main Content Area */}
       <main className="session-main-stage">
-        {(speechError || errorState) && !((speechError || errorState)?.includes('Azure')) && (
-          <div className="session-error-banner" style={{ position: 'absolute', top: '5rem', width: '100%', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-            <Icon name="AlertCircle" size={16} />
-            <span>{speechError || errorState}</span>
-          </div>
-        )}
+        <div className="session-main-container">
+          {/* Error notification if any */}
+          {(speechError || errorState) && !((speechError || errorState)?.includes('Azure')) && (
+            <div className="session-error-banner">
+              <Icon name="AlertCircle" size={16} />
+              <span>{speechError || errorState}</span>
+            </div>
+          )}
 
         <div className="session-content-grid">
-          {/* Left Column */}
+          {/* Left Column: Timer, Question, Hear question, Finish button */}
           <div className="session-col-left">
-            <div className="session-timer-display">{formatTimer(timerSeconds)}</div>
-
-            <div className="session-headline-box">
-              <h1 className="session-main-question">"{currentPrompt}"</h1>
+            {/* Timer Badge */}
+            <div className="session-timer-pill">
+              <Icon name="Clock" size={14} color="#123F39" />
+              <span>{formatTimer(timerSeconds)}</span>
             </div>
 
-            <button className="tap-hear-btn" onClick={() => {
-              ttsService.unlockAudio();
-              speakCurrentQuestion(currentPrompt);
-            }} style={{ marginBottom: '1.5rem' }}>
-              <Icon name="Volume2" size={16} /> {t.tapToHear || 'Tap to hear question'}
+            {/* AI Question Headline */}
+            <h1 className="session-question-text">
+              {currentPrompt || 'Take your time. What made you consider speaking with a therapist now?'}
+            </h1>
+
+            {/* Tap to hear question audio button */}
+            <button
+              type="button"
+              className="session-hear-btn"
+              onClick={() => {
+                ttsService.unlockAudio();
+                speakCurrentQuestion(currentPrompt);
+              }}
+            >
+              <div className="session-play-circle">
+                <Icon name="Play" size={12} color="#FFFFFF" style={{ marginLeft: '2px' }} />
+              </div>
+              <span className="session-hear-label">{t.tapToHear || 'Tap to hear question'}</span>
+              <div className="session-hear-wave-icon" aria-hidden="true">
+                <span className="mini-wave-bar" style={{ height: '7px' }} />
+                <span className="mini-wave-bar" style={{ height: '13px' }} />
+                <span className="mini-wave-bar" style={{ height: '9px' }} />
+                <span className="mini-wave-bar" style={{ height: '15px' }} />
+                <span className="mini-wave-bar" style={{ height: '6px' }} />
+              </div>
             </button>
 
-            {/* Finish button */}
-            <div className="session-finish-btn-row">
-              <Button variant="primary" size="lg" onClick={handleCompleteSession}>
-                {t.finishAndSummary || 'Finish & generate summary'}
-              </Button>
-            </div>
+            {/* Finish & generate summary button */}
+            <button
+              type="button"
+              className="session-finish-pill-btn"
+              onClick={handleCompleteSession}
+            >
+              <Icon name="FileText" size={17} color="#FFFFFF" />
+              <span>{t.finishAndSummary || 'Finish & generate summary'}</span>
+              <Icon name="ArrowRight" size={17} color="#FFFFFF" />
+            </button>
           </div>
 
-          {/* Right Column */}
+          {/* Right Column: Interaction Card */}
           <div className="session-col-right">
-            {/* Primary Interaction Area: Big Orb Button */}
-            <div className="mic-button-wrapper">
-              <button
-                type="button"
-                className={`mic-circle-btn ${isListening ? 'listening' : ''}`}
-                onClick={handleMicClick}
-                aria-label={isListening ? 'Stop recording' : 'Start recording'}
-              >
-                <Icon name={isListening ? 'Square' : 'Mic'} size={42} color="var(--white)" />
-              </button>
-            </div>
-            
-            <p className="mic-status-label">
-              <Icon name="Mic" size={16} color="var(--muted)" />
-              {t.yourTurnTap || 'Your turn — tap to speak'}
-            </p>
-            <p className="mic-hint-text">
-              {t.speakNaturally || "Speak naturally. There's no rush."}
-            </p>
-
-            {/* Waveform Visualizer */}
-            <div className="waveform-canvas-box">
-              <div className="waveform-bars-flex">
-                {[30, 45, 20, 60, 80, 50, 70, 40, 90, 65, 35, 55, 75, 25, 45, 30, 50, 20].map((defaultHeight, idx) => {
-                  const dynamicHeight = isListening
-                    ? Math.max(10, Math.min(50, (volumeLevel * (idx % 3 + 1)) / 2))
-                    : defaultHeight / 2;
-                  return (
-                    <div
-                      key={idx}
-                      className="live-bar"
-                      style={{ height: `${dynamicHeight}px` }}
-                    />
-                  );
-                })}
+            <div className="session-interaction-card">
+              {/* Big Mic Button with Glowing Halo */}
+              <div className="session-mic-orb-container">
+                <div className={`session-mic-halo ${isListening ? 'listening' : ''}`} />
+                <button
+                  type="button"
+                  className={`session-mic-btn ${isListening ? 'listening' : ''}`}
+                  onClick={handleMicClick}
+                  aria-label={isListening ? 'Stop recording' : 'Start recording'}
+                >
+                  <Icon name={isListening ? 'Square' : 'Mic'} size={32} color="#FFFFFF" />
+                </button>
               </div>
-            </div>
 
-            <p className="simulated-disclaimer">
-              {t.reflectiveActivity || 'Reflective activity · simulated visualization.'}<br />
-              {t.visualTraceDisclaimer || 'The visual trace is simulated and is not a medical measurement.'}
-            </p>
+              {/* Status title & subtitle */}
+              <h3 className="session-mic-title">
+                {isListening ? 'Listening... tap to pause' : (t.yourTurnTap || 'Your turn — tap to speak')}
+              </h3>
+              <p className="session-mic-subtitle">
+                {t.speakNaturally || "Speak naturally. There’s no right answer."}
+              </p>
 
-            {/* Live Transcript Display */}
-            <div className="session-transcript-preview">
-              <textarea
-                value={
-                  manualText
-                    ? (interimTranscript ? `${manualText} ${interimTranscript}` : manualText)
-                    : (transcript ? (interimTranscript ? `${transcript} ${interimTranscript}` : transcript) : interimTranscript)
-                }
-                onChange={(e) => setManualText(e.target.value)}
-                placeholder={t.typePlaceholder || 'Or type your reflection here if you prefer not to speak...'}
-                style={{
-                  width: '100%',
-                  border: 'none',
-                  outline: 'none',
-                  resize: 'none',
-                  background: 'transparent',
-                  fontFamily: 'inherit',
-                  fontSize: '1rem',
-                  color: 'var(--ink)',
-                }}
-                rows={2}
-              />
-              {(manualText || transcript || interimTranscript) && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                  <Button size="sm" variant="primary" onClick={handleSendResponse} disabled={convStatus === 'PROCESSING'}>
-                    {t.sendConversation}
-                  </Button>
+              {/* Waveform Visualizer Pill */}
+              <div className="session-waveform-pill" aria-hidden="true">
+                <div className="session-waveform-bars">
+                  {[6, 8, 12, 16, 22, 28, 20, 32, 38, 26, 36, 40, 30, 26, 34, 24, 18, 14, 10, 8, 6].map((baseHeight, idx) => {
+                    const dynamicHeight = isListening
+                      ? Math.max(6, Math.min(42, (volumeLevel * ((idx % 4) + 1) * 1.5) + (baseHeight * 0.35)))
+                      : baseHeight;
+                    return (
+                      <div
+                        key={idx}
+                        className="session-wave-bar"
+                        style={{ height: `${dynamicHeight}px` }}
+                      />
+                    );
+                  })}
                 </div>
-              )}
+              </div>
+
+              {/* Disclaimer subtext */}
+              <p className="session-disclaimer-text">
+                {t.reflectiveActivity || 'Reflective activity · simulated visualization.'}<br />
+                {t.visualTraceDisclaimer || 'The visual trace is simulated and is not a medical measurement.'}
+              </p>
+
+              {/* Text Reflection Input Area */}
+              <div className="session-text-box">
+                <div className="session-text-input-row">
+                  <Icon name="MessageSquare" size={16} color="#7D928D" style={{ marginTop: '3px' }} />
+                  <textarea
+                    value={
+                      manualText
+                        ? (interimTranscript ? `${manualText} ${interimTranscript}` : manualText)
+                        : (transcript ? (interimTranscript ? `${transcript} ${interimTranscript}` : transcript) : interimTranscript)
+                    }
+                    onChange={(e) => setManualText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendResponse();
+                      }
+                    }}
+                    placeholder={t.typePlaceholder || 'Or type your thoughts here if you prefer not to speak...'}
+                    className="session-textarea"
+                    rows={2}
+                  />
+                </div>
+
+                {(manualText || transcript || interimTranscript) && (
+                  <div className="session-send-row">
+                    <button
+                      type="button"
+                      className="session-send-btn"
+                      onClick={handleSendResponse}
+                      disabled={convStatus === 'PROCESSING'}
+                    >
+                      <Icon name="Send" size={13} color="#FFFFFF" />
+                      <span>{convStatus === 'PROCESSING' ? 'Processing...' : (t.sendConversation || 'Send')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
+    </main>
     </div>
   );
 };

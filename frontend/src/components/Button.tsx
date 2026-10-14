@@ -17,12 +17,13 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   className = '',
   disabled,
+  style,
   ...props
 }) => {
   const getStyles = (): React.CSSProperties => {
     let bg = 'var(--green)';
     let color = 'var(--white)';
-    let border = 'none';
+    let border = '1px solid transparent';
 
     if (variant === 'secondary') {
       bg = 'var(--soft-green)';
@@ -39,13 +40,14 @@ export const Button: React.FC<ButtonProps> = ({
     } else if (variant === 'ghost') {
       bg = 'transparent';
       color = 'var(--muted)';
+      border = '1px solid transparent';
     }
 
     let padding = '0.75rem 1.5rem';
     let fontSize = '0.95rem';
 
     if (size === 'sm') {
-      padding = '0.5rem 1rem';
+      padding = '0.45rem 1rem';
       fontSize = '0.85rem';
     } else if (size === 'lg') {
       padding = '1rem 2.25rem';
@@ -64,15 +66,25 @@ export const Button: React.FC<ButtonProps> = ({
       fontSize: fontSize,
       fontWeight: 600,
       borderRadius: 'var(--radius-full)',
+      cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
       width: fullWidth ? '100%' : 'auto',
       transition: 'all var(--transition-fast)',
       opacity: disabled || isLoading ? 0.6 : 1,
       pointerEvents: disabled || isLoading ? 'none' : 'auto',
+      boxShadow: variant === 'primary' ? '0 2px 8px rgba(11, 68, 61, 0.16)' : 'none',
+      textDecoration: 'none',
+      lineHeight: 1.2,
+      ...style,
     };
   };
 
   return (
-    <button style={getStyles()} disabled={disabled || isLoading} className={className} {...props}>
+    <button
+      style={getStyles()}
+      disabled={disabled || isLoading}
+      className={`triora-btn ${className}`}
+      {...props}
+    >
       {isLoading ? (
         <span
           style={{

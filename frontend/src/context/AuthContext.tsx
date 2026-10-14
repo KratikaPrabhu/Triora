@@ -8,11 +8,12 @@ export interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (signupData: any, email?: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   googleLogin: (credential: string) => Promise<{ success: boolean; error?: string; user?: User; isNewUser?: boolean }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   updateOnboarding: (data: any) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (data: any) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,9 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error?.message || 'Login failed.' };
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (data: any, email?: string, password?: string) => {
     setIsLoading(true);
-    const res = await authService.signup(name, email, password);
+    const res = await authService.signup(data, email, password);
     setIsLoading(false);
     if (res.success && res.data) {
       setUser(res.data.user);
@@ -99,6 +100,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error?.message || 'Failed to update onboarding.' };
   };
 
+  const updateProfile = async (data: any) => {
+    const res = await authService.updateProfile(data);
+    if (res.success) {
+      await refreshUser();
+      return { success: true };
+    }
+    return { success: false, error: res.error?.message || 'Failed to update profile.' };
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -117,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshUser,
         updateOnboarding,
+        updateProfile,
       }}
     >
       {children}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
-import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
@@ -12,6 +11,7 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,34 +39,38 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="auth-split-container">
-      <div className="auth-left-banner">
-        <Logo variant="light" linkTo="/" />
-        <div className="auth-quote-wrapper">
-          <p className="auth-quote">
-            "Sometimes the first step isn’t having the answer. It’s finding a safe place to begin."
-          </p>
-          <p className="auth-quote-sub">Triora gives you that place.</p>
+    <div className="login-page-bg">
+      <div className="login-container">
+        {/* Left Side: Logo & Editorial Quote */}
+        <div className="login-left-section">
+          <div className="login-logo-wrap">
+            <Logo variant="dark" linkTo="/" size="xl" />
+          </div>
+
+          <div className="login-quote-box">
+            <blockquote className="login-quote-text">
+              “Sometimes the first step<br />
+              isn’t having the answer.<br />
+              It’s finding a safe place to begin.”
+            </blockquote>
+            <div className="login-quote-dash" />
+            <p className="login-quote-subtext">Triora gives you that place.</p>
+          </div>
         </div>
-        <div className="auth-banner-footer">
-          Private · Patient · In your language
-        </div>
-      </div>
 
-      <div className="auth-right-panel">
-        <Link to="/" className="auth-back-link">
-          <Icon name="ArrowLeft" size={16} />
-          <span>Back home</span>
-        </Link>
+        {/* Right Side: Floating Login Card */}
+        <div className="login-card">
+          <h1 className="login-card-title">Continue your conversation.</h1>
+          <p className="login-card-subtitle">Log in to access your sessions and reports.</p>
 
-        <div className="auth-form-container">
-          <p className="auth-kicker">WELCOME BACK</p>
-          <h1 className="auth-title">Continue your conversation.</h1>
-          <p className="auth-subtitle">Log in to access your sessions and reports.</p>
+          {error && (
+            <div className="login-error-wrapper">
+              <ErrorMessage message={error} />
+            </div>
+          )}
 
-          {error && <ErrorMessage message={error} />}
-
-          <div style={{ marginBottom: '1.5rem' }}>
+          {/* Continue with Google */}
+          <div className="login-google-container">
             <GoogleLoginButton
               onSuccess={(_, isNewUser) => {
                 if (isNewUser) {
@@ -79,31 +83,45 @@ export const LoginPage: React.FC = () => {
             />
           </div>
 
-          <div className="auth-divider">
-            <span>or use email</span>
+          {/* Divider */}
+          <div className="login-divider-row">
+            <span className="login-divider-line" />
+            <span className="login-divider-label">or use email</span>
+            <span className="login-divider-line" />
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="login-form-body">
+            {/* Email Address */}
+            <div className="login-form-group">
+              <label className="login-form-label" htmlFor="login-email">
+                Email address
+              </label>
+              <div className="login-input-wrapper">
+                <Icon name="Mail" size={18} className="login-input-icon" />
+                <input
+                  id="login-email"
+                  type="email"
+                  className="login-input-field"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <div className="input-wrapper">
+            {/* Password */}
+            <div className="login-form-group">
+              <label className="login-form-label" htmlFor="login-password">
+                Password
+              </label>
+              <div className="login-input-wrapper">
+                <Icon name="Lock" size={18} className="login-input-icon" />
                 <input
-                  id="password"
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
-                  className="form-input"
+                  className="login-input-field"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -111,25 +129,64 @@ export const LoginPage: React.FC = () => {
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="login-password-eye-btn"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  <Icon name={showPassword ? 'Eye' : 'EyeOff'} size={18} />
                 </button>
               </div>
             </div>
 
-            <Button type="submit" variant="primary" fullWidth isLoading={isSubmitting}>
-              Log in
-            </Button>
+            {/* Keep me signed in & Forgot Password */}
+            <div className="login-aux-row">
+              <label className="login-remember-label">
+                <input
+                  type="checkbox"
+                  checked={keepSignedIn}
+                  onChange={(e) => setKeepSignedIn(e.target.checked)}
+                  className="login-checkbox-input"
+                />
+                <span>Keep me signed in</span>
+              </label>
+
+              <Link
+                to="#"
+                className="login-forgot-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('Password reset link will be sent to your registered email address.');
+                }}
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            {/* Log in Button */}
+            <button
+              type="submit"
+              className="login-submit-button"
+              disabled={isSubmitting}
+            >
+              <span>{isSubmitting ? 'Logging in...' : 'Log in'}</span>
+              <span className="login-arrow-icon-circle">
+                <Icon name="ArrowRight" size={15} />
+              </span>
+            </button>
           </form>
 
-          <p className="auth-bottom-text">
-            New to Triora? <Link to="/signup">Create an account</Link>
-          </p>
+          {/* New to Triora Link */}
+          <div className="login-card-footer">
+            <span className="login-footer-text">New to Triora?</span>{' '}
+            <Link to="/signup" className="login-signup-anchor">
+              Create an account <span className="login-signup-arrow">→</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default LoginPage;

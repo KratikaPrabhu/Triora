@@ -1,28 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --ink: #24332e;
-  --muted: #66756f;
-  --paper: #f6f4ef;
-  --white: #ffffff;
-  --sage: #5f8377;
-  --sage-light: #dbe7df;
-  --green: #315f50;
-  --line: #dfe3de;
-  --peach: #e6b486;
-  --soft-green: #edf1ec;
-  --green-dark: #1b2622;
-  
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Georgia', Cambria, 'Times New Roman', Times, serif;
+  --bg-main: #FAF8F3;
+  --card-bg: #FFFFFF;
+  --forest-dark: #0B443D;
+  --forest-heading: #123B38;
+  --sage-accent: #DDE9DF;
+  --pale-mint: #EDF3ED;
+  --warm-peach: #F3D8C4;
+  --peach-soft: #F9EBE0;
+  --text-muted: #728581;
+  --border-light: #E8E8E0;
 
-  --shadow-sm: 0 1px 3px rgba(36, 51, 46, 0.05);
-  --shadow-md: 0 4px 12px rgba(36, 51, 46, 0.08);
-  --shadow-lg: 0 10px 25px rgba(36, 51, 46, 0.12);
+  /* Legacy & mapped variables */
+  --ink: #123B38;
+  --muted: #728581;
+  --paper: #FAF8F3;
+  --white: #FFFFFF;
+  --sage: #5F8377;
+  --sage-light: #DDE9DF;
+  --green: #0B443D;
+  --line: #E8E8E0;
+  --peach: #E6B486;
+  --soft-green: #EDF3ED;
+  --green-dark: #0B443D;
+  
+  --font-sans: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Newsreader', 'Lora', 'Georgia', Cambria, 'Times New Roman', Times, serif;
+  --font-script: 'Caveat', cursive, 'Brush Script MT', sans-serif;
+
+  --shadow-sm: 0 1px 3px rgba(11, 68, 61, 0.04);
+  --shadow-md: 0 4px 14px rgba(11, 68, 61, 0.06);
+  --shadow-lg: 0 10px 28px rgba(11, 68, 61, 0.08);
 
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 24px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
   --transition-fast: 150ms ease;
@@ -54,6 +68,23 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+}
+
+.triora-btn {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.triora-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.triora-btn:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.96);
 }
 
 input, select, textarea {
@@ -88,3 +119,27 @@ input, select, textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* Custom Scrollbars */
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sage-accent, #DDE9DF);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sage, #5F8377);
+}
+
