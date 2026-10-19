@@ -128,7 +128,6 @@ export const DashboardPage: React.FC = () => {
               <span className="dash-greeting-text">
                 {getGreetingTime()}, <strong className="dash-user-name">{displayName}</strong>
               </span>
-              <span className="dash-leaf-accent" aria-hidden="true">🌿</span>
             </div>
             <p className="dash-supportive-sub">Take a moment. There’s no rush here.</p>
           </div>
@@ -136,9 +135,7 @@ export const DashboardPage: React.FC = () => {
           <div className="dash-header-right">
             {/* Wellness Badge */}
             <div className="wellness-badge">
-              <span className="wellness-badge-icon" aria-hidden="true">☀️</span>
               <span className="wellness-badge-text">You're doing great</span>
-              <span className="wellness-badge-heart" aria-hidden="true">♡</span>
             </div>
 
             {/* Notification Bell */}
@@ -250,7 +247,7 @@ export const DashboardPage: React.FC = () => {
             <div className="wellbeing-divider" />
 
             <p className="wellbeing-handwritten">
-              You are not alone <span className="heart-pink">♡</span>
+              You are not alone
             </p>
           </div>
 

@@ -513,25 +513,29 @@
 }
 
 /* Left badges: Anchored so right edge rests on tablet outer left bezel */
+.hero-floating-badge.badge-top-left,
 .badge-top-left {
   top: 60px;
   left: -65px;
   right: auto;
 }
 
+.hero-floating-badge.badge-bottom-left,
 .badge-bottom-left {
   top: 178px; /* Positioned directly above "What has been feeling heaviest lately?" with minimal gap */
   left: -65px;
   right: auto;
 }
 
-/* Right badges: Anchored on the right of the tablet, strictly within the screen boundary */
+/* Right badges: Anchored on the right of the tablet, shifted right to prevent overlap with Speak Naturally */
+.hero-floating-badge.badge-top-right,
 .badge-top-right {
   top: 115px;
-  right: -55px;
+  right: -85px;
   left: auto;
 }
 
+.hero-floating-badge.badge-bottom-right,
 .badge-bottom-right {
   top: 290px;
   right: -45px;
@@ -827,7 +831,7 @@
   }
   .badge-top-right {
     top: 125px;
-    right: -35px;
+    right: -65px;
     left: auto;
   }
   .badge-bottom-right {
@@ -2077,17 +2081,17 @@
   flex-shrink: 0;
 }
 
-.badge-top-left {
+.privacy-float-badge.badge-top-left {
   top: 15%;
   left: 0;
 }
 
-.badge-top-right {
+.privacy-float-badge.badge-top-right {
   top: 22%;
   right: -25px;
 }
 
-.badge-bottom-right {
+.privacy-float-badge.badge-bottom-right {
   bottom: 22%;
   right: -15px;
 }
@@ -2436,10 +2440,10 @@
     transform: scale(0.78);
     margin: -20px auto;
   }
-  .badge-top-left {
+  .privacy-float-badge.badge-top-left {
     left: -15px;
   }
-  .badge-top-right {
+  .privacy-float-badge.badge-top-right {
     right: -20px;
   }
   .privacy-card-body {

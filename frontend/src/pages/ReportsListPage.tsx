@@ -77,9 +77,7 @@ export const ReportsListPage: React.FC = () => {
           <div className="reports-top-actions">
             {/* Wellness Badge matching Dashboard */}
             <div className="wellness-badge">
-              <span className="wellness-badge-icon" aria-hidden="true">☀️</span>
               <span className="wellness-badge-text">You're doing great</span>
-              <span className="wellness-badge-heart" aria-hidden="true">♡</span>
             </div>
 
             {/* Notification Bell */}
