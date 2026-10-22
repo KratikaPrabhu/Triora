@@ -10,6 +10,7 @@ export interface VoiceAnalysisResponse {
 
 export interface VoiceAnalysis {
   totalDuration?: number;
+  speechDuration?: number;
   averageFrequency?: number;
   minFrequency?: number;
   maxFrequency?: number;
@@ -28,6 +29,7 @@ export interface Report {
   emotionalContext: string;
   importantStatements: string[];
   conversationOverview: string;
+  duration?: number;
   voiceAnalysis?: VoiceAnalysis | null;
   generatedAt: string;
   modelName?: string;

@@ -26,7 +26,7 @@ export const sessionService = {
 
   async respondToSession(
     id: string,
-    payload: { text?: string; status?: string; voiceMetrics?: any }
+    payload: { text?: string; status?: string; voiceMetrics?: any; durationSeconds?: number }
   ): Promise<ApiResponse<{ action: string; question: string; reason?: string; metadata?: any; session: Session }>> {
     return apiRequest<{ action: string; question: string; reason?: string; metadata?: any; session: Session }>(
       `/sessions/${id}/respond`,

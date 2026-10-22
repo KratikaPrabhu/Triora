@@ -15,6 +15,7 @@ export interface UpdateSessionInput {
   language?: string;
   metadata?: Record<string, any>;
   transcript?: ISessionMessage[];
+  duration?: number;
 }
 
 export class SessionService {
@@ -115,6 +116,19 @@ export class SessionService {
         session.startedAt = new Date();
       } else if (updateData.status === 'completed' || updateData.status === 'failed') {
         session.completedAt = new Date();
+        if (!session.startedAt) {
+          session.startedAt = session.createdAt || new Date();
+        }
+      }
+    }
+
+    if (typeof updateData.duration === 'number' && updateData.duration > 0) {
+      session.duration = Math.round(updateData.duration);
+    } else if (session.status === 'completed' && (!session.duration || session.duration === 0)) {
+      if (session.completedAt && session.startedAt) {
+        session.duration = Math.max(1, Math.round((session.completedAt.getTime() - session.startedAt.getTime()) / 1000));
+      } else if (session.completedAt && session.createdAt) {
+        session.duration = Math.max(1, Math.round((session.completedAt.getTime() - session.createdAt.getTime()) / 1000));
       }
     }
 

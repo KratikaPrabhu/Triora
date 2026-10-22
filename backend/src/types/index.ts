@@ -74,6 +74,7 @@ export interface ISession {
   language: string;
   startedAt: Date | null;
   completedAt: Date | null;
+  duration?: number;
   metadata: Record<string, any>;
   transcript: ISessionMessage[];
   reportId: Types.ObjectId | null;
@@ -92,8 +93,10 @@ export interface IReport {
   emotionalContext: string;
   importantStatements: string[];
   conversationOverview: string;
+  duration?: number;
   voiceAnalysis?: {
     totalDuration: number;
+    speechDuration?: number;
     averageFrequency: number;
     minFrequency: number;
     maxFrequency: number;

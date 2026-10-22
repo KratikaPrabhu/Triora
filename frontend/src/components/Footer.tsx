@@ -1,29 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Logo } from './Logo';
-import { useLanguage, LANGUAGES } from '../context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Icon } from './Icon';
 
 export const Footer: React.FC = () => {
-  const { t, language, setLanguage } = useLanguage();
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  const [showLangMenu, setShowLangMenu] = useState(false);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 4000);
-    }
-  };
-
-  const currentLangName = LANGUAGES.find((l) => l.code === language)?.name || 'English';
+  const { t } = useLanguage();
 
   return (
     <footer className="landing-footer">
       <div className="footer-container">
-        {/* Top Section: 5 Columns (Brand + 3 Nav Columns + Newsletter Card) */}
+        {/* Top Section: 4 Columns (Brand & Pills, Product, Resources, Company) */}
         <div className="footer-top-grid">
           {/* Column 1: Brand & Feature Badges */}
           <div className="footer-col-brand">
@@ -117,99 +103,17 @@ export const Footer: React.FC = () => {
               <li><a href="#contact" className="footer-nav-link">Contact</a></li>
             </ul>
           </div>
-
-          {/* Column 5: Stay in the loop Newsletter Card */}
-          <div className="footer-newsletter-card">
-            <h3 className="newsletter-card-title">Stay in the loop</h3>
-            <p className="newsletter-card-subtitle">
-              Get updates on new features, languages, and resources.
-            </p>
-
-            <form className="newsletter-form" onSubmit={handleSubscribe}>
-              <div className="newsletter-input-wrapper">
-                <Icon name="Mail" size={16} color="#7c9287" className="newsletter-mail-icon" />
-                <input
-                  type="email"
-                  className="newsletter-input"
-                  placeholder="Your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <button type="submit" className="newsletter-submit-btn" aria-label="Subscribe">
-                  <Icon name="ArrowRight" size={15} color="#ffffff" />
-                </button>
-              </div>
-              {subscribed && (
-                <span className="newsletter-success-msg">✓ Thank you for subscribing!</span>
-              )}
-            </form>
-          </div>
         </div>
 
-        {/* Bottom Bar: Copyright + Disclaimer | Social Links + Language Selector */}
+        {/* Bottom Bar: Copyright & Disclaimer */}
         <div className="footer-bottom-bar">
-          <div className="footer-bottom-left">
-            <p className="footer-copyright">© 2026 Triora. All rights reserved.</p>
-            <p className="footer-disclaimer-note">
-              Triora is not a crisis service or a substitute for medical care.
-            </p>
-          </div>
-
-          <div className="footer-bottom-right">
-            {/* Social Icons */}
-            <div className="footer-social-links">
-              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="social-pill-btn" aria-label="X (formerly Twitter)">
-                <span className="social-x-symbol">𝕏</span>
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-pill-btn" aria-label="LinkedIn">
-                <Icon name="Linkedin" size={14} color="#1b4937" />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-pill-btn" aria-label="Instagram">
-                <Icon name="Instagram" size={14} color="#1b4937" />
-              </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="social-pill-btn" aria-label="YouTube">
-                <Icon name="Youtube" size={14} color="#1b4937" />
-              </a>
-            </div>
-
-            <div className="footer-divider-vert" aria-hidden="true" />
-
-            {/* Language Selector Dropdown */}
-            <div className="footer-lang-selector-wrapper">
-              <button
-                type="button"
-                className="footer-lang-btn"
-                onClick={() => setShowLangMenu(!showLangMenu)}
-                aria-expanded={showLangMenu}
-              >
-                <Icon name="Globe" size={15} color="#1b4937" />
-                <span>{currentLangName}</span>
-                <Icon name="ChevronDown" size={14} color="#1b4937" />
-              </button>
-
-              {showLangMenu && (
-                <div className="footer-lang-dropdown">
-                  {LANGUAGES.map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      className={`footer-lang-opt ${language === lang.code ? 'opt-active' : ''}`}
-                      onClick={() => {
-                        setLanguage(lang.code);
-                        setShowLangMenu(false);
-                      }}
-                    >
-                      <span className="lang-opt-native">{lang.native}</span>
-                      <span className="lang-opt-name">({lang.name})</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <p className="footer-copyright">© 2026 Triora. All rights reserved.</p>
+          <p className="footer-disclaimer-note">
+            Triora is not a crisis service or a substitute for medical care.
+          </p>
         </div>
       </div>
     </footer>
   );
 };
+

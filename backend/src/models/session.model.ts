@@ -78,6 +78,10 @@ const sessionSchema = new Schema<ISessionDocument>(
       type: Date,
       default: null
     },
+    duration: {
+      type: Number,
+      default: 0
+    },
     metadata: {
       type: Schema.Types.Mixed,
       default: {}

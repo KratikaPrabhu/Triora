@@ -5,7 +5,12 @@ import logger from '../config/logger';
 
 export const generateReport = asyncWrapper(async (req: Request, res: Response) => {
   const sessionId = req.params.sessionId as string;
-  const report = await reportService.generateReport(req.user!._id.toString(), sessionId);
+  const { durationSeconds, duration } = req.body || {};
+  const report = await reportService.generateReport(
+    req.user!._id.toString(),
+    sessionId,
+    durationSeconds || duration
+  );
   res.status(201).json({
     success: true,
     data: { report }

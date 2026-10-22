@@ -8,6 +8,7 @@ export interface ProcessMessageInput {
   userMessage: string;
   status?: AnswerStatus | 'completed';
   voiceMetrics?: IVoiceMetrics;
+  durationSeconds?: number;
 }
 
 export class ConversationService {
@@ -18,7 +19,7 @@ export class ConversationService {
     session: any;
     aiResponse: ConversationEngineOutput;
   }> {
-    const { userId, sessionId, userMessage, status = 'answered', voiceMetrics } = input;
+    const { userId, sessionId, userMessage, status = 'answered', voiceMetrics, durationSeconds } = input;
 
     // 1. Retrieve session and verify ownership
     let session = await sessionService.getSessionById(userId, sessionId);
@@ -27,7 +28,8 @@ export class ConversationService {
     
     if (status === 'completed') {
       const updatedSession = await sessionService.updateSession(userId, sessionId, {
-        status: 'completed'
+        status: 'completed',
+        duration: durationSeconds
       });
       return {
         session: updatedSession,
@@ -98,6 +100,7 @@ export class ConversationService {
 
     const updatedSession = await sessionService.updateSession(userId, sessionId, {
       status: newStatus,
+      duration: durationSeconds,
       transcript: aiTranscriptItems,
       metadata: {
         ...session.metadata,

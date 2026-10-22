@@ -21,6 +21,7 @@ export interface Session {
   language: string;
   startedAt?: string | null;
   completedAt?: string | null;
+  duration?: number;
   metadata?: Record<string, any>;
   transcript: SessionMessage[];
   reportId?: string | null;

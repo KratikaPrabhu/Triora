@@ -34,6 +34,18 @@ export const SessionPage: React.FC = () => {
           setErrorState("We couldn't initialize your conversation space right now.");
         }
       });
+    } else {
+      sessionService.getSessionById(sessionIdFromUrl).then((res) => {
+        if (res.success && res.data?.session) {
+          const sess = res.data.session;
+          if (sess.startedAt) {
+            const elapsed = Math.max(0, Math.round((Date.now() - new Date(sess.startedAt).getTime()) / 1000));
+            setTimerSeconds(elapsed);
+          } else if (sess.duration && sess.duration > 0) {
+            setTimerSeconds(sess.duration);
+          }
+        }
+      });
     }
   }, [sessionIdFromUrl, language]);
 
@@ -121,13 +133,18 @@ export const SessionPage: React.FC = () => {
     setErrorState(null);
 
     try {
-      const finishRes = await sessionService.respondToSession(sessionId, { status: 'completed' });
+      const finishRes = await sessionService.respondToSession(sessionId, {
+        status: 'completed',
+        durationSeconds: timerSeconds
+      });
 
       if (!finishRes.success) {
         throw new Error(finishRes.error?.message || 'Failed to complete session');
       }
 
-      const reportRes = await reportService.generateReport(sessionId);
+      const reportRes = await reportService.generateReport(sessionId, {
+        durationSeconds: timerSeconds
+      });
 
       if (reportRes.success && reportRes.data?.report) {
         navigate(`/report/${reportRes.data.report._id}`);

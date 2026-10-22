@@ -37,7 +37,7 @@ export const updateSession = asyncWrapper(async (req: Request, res: Response) =>
 
 export const respondSession = asyncWrapper(
   async (req: Request, res: Response) => {
-    const { text, status, voiceMetrics } = req.body;
+    const { text, status, voiceMetrics, durationSeconds, duration } = req.body;
 
     const sessionId = req.params.id as string;
     const userId = req.user!._id.toString();
@@ -48,7 +48,8 @@ export const respondSession = asyncWrapper(
         sessionId,
         userMessage: text || '',
         status: status || 'answered',
-        voiceMetrics
+        voiceMetrics,
+        durationSeconds: durationSeconds || duration
       });
 
     res.status(200).json({

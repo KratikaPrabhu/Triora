@@ -1,0 +1,53 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:5000/api
+        VITE_WS_URL: ws://localhost:5000/ws/conversation
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-1028501724428-hhf16j5pqj9eobce35v9aaq882g8u1dn.apps.googleusercontent.com}
+    container_name: triora_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    container_name: triora_backend
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: "5000"
+      NODE_ENV: production
+      # Use local mongo container by default; change to your Atlas URI if you prefer MongoDB Atlas:
+      MONGODB_URI: mongodb+srv://lunknown2321_db_user:V1cqr6cHkntT14SE@cluster0.ommasjv.mongodb.net/triora_db?appName=Cluster0
+      CLIENT_URL: http://localhost:3000
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: triora_mongo
+    volumes:
+      - triora_mongo_data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  triora_mongo_data:

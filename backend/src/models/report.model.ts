@@ -46,6 +46,10 @@ const reportSchema = new Schema<IReportDocument>(
       type: Schema.Types.Mixed,
       default: null
     },
+    duration: {
+      type: Number,
+      default: 0
+    },
     generatedAt: {
       type: Date,
       default: Date.now

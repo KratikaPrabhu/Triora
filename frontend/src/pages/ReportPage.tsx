@@ -65,10 +65,44 @@ export const ReportPage: React.FC = () => {
       })
     : 'October 14, 2026';
 
-  // Metrics derived from report or defaults matching the design in Image 1
-  const conversationTime = report?.voiceAnalysis?.totalDuration
-    ? `${Math.max(1, Math.round(report.voiceAnalysis.totalDuration / 60))} minutes`
-    : '28 minutes';
+  // Helper to format actual conversation time
+  const formatConversationDuration = (seconds?: number | null): string => {
+    if (typeof seconds !== 'number' || seconds <= 0) {
+      if (report?.createdAt && report?.generatedAt) {
+        const diff = Math.round((new Date(report.generatedAt).getTime() - new Date(report.createdAt).getTime()) / 1000);
+        if (diff > 5) {
+          const m = Math.floor(diff / 60);
+          const s = diff % 60;
+          return m === 0 ? `${s} seconds` : s === 0 ? `${m} minute${m === 1 ? '' : 's'}` : `${m} min ${s} sec`;
+        }
+      }
+      return '1 minute';
+    }
+
+    const totalSeconds = Math.round(seconds);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+
+    if (mins >= 60) {
+      const hrs = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      return remMins > 0 ? `${hrs} hr ${remMins} min` : `${hrs} hour${hrs === 1 ? '' : 's'}`;
+    }
+
+    if (mins === 0) {
+      return `${secs} second${secs === 1 ? '' : 's'}`;
+    }
+
+    if (secs === 0) {
+      return `${mins} minute${mins === 1 ? '' : 's'}`;
+    }
+
+    return `${mins} min ${secs} sec`;
+  };
+
+  // Actual session duration derived from report or voice analysis
+  const actualDuration = report?.duration || report?.voiceAnalysis?.totalDuration;
+  const conversationTime = formatConversationDuration(actualDuration);
 
   const topicsList = report?.keyThemes && report.keyThemes.length > 0
     ? report.keyThemes
