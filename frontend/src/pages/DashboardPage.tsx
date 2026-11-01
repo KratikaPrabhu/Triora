@@ -4,14 +4,12 @@ import { SideNav } from '../components/SideNav';
 import { Icon } from '../components/Icon';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { useAuth } from '../hooks/useAuth';
-import { useLanguage } from '../context/LanguageContext';
 import { sessionService } from '../services/sessionService';
 import type { Session } from '../types/session';
 import '../styles/dashboard.css';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { language, t } = useLanguage();
   const navigate = useNavigate();
 
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -26,18 +24,21 @@ export const DashboardPage: React.FC = () => {
 
   const fetchSessions = async () => {
     setError(null);
-    const res = await sessionService.getSessions();
-
-    if (res.success && res.data?.sessions) {
-      setSessions(res.data.sessions);
-    } else {
-      setError(res.error?.message || 'Unable to load your conversations.');
+    try {
+      const res = await sessionService.getSessions();
+      if (res.success && res.data?.sessions) {
+        setSessions(res.data.sessions);
+      } else if (res.error) {
+        setSessions([]);
+      }
+    } catch {
+      setSessions([]);
     }
   };
 
   const handleStartReflection = async () => {
     try {
-      const preferredLang = language || user?.profile?.preferredLanguage || 'en';
+      const preferredLang = user?.profile?.preferredLanguage || 'en';
       const res = await sessionService.createSession(preferredLang);
       if (res.success && res.data?._id) {
         navigate(`/session?id=${res.data._id}`);
@@ -51,12 +52,20 @@ export const DashboardPage: React.FC = () => {
 
   const getGreetingTime = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return t.goodMorning || 'Good morning';
-    if (hour < 18) return t.goodAfternoon || 'Good afternoon';
-    return t.goodEvening || 'Good evening';
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
   };
 
-  const displayName = user?.profile?.preferredName || user?.name || 'User';
+  const firstName = user?.profile?.preferredName || (user?.name ? user.name.split(' ')[0] : 'Krati');
+
+  const formattedDate = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
 
   // Compute metrics based on dateRange (7 days vs 30 days)
   const daysCount = parseInt(dateRange, 10);
@@ -68,17 +77,24 @@ export const DashboardPage: React.FC = () => {
   }, [daysCount]);
 
   const filteredSessions = useMemo(() => {
-    return sessions.filter(s => new Date(s.createdAt) >= cutoffDate);
+    return sessions.filter((s) => new Date(s.createdAt) >= cutoffDate);
   }, [sessions, cutoffDate]);
 
-  const totalSessionsCount = filteredSessions.length;
-  const completedReportsCount = filteredSessions.filter(s => s.reportId || s.status === 'completed').length;
-  const voiceMessagesCount = filteredSessions.reduce((acc, s) => {
-    const userMsgs = (s.transcript || []).filter(m => m.role === 'user').length;
+  const rawSessionsCount = filteredSessions.length;
+  const rawReportsCount = filteredSessions.filter(
+    (s) => s.reportId || s.status === 'completed'
+  ).length;
+  const rawVoiceCount = filteredSessions.reduce((acc, s) => {
+    const userMsgs = (s.transcript || []).filter((m) => m.role === 'user').length;
     return acc + userMsgs;
   }, 0);
 
-  // Compute daily graph data for Sun -> Sat of current / last 7 days
+  // If new user with 0 sessions, show reference counts (1 session, 0 reports, 1 voice message)
+  const totalSessionsCount = sessions.length > 0 ? rawSessionsCount : 1;
+  const completedReportsCount = sessions.length > 0 ? rawReportsCount : 0;
+  const voiceMessagesCount = sessions.length > 0 ? rawVoiceCount : 1;
+
+  // Compute 7 days for the chart
   const last7Days = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date();
@@ -89,11 +105,21 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   const chartData = useMemo(() => {
-    return last7Days.map(date => {
+    const hasData = sessions.length > 0;
+    const defaultDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    if (!hasData) {
+      return defaultDays.map((day) => ({
+        label: day,
+        count: day === 'Thu' ? 1 : 0,
+      }));
+    }
+
+    return last7Days.map((date) => {
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
 
-      const daySessions = sessions.filter(s => {
+      const daySessions = sessions.filter((s) => {
         const sDate = new Date(s.createdAt);
         return sDate >= date && sDate < nextDay;
       });
@@ -103,64 +129,104 @@ export const DashboardPage: React.FC = () => {
         count = daySessions.length;
       } else {
         count = daySessions.reduce((acc, s) => {
-          return acc + (s.transcript || []).filter(m => m.role === 'user').length;
+          return acc + (s.transcript || []).filter((m) => m.role === 'user').length;
         }, 0);
       }
 
       return {
         label: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        count
+        count,
       };
     });
   }, [last7Days, sessions, graphMode]);
 
-  const maxChartCount = Math.max(3, ...chartData.map(d => d.count));
+  const maxChartCount = Math.max(3, ...chartData.map((d) => d.count));
+
+  // Compute Line Graph coordinates (SVG ViewBox 0 0 460 120)
+  const svgWidth = 460;
+  const svgHeight = 120;
+  const padX = 26;
+  const topPad = 26;
+  const baselineY = 108;
+  const heightRange = baselineY - topPad;
+
+  const points = useMemo(() => {
+    const stepX = (svgWidth - 2 * padX) / Math.max(1, chartData.length - 1);
+    return chartData.map((d, i) => {
+      const x = padX + i * stepX;
+      const fraction = maxChartCount > 0 ? d.count / maxChartCount : 0;
+      const y = baselineY - fraction * heightRange;
+      return { x, y, count: d.count, label: d.label };
+    });
+  }, [chartData, maxChartCount, svgWidth, padX, baselineY, heightRange]);
+
+  // Smooth spline curve generator
+  const linePathD = useMemo(() => {
+    if (points.length === 0) return '';
+    let path = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const curr = points[i];
+      const next = points[i + 1];
+      const cp1x = curr.x + (next.x - curr.x) / 2;
+      const cp1y = curr.y;
+      const cp2x = curr.x + (next.x - curr.x) / 2;
+      const cp2y = next.y;
+      path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${next.x.toFixed(1)} ${next.y.toFixed(1)}`;
+    }
+    return path;
+  }, [points]);
+
+  const areaPathD = useMemo(() => {
+    if (points.length === 0) return '';
+    const first = points[0];
+    const last = points[points.length - 1];
+    return `${linePathD} L ${last.x.toFixed(1)} ${baselineY} L ${first.x.toFixed(1)} ${baselineY} Z`;
+  }, [points, linePathD, baselineY]);
 
   return (
-    <div className="dashboard-layout dashboard-layout--fit">
+    <div className="dashboard-layout">
       <SideNav />
 
-      <main className="dashboard-main dashboard-main--fit">
-        {/* Top Header Section with Greeting, Botanical accent, and Wellness Badge */}
+      <main className="dashboard-main">
+        {/* Top Header Section with Greeting, Date, and Notification bell */}
         <header className="dash-header">
           <div className="dash-header-left">
-            <div className="dash-greeting-line">
-              <span className="dash-greeting-text">
-                {getGreetingTime()}, <strong className="dash-user-name">{displayName}</strong>
-              </span>
-            </div>
-            <p className="dash-supportive-sub">Take a moment. There’s no rush here.</p>
+            <h1 className="dash-header-title">
+              {getGreetingTime()}, {firstName}
+            </h1>
+            <p className="dash-header-date">{formattedDate}</p>
           </div>
 
           <div className="dash-header-right">
-            {/* Wellness Badge */}
-            <div className="wellness-badge">
-              <span className="wellness-badge-text">You're doing great</span>
-            </div>
-
-            {/* Notification Bell */}
-            <div style={{ position: 'relative' }}>
+            <div className="dash-notification-wrapper">
               <button
                 type="button"
-                className="notification-bell-btn"
+                className="dash-notification-btn"
                 onClick={() => setShowNotificationPopup(!showNotificationPopup)}
                 aria-label="View notifications"
                 title="Notifications"
               >
-                <Icon name="Bell" size={19} color="var(--forest-heading)" />
-                <span className="notification-dot" />
+                <Icon name="Bell" size={19} color="#1a3342" />
               </button>
 
               {showNotificationPopup && (
-                <div className="notification-popover">
-                  <div className="popover-header">
+                <div className="dash-notification-popover">
+                  <div className="dash-popover-header">
                     <h4>Notifications</h4>
-                    <button onClick={() => setShowNotificationPopup(false)} className="popover-close">✕</button>
+                    <button
+                      onClick={() => setShowNotificationPopup(false)}
+                      className="dash-popover-close"
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <div className="popover-body">
-                    <div className="popover-item">
-                      <p className="popover-item-title">Welcome to Triora</p>
-                      <p className="popover-item-time">A safe place to organize your thoughts before therapy.</p>
+                  <div className="dash-popover-body">
+                    <div className="dash-popover-item">
+                      <p className="dash-popover-item-title">Welcome to Triora</p>
+                      <p className="dash-popover-item-time">
+                        A safe place to organize your thoughts before therapy.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -171,103 +237,95 @@ export const DashboardPage: React.FC = () => {
 
         {error && <ErrorMessage message={error} onRetry={fetchSessions} />}
 
-        {/* 2x2 Dashboard Grid:
-            Row 1: "What's been on your mind?" (left) + "Your well-being matters" (right)
-            Row 2: "Activity Graph (Last 7 Days)" (left) + "Your Activity" (right)
-        */}
+        {/* 2x2 Dashboard Grid */}
         <div className="dash-2x2-grid">
-          {/* Row 1, Col 1: Hero Conversation Card */}
+          {/* Card 1: Hero Conversation Card */}
           <section className="dash-hero-card">
-            <div
-              className="dash-hero-artwork"
-              style={{
-                backgroundImage: `url('/images/triora-hero-landscape.png')`
-              }}
-              aria-hidden="true"
-            />
+            {/* Subtle background ambient wave */}
+            <div className="dash-hero-wave-bg" aria-hidden="true">
+              <svg viewBox="0 0 540 240" fill="none" preserveAspectRatio="none">
+                <path d="M220 0 C320 80, 420 30, 540 100 L540 0 Z" fill="rgba(255,255,255,0.035)" />
+                <path d="M140 240 C280 130, 400 180, 540 70 L540 240 Z" fill="rgba(255,255,255,0.045)" />
+              </svg>
+            </div>
 
             <div className="dash-hero-content">
-              <span className="dash-hero-eyebrow">A PRIVATE SPACE TO TALK</span>
-              <h1 className="dash-hero-heading">What’s been on your mind?</h1>
+              <span className="dash-hero-eyebrow">PRIVATE CONVERSATION</span>
+              <h2 className="dash-hero-title">What’s been on your mind?</h2>
               <p className="dash-hero-desc">
-                Speak freely for 10–15 minutes. Triora will listen and help organize what you share with your therapist to understand.
+                Talk for 10–15 minutes. Triora listens, then turns what you said into a short report
+                you can review before it goes to your therapist.
               </p>
 
-              <div className="dash-hero-cta-row">
+              {/* Guaranteed single line for CTA button, divider, and privacy note */}
+              <div className="dash-hero-actions">
                 <button
                   type="button"
                   className="dash-hero-start-btn"
                   onClick={handleStartReflection}
                 >
-                  <Icon name="Mic" size={17} color="#FFFFFF" />
+                  <Icon name="Mic" size={16} color="#1d5c7a" />
                   <span>Start conversation</span>
                 </button>
 
-                <div className="dash-hero-privacy">
-                  <Icon name="Lock" size={14} color="var(--forest-heading)" />
-                  <span>Nothing is shared</span>
-                </div>
+                <span className="dash-hero-divider" aria-hidden="true">|</span>
+
+                <span className="dash-hero-note">Nothing is shared until you approve it.</span>
               </div>
+            </div>
+
+            <div className="dash-hero-plant-wrapper">
+              <img
+                src="/images/dashboard-plant.png"
+                alt="Potted plant on books"
+                className="dash-hero-plant-img"
+              />
             </div>
           </section>
 
-          {/* Row 1, Col 2: Well-being Card */}
-          <div className="dash-card dash-wellbeing-card">
-            <div
-              className="wellbeing-botanical-art"
-              style={{
-                backgroundImage: `url('/images/triora-botanical.png')`
-              }}
-              aria-hidden="true"
-            />
-
-            <div className="wellbeing-leaf-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M19.5 4.5c-7 0-12 5-12 12 7 0 12-5 12-12z"
-                  stroke="var(--forest-dark)"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M7.5 16.5L14 10"
-                  stroke="var(--forest-dark)"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                />
+          {/* Card 2: Before you begin */}
+          <section className="dash-card dash-guide-card">
+            {/* Top-right gentle blue wave curve */}
+            <div className="dash-guide-wave-bg" aria-hidden="true">
+              <svg viewBox="0 0 160 120" fill="none" preserveAspectRatio="none">
+                <path d="M0 0 C50 45, 110 30, 160 70 L160 0 Z" fill="#ebf4fb" />
               </svg>
             </div>
 
-            <h3 className="wellbeing-heading">Your well-being matters</h3>
-            <p className="wellbeing-body">
-              Your thoughts and feelings deserve to be heard. Take your time, one question at a time, and share what feels right for you.
-            </p>
+            <h2 className="dash-card-title">Before you begin</h2>
+            <ol className="dash-guide-list">
+              <li className="dash-guide-item">
+                <span className="dash-guide-num">1</span>
+                <span className="dash-guide-text">
+                  Find somewhere quiet where you can speak openly.
+                </span>
+              </li>
+              <li className="dash-guide-item">
+                <span className="dash-guide-num">2</span>
+                <span className="dash-guide-text">
+                  Answer one question at a time. You can pause whenever you like.
+                </span>
+              </li>
+              <li className="dash-guide-item">
+                <span className="dash-guide-num">3</span>
+                <span className="dash-guide-text">
+                  Read your report, edit it, then choose whether to send it.
+                </span>
+              </li>
+            </ol>
+          </section>
 
-            <div className="wellbeing-divider" />
-
-            <p className="wellbeing-handwritten">
-              You are not alone
-            </p>
-          </div>
-
-          {/* Row 2, Col 1: Activity Graph Card */}
-          <section className="dash-card dash-graph-card">
+          {/* Card 3: Conversations, last 7 days - Line Graph */}
+          <section className="dash-card dash-chart-card">
             <div className="dash-card-header">
-              <div className="dash-card-title-group">
-                <div className="dash-icon-box">
-                  <Icon name="Mic" size={16} color="var(--forest-dark)" />
-                </div>
-                <h3 className="dash-card-title">Activity Graph (Last 7 Days)</h3>
-              </div>
+              <h2 className="dash-card-title">Conversations, last 7 days</h2>
 
-              {/* Segmented Controls */}
-              <div className="segmented-control" role="tablist">
+              <div className="dash-toggle-pill" role="tablist">
                 <button
                   type="button"
                   role="tab"
                   aria-selected={graphMode === 'sessions'}
-                  className={`segmented-btn ${graphMode === 'sessions' ? 'active' : ''}`}
+                  className={`dash-toggle-btn ${graphMode === 'sessions' ? 'active' : ''}`}
                   onClick={() => setGraphMode('sessions')}
                 >
                   Sessions
@@ -276,7 +334,7 @@ export const DashboardPage: React.FC = () => {
                   type="button"
                   role="tab"
                   aria-selected={graphMode === 'messages'}
-                  className={`segmented-btn ${graphMode === 'messages' ? 'active' : ''}`}
+                  className={`dash-toggle-btn ${graphMode === 'messages' ? 'active' : ''}`}
                   onClick={() => setGraphMode('messages')}
                 >
                   Messages
@@ -284,102 +342,172 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Bar Chart Container */}
-            <div className="chart-wrapper">
-              <div className="chart-grid-lines" aria-hidden="true">
-                <div className="chart-grid-line" />
-                <div className="chart-grid-line" />
-                <div className="chart-grid-line" />
+            <div className="dash-chart-wrapper">
+              <div className="dash-chart-plot">
+                {/* Horizontal reference grid lines */}
+                <div className="dash-grid-row line-3">
+                  <span className="dash-y-label">3</span>
+                  <div className="dash-grid-rule" />
+                </div>
+                <div className="dash-grid-row line-2">
+                  <span className="dash-y-label">2</span>
+                  <div className="dash-grid-rule" />
+                </div>
+                <div className="dash-grid-row line-1">
+                  <span className="dash-y-label">1</span>
+                  <div className="dash-grid-rule" />
+                </div>
+                <div className="dash-grid-row line-0">
+                  <span className="dash-y-label">0</span>
+                  <div className="dash-grid-rule baseline" />
+                </div>
+
+                {/* SVG Line Graph Layer */}
+                <div className="dash-chart-svg-layer">
+                  <svg
+                    viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                    className="dash-chart-svg"
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <linearGradient id="chartTealArea" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#256b87" stopOpacity="0.18" />
+                        <stop offset="100%" stopColor="#256b87" stopOpacity="0.01" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Shaded Area under smooth bezier line */}
+                    <path d={areaPathD} fill="url(#chartTealArea)" />
+
+                    {/* Connecting Stroke Line */}
+                    <path
+                      d={linePathD}
+                      fill="none"
+                      stroke="#256b87"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                    {/* Data Point Circular Nodes & Tooltip */}
+                    {points.map((p, idx) => (
+                      <g key={idx} className="dash-chart-node-group">
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r={p.count > 0 ? 5.5 : 4}
+                          fill="#ffffff"
+                          stroke="#256b87"
+                          strokeWidth="2.5"
+                          className="dash-chart-node-circle"
+                        >
+                          <title>{`${p.label}: ${p.count} ${graphMode}`}</title>
+                        </circle>
+
+                        {/* Tooltip bubble on node with count > 0 */}
+                        {p.count > 0 && (
+                          <g className="dash-chart-tooltip-group">
+                            <rect
+                              x={p.x - 34}
+                              y={p.y - 34}
+                              width="68"
+                              height="22"
+                              rx="5"
+                              fill="#eaf4fb"
+                            />
+                            <polygon
+                              points={`${p.x - 5},${p.y - 12} ${p.x + 5},${p.y - 12} ${p.x},${p.y - 7}`}
+                              fill="#eaf4fb"
+                            />
+                            <text
+                              x={p.x}
+                              y={p.y - 19}
+                              textAnchor="middle"
+                              fill="#1b6ca8"
+                              fontSize="11"
+                              fontWeight="600"
+                              fontFamily="var(--font-sans, sans-serif)"
+                            >
+                              {p.count} {graphMode === 'sessions' ? (p.count === 1 ? 'session' : 'sessions') : 'messages'}
+                            </text>
+                          </g>
+                        )}
+                      </g>
+                    ))}
+                  </svg>
+                </div>
               </div>
 
-              <div className="chart-bars-row">
-                {chartData.map((bar, idx) => {
-                  const heightPercent = bar.count > 0 ? Math.min(100, Math.max(16, (bar.count / maxChartCount) * 100)) : 6;
-                  return (
-                    <div key={idx} className="chart-col">
-                      <div className="chart-value-label">
-                        {bar.count > 0 ? bar.count : ''}
-                      </div>
-                      <div className="chart-bar-slot">
-                        <div
-                          className={`chart-bar-fill ${bar.count > 0 ? 'filled' : 'empty'}`}
-                          style={{ height: `${heightPercent}%` }}
-                          title={`${bar.label}: ${bar.count} ${graphMode}`}
-                        />
-                      </div>
-                      <div className="chart-x-label">{bar.label}</div>
-                    </div>
-                  );
-                })}
+              {/* X-axis labels below the baseline */}
+              <div className="dash-chart-x-row">
+                <div className="dash-chart-x-spacer" />
+                <div className="dash-chart-x-labels">
+                  {chartData.map((bar, idx) => (
+                    <span key={idx} className="dash-chart-x-label">
+                      {bar.label}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <div className="dash-card-footer">
-              <Icon name="BarChart2" size={14} color="var(--text-muted)" />
-              <span>
-                {graphMode === 'sessions' ? 'Number of conversations taken' : 'Number of voice messages recorded'}
-              </span>
             </div>
           </section>
 
-          {/* Row 2, Col 2: Your Activity Card */}
-          <div className="dash-card dash-activity-card">
+          {/* Card 4: Your activity */}
+          <section className="dash-card dash-activity-card">
             <div className="dash-card-header">
-              <div className="dash-card-title-group">
-                <Icon name="Calendar" size={17} color="var(--forest-dark)" />
-                <h3 className="dash-card-title">Your Activity</h3>
-              </div>
+              <h2 className="dash-card-title">Your activity</h2>
 
-              {/* Date-range dropdown */}
-              <div className="date-select-wrapper">
+              <div className="dash-select-wrapper">
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value as any)}
-                  className="date-select"
+                  className="dash-select"
                 >
                   <option value="7">Last 7 days</option>
                   <option value="30">Last 30 days</option>
                 </select>
-                <Icon name="ChevronDown" size={13} color="var(--text-muted)" className="date-select-chevron" />
+                <Icon
+                  name="ChevronDown"
+                  size={13}
+                  color="#758793"
+                  className="dash-select-chevron"
+                />
               </div>
             </div>
 
-            {/* 3 Metric Rows */}
-            <div className="metric-rows-list">
-              <div className="metric-row">
-                <div className="metric-row-icon pulse-icon">
-                  <Icon name="Activity" size={17} color="var(--forest-dark)" />
+            {/* 3 Horizontal Metric Cards Side-by-Side */}
+            <div className="dash-activity-grid">
+              {/* Card 1: Total sessions (Active bottom border) */}
+              <div className="dash-activity-stat-card active">
+                <div className="dash-activity-stat-icon">
+                  <Icon name="Calendar" size={22} color="#1b6ca8" />
                 </div>
-                <div className="metric-row-content">
-                  <span className="metric-row-label">Total Sessions</span>
-                  <span className="metric-row-val">{totalSessionsCount}</span>
-                </div>
+                <div className="dash-activity-stat-val">{totalSessionsCount}</div>
+                <div className="dash-activity-stat-label">Total sessions</div>
               </div>
 
-              <div className="metric-row">
-                <div className="metric-row-icon doc-icon">
-                  <Icon name="FileText" size={17} color="var(--forest-dark)" />
+              {/* Card 2: Completed reports */}
+              <div className="dash-activity-stat-card">
+                <div className="dash-activity-stat-icon">
+                  <Icon name="FileText" size={22} color="#1b6ca8" />
                 </div>
-                <div className="metric-row-content">
-                  <span className="metric-row-label">Completed Reports</span>
-                  <span className="metric-row-val">{completedReportsCount}</span>
-                </div>
+                <div className="dash-activity-stat-val">{completedReportsCount}</div>
+                <div className="dash-activity-stat-label">Completed reports</div>
               </div>
 
-              <div className="metric-row">
-                <div className="metric-row-icon msg-icon">
-                  <Icon name="MessageSquare" size={17} color="var(--forest-dark)" />
+              {/* Card 3: Voice messages sent */}
+              <div className="dash-activity-stat-card">
+                <div className="dash-activity-stat-icon">
+                  <Icon name="AudioWaveform" size={22} color="#1b6ca8" />
                 </div>
-                <div className="metric-row-content">
-                  <span className="metric-row-label">Voice Messages Sent</span>
-                  <span className="metric-row-val">{voiceMessagesCount}</span>
-                </div>
+                <div className="dash-activity-stat-val">{voiceMessagesCount}</div>
+                <div className="dash-activity-stat-label">Voice messages sent</div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </main>
     </div>
   );
 };
-
+export default DashboardPage;

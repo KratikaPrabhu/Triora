@@ -74,8 +74,14 @@ export const authService = {
     });
   },
 
-  async getOnboarding(): Promise<ApiResponse<any>> {
-    return apiRequest<any>('/onboarding');
+  async deleteAccount(): Promise<ApiResponse<any>> {
+    const res = await apiRequest<any>('/auth/me', {
+      method: 'DELETE',
+    });
+    if (res.success) {
+      removeStoredToken();
+    }
+    return res;
   },
 
   logout(): void {

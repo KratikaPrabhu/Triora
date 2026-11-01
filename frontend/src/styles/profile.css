@@ -1,0 +1,879 @@
+/* ========================================================
+   TRIORA PERSONAL PROFILE PAGE STYLES
+   - Blue and White Theme
+   - Integrated with SideNav navbar
+   - Smooth scrollable main content area
+   - Powder-blue hero profile card with avatar and status tag
+   - 2x2 Grid of White Cards with soft-tinted field boxes & icons
+   - Demographics & Personal Profile Card (3 columns)
+   - Danger Zone Card with soft coral tint
+   - Edit Profile Details Modal / Form in Blue & White Theme
+   ======================================================== */
+
+.profile-page-layout {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+}
+
+/* Scrollable Main Area */
+.profile-main-scrollable {
+  flex: 1;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2.25rem 3.5rem 5rem 3.5rem;
+  background-color: var(--bg-main, #f7f6f2);
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+/* ========================================================
+   1. TOP HEADER SECTION
+   ======================================================== */
+.profile-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.profile-header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #607d8b;
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+.profile-main-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 2.35rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.profile-main-subtitle {
+  font-size: 0.94rem;
+  color: #60737f;
+  margin: 0;
+  font-weight: 400;
+  max-width: 680px;
+}
+
+.profile-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1.15rem;
+}
+
+.profile-user-greeting {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: #183344;
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
+}
+
+.profile-user-date {
+  font-size: 0.86rem;
+  color: #7c8d96;
+  line-height: 1.3;
+}
+
+.profile-edit-btn {
+  background-color: var(--triora-teal, #20627e);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.45rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(32, 98, 126, 0.22);
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.profile-edit-btn:hover {
+  background-color: #184e64;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(32, 98, 126, 0.28);
+}
+
+.profile-edit-btn:active {
+  transform: translateY(0);
+}
+
+/* Success & Error Banners */
+.profile-alert-success {
+  padding: 0.85rem 1.25rem;
+  background-color: #edf7ed;
+  border: 1px solid #a3d9a5;
+  border-radius: 10px;
+  color: #1e4620;
+  margin-bottom: 1.35rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-alert-error {
+  padding: 0.75rem 1rem;
+  background-color: #fde8e8;
+  border: 1px solid #f98080;
+  border-radius: 8px;
+  color: #9b1c1c;
+  margin-bottom: 1rem;
+  font-size: 0.86rem;
+}
+
+/* ========================================================
+   2. HERO PROFILE CARD (Powder-Blue Tint)
+   ======================================================== */
+.profile-hero-card {
+  background-color: #edf5f9;
+  border-radius: 16px;
+  padding: 1.75rem 2.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+}
+
+.profile-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 1.35rem;
+}
+
+.profile-avatar-circle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background-color: #d2e5f0;
+  color: #183344;
+  font-size: 1.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.profile-hero-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.profile-user-name {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.profile-status-badge {
+  background-color: #d4e7f2;
+  color: #205c74;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+}
+
+.profile-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  color: #557383;
+}
+
+.profile-meta-pipe {
+  color: #a4bcc9;
+  font-weight: 300;
+}
+
+/* Language Box in Hero Right */
+.profile-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(164, 188, 201, 0.3);
+}
+
+.profile-lang-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #607d8b;
+  margin-bottom: 0.35rem;
+}
+
+.profile-lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8d96' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat calc(100% - 12px) center;
+  padding: 0.5rem 2.2rem 0.5rem 0.95rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  color: #183344;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 150ms ease;
+  min-width: 170px;
+}
+
+.profile-lang-select:hover {
+  border-color: #94a3b8;
+}
+
+/* ========================================================
+   3. 2X2 PROFILE GRID CARDS
+   ======================================================== */
+.profile-2x2-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+}
+
+.profile-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-light, #eae7df);
+  border-radius: 16px;
+  padding: 1.6rem 1.85rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.profile-card-header {
+  margin-bottom: 1.15rem;
+}
+
+.profile-card-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.01em;
+}
+
+.profile-card-subtitle {
+  font-size: 0.86rem;
+  color: #7c8d96;
+  margin: 0;
+  font-weight: 400;
+}
+
+.profile-fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.profile-field-box {
+  background-color: #f5f9fb;
+  border: 1px solid #e7f0f5;
+  border-radius: 10px;
+  padding: 0.9rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: all 150ms ease;
+}
+
+.profile-field-box:hover {
+  background-color: #edf5f9;
+  border-color: #d9e8f1;
+}
+
+.profile-field-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #607d8b;
+  margin-bottom: 0.35rem;
+}
+
+.profile-field-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.profile-item-icon {
+  color: #557383;
+  flex-shrink: 0;
+}
+
+.profile-field-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #183344;
+  line-height: 1.35;
+}
+
+.profile-field-value.bold {
+  font-weight: 600;
+}
+
+.profile-field-value.masked {
+  letter-spacing: 0.2em;
+  font-size: 1.15rem;
+  color: #183344;
+}
+
+/* ========================================================
+   4. DEMOGRAPHICS & PERSONAL PROFILE CARD (Full Width)
+   ======================================================== */
+.profile-demographics-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-light, #eae7df);
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.demographics-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.4rem;
+}
+
+.demographics-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: #e2edf3;
+  color: #20627e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.demographics-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0 0 0.2rem 0;
+  letter-spacing: -0.01em;
+}
+
+.demographics-subtitle {
+  font-size: 0.86rem;
+  color: #7c8d96;
+  margin: 0;
+  font-weight: 400;
+}
+
+.demographics-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.demographics-field-box {
+  background-color: #f5f9fb;
+  border: 1px solid #e7f0f5;
+  border-radius: 10px;
+  padding: 0.95rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 150ms ease;
+}
+
+.demographics-field-box:hover {
+  background-color: #edf5f9;
+  border-color: #d9e8f1;
+}
+
+.demographics-field-val {
+  font-size: 0.96rem;
+  font-weight: 500;
+  color: #183344;
+  line-height: 1.35;
+}
+
+.demographics-field-val.bold {
+  font-weight: 600;
+}
+
+/* ========================================================
+   5. DANGER ZONE CARD (Full Width)
+   ======================================================== */
+.profile-danger-zone-card {
+  background-color: #fff8f6;
+  border: 1px solid #fed7d7;
+  border-radius: 16px;
+  padding: 1.75rem 2.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.75rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.danger-zone-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.danger-zone-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #c53030;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.01em;
+}
+
+.danger-zone-description {
+  font-size: 0.88rem;
+  color: #744242;
+  margin: 0;
+  max-width: 680px;
+  line-height: 1.45;
+}
+
+.danger-zone-delete-btn {
+  background-color: #ffffff;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 9999px;
+  padding: 0.62rem 1.55rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.06);
+}
+
+.danger-zone-delete-btn:hover {
+  background-color: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.danger-zone-delete-btn:active {
+  transform: translateY(0);
+}
+
+/* ========================================================
+   6. EDIT PROFILE DETAILS MODAL (Blue and White Theme)
+   ======================================================== */
+.profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(24, 51, 68, 0.48);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.profile-modal-card {
+  background-color: #ffffff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(18, 52, 68, 0.18);
+  padding: 2.25rem;
+  box-sizing: border-box;
+  animation: modalFadeIn 180ms ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.profile-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid #edf2f5;
+}
+
+.profile-modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-modal-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: #e2edf3;
+  color: #20627e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-modal-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0 0 0.2rem 0;
+}
+
+.profile-modal-subtitle {
+  font-size: 0.85rem;
+  color: #607d8b;
+  margin: 0;
+}
+
+.profile-modal-close-btn {
+  background: #f1f5f8;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #607d8b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.profile-modal-close-btn:hover {
+  background-color: #e2eaf0;
+  color: #183344;
+}
+
+.profile-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.profile-form-section {
+  background-color: #fafbfc;
+  border: 1px solid #eef3f6;
+  border-radius: 12px;
+  padding: 1.15rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.form-section-header {
+  border-bottom: 1px solid #e8eff3;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-section-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #20627e;
+}
+
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.95rem;
+}
+
+.profile-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.profile-form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #183344;
+}
+
+.profile-form-input,
+.profile-form-select {
+  padding: 0.65rem 0.95rem;
+  border: 1px solid #d1dbe2;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #183344;
+  outline: none;
+  background-color: #ffffff;
+  transition: all 150ms ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.profile-form-input:focus,
+.profile-form-select:focus {
+  border-color: #20627e;
+  box-shadow: 0 0 0 3px rgba(32, 98, 126, 0.15);
+}
+
+.profile-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid #edf2f5;
+}
+
+.profile-modal-btn-cancel {
+  background-color: #ffffff;
+  border: 1px solid #d1dbe2;
+  color: #475569;
+  border-radius: 8px;
+  padding: 0.65rem 1.45rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.profile-modal-btn-cancel:hover {
+  background-color: #f8fafc;
+}
+
+.profile-modal-btn-save {
+  background-color: var(--triora-teal, #20627e);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.6rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(32, 98, 126, 0.25);
+  transition: all 150ms ease;
+}
+
+.profile-modal-btn-save:hover {
+  background-color: #184e64;
+  transform: translateY(-1px);
+}
+
+.profile-modal-btn-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ========================================================
+   7. DELETE ACCOUNT CONFIRMATION MODAL
+   ======================================================== */
+.delete-confirm-card {
+  max-width: 480px;
+  text-align: center;
+  padding: 2.25rem 2rem;
+}
+
+.delete-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem auto;
+}
+
+.delete-modal-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #991b1b;
+  margin: 0 0 0.65rem 0;
+}
+
+.delete-modal-text {
+  font-size: 0.9rem;
+  color: #555555;
+  line-height: 1.5;
+  margin: 0 0 1.75rem 0;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.delete-modal-btn-confirm {
+  background-color: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.45rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+  transition: all 150ms ease;
+}
+
+.delete-modal-btn-confirm:hover {
+  background-color: #b91c1c;
+}
+
+.delete-modal-btn-confirm:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ========================================================
+   8. RESPONSIVE DESIGN
+   ======================================================== */
+@media (max-width: 1080px) {
+  .profile-main-scrollable {
+    padding: 1.75rem 2rem 5rem 2rem;
+  }
+
+  .profile-2x2-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .demographics-fields-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .profile-danger-zone-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page-layout {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+
+  .profile-main-scrollable {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.25rem 1.25rem 6rem 1.25rem;
+  }
+
+  .profile-top-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .profile-header-right {
+    align-items: flex-start;
+  }
+
+  .profile-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.35rem;
+  }
+
+  .profile-hero-right {
+    padding-left: 0;
+    border-left: none;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(164, 188, 201, 0.3);
+    width: 100%;
+  }
+
+  .profile-lang-select {
+    width: 100%;
+  }
+
+  .profile-2x2-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-modal-card {
+    padding: 1.5rem;
+  }
+}

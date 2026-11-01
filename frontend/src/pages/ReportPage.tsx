@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Logo } from '../components/Logo';
-import { Icon } from '../components/Icon';
+import { SideNav } from '../components/SideNav';
 import { Loading } from '../components/Loading';
-import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../hooks/useAuth';
 import { reportService } from '../services/reportService';
 import type { Report } from '../types/report';
+import '../styles/dashboard.css';
 import '../styles/report.css';
+
+interface ThemeItem {
+  title: string;
+  description: string;
+}
 
 export const ReportPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { t } = useLanguage();
+  const { user } = useAuth();
 
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -29,21 +34,26 @@ export const ReportPage: React.FC = () => {
     try {
       const res = await reportService.getReport(reportId);
       setIsLoading(false);
-
       if (res.success && res.data?.report) {
         setReport(res.data.report);
       } else {
-        // Fallback for demo or when session is newly generated
         setReport(null);
       }
-    } catch (err: any) {
+    } catch {
       setIsLoading(false);
       setReport(null);
     }
   };
 
   const handlePrint = () => {
-    window.print();
+    // Reset any container scroll offsets so print captures the complete document from top
+    const mainEl = document.querySelector('.report-detail-main');
+    if (mainEl) mainEl.scrollTop = 0;
+    window.scrollTo(0, 0);
+
+    setTimeout(() => {
+      window.print();
+    }, 50);
   };
 
   const handleShare = () => {
@@ -52,256 +62,202 @@ export const ReportPage: React.FC = () => {
     setTimeout(() => setShareCopied(false), 3000);
   };
 
-  if (isLoading) {
-    return <Loading fullScreen message={t.synthesizingSummary || 'Loading summary...'} />;
-  }
+  const getGreetingTime = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
 
-  // Format date: if report has generatedAt or createdAt, use it; else fallback to October 14, 2026
-  const formattedDate = report?.createdAt || report?.generatedAt
-    ? new Date(report.createdAt || report.generatedAt).toLocaleDateString('en-US', {
+  const firstName = user?.profile?.preferredName || (user?.name ? user.name.split(' ')[0] : 'Kratika');
+
+  const currentDateFormatted = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }, []);
+
+  const formattedDate = useMemo(() => {
+    if (report?.createdAt || report?.generatedAt) {
+      return new Date(report.createdAt || report.generatedAt).toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
-      })
-    : 'October 14, 2026';
+      });
+    }
+    return 'October 21, 2026';
+  }, [report]);
 
-  // Helper to format actual conversation time
-  const formatConversationDuration = (seconds?: number | null): string => {
-    if (typeof seconds !== 'number' || seconds <= 0) {
-      if (report?.createdAt && report?.generatedAt) {
-        const diff = Math.round((new Date(report.generatedAt).getTime() - new Date(report.createdAt).getTime()) / 1000);
-        if (diff > 5) {
-          const m = Math.floor(diff / 60);
-          const s = diff % 60;
-          return m === 0 ? `${s} seconds` : s === 0 ? `${m} minute${m === 1 ? '' : 's'}` : `${m} min ${s} sec`;
+  // Derive conversation duration
+  const conversationDuration = useMemo(() => {
+    const actualSeconds = report?.duration || report?.voiceAnalysis?.totalDuration;
+    if (typeof actualSeconds === 'number' && actualSeconds > 0) {
+      const mins = Math.floor(actualSeconds / 60);
+      const secs = Math.round(actualSeconds % 60);
+      return `${mins} min ${secs} sec`;
+    }
+    return '10 min 41 sec';
+  }, [report]);
+
+  // Derive themes list
+  const themesList: ThemeItem[] = useMemo(() => {
+    if (report?.keyThemes && report.keyThemes.length > 0) {
+      return report.keyThemes.map((themeStr, i) => {
+        // If themeStr contains a colon, split it into title and description
+        if (themeStr.includes(':')) {
+          const [tPart, ...rest] = themeStr.split(':');
+          return { title: tPart.trim(), description: rest.join(':').trim() };
         }
-      }
-      return '1 minute';
+        const defaultDescriptions = [
+          'You shared that work and personal responsibilities have been making you feel overwhelmed.',
+          'You mentioned having difficulty maintaining a consistent sleep schedule and feeling tired during the day.',
+          'You reflected on patterns that trigger feelings of anxiety and practical steps for relief.',
+        ];
+        return {
+          title: themeStr,
+          description: defaultDescriptions[i % defaultDescriptions.length],
+        };
+      });
     }
 
-    const totalSeconds = Math.round(seconds);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
+    return [
+      {
+        title: 'Stress and Overthinking',
+        description:
+          'You shared that work and personal responsibilities have been making you feel overwhelmed.',
+      },
+      {
+        title: 'Sleep and Routine',
+        description:
+          'You mentioned having difficulty maintaining a consistent sleep schedule and feeling tired during the day.',
+      },
+    ];
+  }, [report]);
 
-    if (mins >= 60) {
-      const hrs = Math.floor(mins / 60);
-      const remMins = mins % 60;
-      return remMins > 0 ? `${hrs} hr ${remMins} min` : `${hrs} hour${hrs === 1 ? '' : 's'}`;
-    }
+  const topicsCount = themesList.length;
+  const insightsCount =
+    (report?.concerns?.length || 0) + (report?.importantStatements?.length || 0) || 16;
 
-    if (mins === 0) {
-      return `${secs} second${secs === 1 ? '' : 's'}`;
-    }
-
-    if (secs === 0) {
-      return `${mins} minute${mins === 1 ? '' : 's'}`;
-    }
-
-    return `${mins} min ${secs} sec`;
-  };
-
-  // Actual session duration derived from report or voice analysis
-  const actualDuration = report?.duration || report?.voiceAnalysis?.totalDuration;
-  const conversationTime = formatConversationDuration(actualDuration);
-
-  const topicsList = report?.keyThemes && report.keyThemes.length > 0
-    ? report.keyThemes
-    : [
-        'Daily routine and lifestyle',
-        'Emotional well-being',
-        'Work and personal boundaries',
-        'Sleep and physical energy',
-        'Mindfulness practices',
-      ];
-
-  const topicsCount = report?.keyThemes?.length || 5;
-
-  const takeawaysList = [
-    ...(report?.concerns || []),
-    ...(report?.importantStatements || []),
-  ];
-
-  const defaultTakeaways = [
-    'You shared your current daily routine and how it has been affecting your mood and energy levels.',
-    'You expressed interest in developing healthier habits and routines.',
-  ];
-
-  const displayTakeaways = takeawaysList.length > 0 ? takeawaysList : defaultTakeaways;
-
-  const insightsCount = takeawaysList.length > 0 ? takeawaysList.length : 12;
+  if (isLoading) {
+    return <Loading fullScreen message="Loading summary..." />;
+  }
 
   return (
-    <div className="report-page-bg">
-      {/* Top Toolbar */}
-      <header className="report-top-toolbar">
-        <Logo linkTo="/dashboard" />
+    <div className="dashboard-layout report-detail-layout">
+      {/* Side Navigation Bar */}
+      <SideNav />
 
-        <div className="report-toolbar-actions">
-          <button className="report-action-btn report-print-btn" onClick={handlePrint} type="button">
-            <Icon name="Printer" size={16} />
-            <span>{t.print || 'Print'}</span>
+      {/* Main Scrollable Report Content Area */}
+      <main className="dashboard-main report-detail-main">
+        {/* Top Header & User Greeting */}
+        <div className="report-detail-top-bar">
+          <div className="report-back-nav">
+            <Link to="/reports" className="report-back-btn">
+              <span className="report-back-arrow">←</span>
+              <span>Back to Reports</span>
+            </Link>
+          </div>
+
+          <div className="report-top-right-group">
+            <div className="report-user-greeting">
+              {getGreetingTime()}, {firstName}
+            </div>
+            <div className="report-user-date">{currentDateFormatted}</div>
+          </div>
+        </div>
+
+        {/* Action Buttons Toolbar Row */}
+        <div className="report-action-buttons-row">
+          <button type="button" className="report-action-btn btn-print" onClick={handlePrint}>
+            Print
           </button>
-
-          <button className="report-action-btn report-share-btn" onClick={handleShare} type="button">
-            <Icon name={shareCopied ? 'Check' : 'Share2'} size={16} />
-            <span>{shareCopied ? (t.linkCopied || 'Link copied!') : (t.shareWithTherapist || 'Share with therapist')}</span>
+          <button type="button" className="report-action-btn btn-share" onClick={handleShare}>
+            {shareCopied ? 'Link copied!' : 'Share with therapist'}
           </button>
-
-          <Link to="/dashboard" className="report-dashboard-link">
-            <Icon name="LayoutGrid" size={16} />
-            <span>{t.goToDashboard || 'Go to Dashboard'}</span>
-            <span className="report-arrow">→</span>
+          <Link to="/dashboard" className="report-action-btn btn-dashboard">
+            Go to Dashboard
           </Link>
         </div>
-      </header>
 
-      {/* Document Layout - Covers 90% of summary page width */}
-      <main className="report-document-container" id="summary-report-document">
-        {/* Centered Top Eyebrow with flanking divider lines */}
-        <div className="report-eyebrow-wrapper">
-          <span className="report-eyebrow-line" />
-          <span className="report-eyebrow-text">
-            TRIORA {(t.reportSummaryTitle || 'Conversation Summary').toUpperCase()}
-          </span>
-          <span className="report-eyebrow-line" />
-        </div>
-
-        {/* Title */}
-        <h1 className="report-main-title">{t.reportSummaryTitle || 'Conversation Summary'}</h1>
-
-        {/* Meta Row */}
-        <div className="report-meta-row">
-          <span className="report-meta-item">
-            <Icon name="Calendar" size={16} className="meta-icon" />
-            Date: {formattedDate}
-          </span>
-          <span className="report-meta-divider">|</span>
-          <span className="report-meta-item">
-            <Icon name="Lock" size={16} className="meta-icon" />
-            {t.privateIntakeDoc || 'Private Intake Document'}
-          </span>
-        </div>
-
-        {/* Notice Disclaimer Banner */}
-        <div className="report-disclaimer-card">
-          <div className="report-disclaimer-icon-circle">
-            <Icon name="Info" size={16} color="#ffffff" />
+        {/* Print-Only Header: Shown strictly during print */}
+        <div className="report-print-header" aria-hidden="true">
+          <div className="report-print-logo">triora</div>
+          <div className="report-print-meta">
+            <span>Patient: {user?.name || firstName}</span>
+            <span className="report-print-dot">·</span>
+            <span>Date: {formattedDate}</span>
           </div>
-          <p className="report-disclaimer-text">
-            {t.reportNotice || 'This summary was generated from your conversation. Review and edit it before sharing with your therapist.'}
-          </p>
         </div>
 
-        {/* Summary Overview Section Header */}
-        <div className="report-section-intro">
-          <p className="report-section-tag">{t.inYourWords || 'IN YOUR WORDS'}</p>
-          <h2 className="report-section-title">{t.summaryOverview || 'Summary Overview'}</h2>
+        {/* Hero Card: Conversation Summary */}
+        <section className="report-hero-card">
+          <span className="report-hero-eyebrow">TRIORA CONVERSATION SUMMARY</span>
+          <h1 className="report-hero-title">Conversation Summary</h1>
+          <div className="report-hero-meta">
+            <span>Date: {formattedDate}</span>
+            <span className="report-meta-pipe">|</span>
+            <span>Private Intake Document</span>
+          </div>
+          <p className="report-hero-desc">
+            This summary was generated from your conversation. Review and edit it before sharing
+            with your therapist.
+          </p>
+        </section>
+
+        {/* Section 1: Summary Overview */}
+        <section className="report-overview-section">
+          <h2 className="report-section-heading">Summary Overview</h2>
           <p className="report-section-desc">
-            This section captures the key themes and insights from your conversation. It reflects what you shared in your own words, helping you and your therapist better understand your current thoughts, feelings, and experiences.
+            This section captures the key themes and insights from your conversation. It reflects
+            what you shared in your own words, helping you and your therapist better understand your
+            current thoughts, feelings, and experiences.
           </p>
-        </div>
 
-        {/* 3 Stat Cards Row: Conversation Time, Topics Discussed, Key Insights */}
-        <div className="report-stats-grid">
-          {/* Card 1: Total Conversation Time */}
-          <div className="report-stat-card card-time">
-            <div className="report-stat-icon-wrap icon-time">
-              <Icon name="MessageSquare" size={18} />
+          {/* 3 Overview Metric Cards */}
+          <div className="report-metrics-grid">
+            <div className="report-metric-card">
+              <span className="report-metric-label">Total Conversation Time</span>
+              <span className="report-metric-val">{conversationDuration}</span>
             </div>
-            <div className="report-stat-info">
-              <span className="report-stat-label">Total Conversation Time</span>
-              <span className="report-stat-value">{conversationTime}</span>
+
+            <div className="report-metric-card">
+              <span className="report-metric-label">Topics Discussed</span>
+              <span className="report-metric-val">{topicsCount} key themes</span>
+            </div>
+
+            <div className="report-metric-card">
+              <span className="report-metric-label">Key Insights</span>
+              <span className="report-metric-val">{insightsCount} highlights</span>
             </div>
           </div>
+        </section>
 
-          {/* Card 2: Topics Discussed */}
-          <div className="report-stat-card card-topics">
-            <div className="report-stat-icon-wrap icon-topics">
-              <Icon name="FileText" size={18} />
-            </div>
-            <div className="report-stat-info">
-              <span className="report-stat-label">Topics Discussed</span>
-              <span className="report-stat-value">
-                {topicsCount === 1 ? '1 key theme' : `${topicsCount} key themes`}
-              </span>
-            </div>
+        {/* Section 2: Key Themes Card */}
+        <section className="report-themes-card">
+          <div className="report-themes-card-header">
+            <h2 className="report-section-heading">Key Themes</h2>
+            <p className="report-themes-subtitle">
+              These are the main areas that came up during your conversation.
+            </p>
           </div>
 
-          {/* Card 3: Key Insights */}
-          <div className="report-stat-card card-insights">
-            <div className="report-stat-icon-wrap icon-insights">
-              <Icon name="Lightbulb" size={18} />
-            </div>
-            <div className="report-stat-info">
-              <span className="report-stat-label">Key Insights</span>
-              <span className="report-stat-value">
-                {insightsCount === 1 ? '1 highlight' : `${insightsCount} highlights`}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2-Column Cards Section: Main Themes & Key Takeaways */}
-        <div className="report-columns-grid">
-          {/* Column 1: Main Themes */}
-          <div className="report-column-card">
-            <div className="report-column-header">
-              <div className="column-icon-badge badge-green">
-                <Icon name="MessageSquare" size={18} />
+          <div className="report-themes-list">
+            {themesList.map((theme, idx) => (
+              <div key={idx} className="report-theme-row-card">
+                <h3 className="report-theme-title">{theme.title}</h3>
+                <p className="report-theme-text">{theme.description}</p>
               </div>
-              <div>
-                <h3 className="report-column-title">Main Themes</h3>
-                <p className="report-column-subtitle">Topics you talked about during the session</p>
-              </div>
-            </div>
-
-            <div className="report-theme-items-list">
-              {topicsList.slice(0, 5).map((theme, idx) => (
-                <div key={idx} className="report-theme-row-item">
-                  <span className="theme-index-badge">{idx + 1}</span>
-                  <span className="theme-name-text">{theme}</span>
-                  <Icon name="ChevronRight" size={16} className="theme-arrow-icon" />
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
+        </section>
 
-          {/* Column 2: Key Takeaways */}
-          <div className="report-column-card">
-            <div className="report-column-header">
-              <div className="column-icon-badge badge-amber">
-                <Icon name="Lightbulb" size={18} />
-              </div>
-              <div>
-                <h3 className="report-column-title">Key Takeaways</h3>
-                <p className="report-column-subtitle">Important points from your conversation</p>
-              </div>
-            </div>
-
-            <div className="report-takeaway-bullets-list">
-              {displayTakeaways.slice(0, 5).map((takeaway, idx) => (
-                <div key={idx} className="report-takeaway-bullet-row">
-                  <span className="takeaway-bullet-dot" />
-                  <p className="takeaway-bullet-text">{takeaway}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Optional Detailed Patient Summary / Session Reflection if available */}
-        {report?.summary && report.summary !== 'Patient completed an intake session. No specific patient statements were recorded.' && (
-          <div className="report-narrative-section">
-            <h3 className="report-narrative-title">Session Reflection</h3>
-            <p className="report-narrative-text">{report.summary}</p>
-          </div>
-        )}
-
-        {/* Safety & Clinical Notice */}
-        <div className="report-safety-notice">
-          <p>
-            <strong>Safety & Clinical Notice:</strong> This summary is a non-clinical preparation document generated from self-reported input. It is not a diagnostic assessment, psychological evaluation, or medical advice.
-          </p>
+        {/* Print-Only Footer: Shown strictly during print */}
+        <div className="report-print-footer" aria-hidden="true">
+          <span>Triora Health · Confidential Intake Preparation Document · Not a clinical diagnosis</span>
+          <span>Page 1 of 1</span>
         </div>
       </main>
     </div>

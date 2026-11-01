@@ -181,9 +181,8 @@ export const SessionPage: React.FC = () => {
           {/* Center Realtime Status Badge */}
           <div className="session-nav-center">
             <div className="session-status-badge">
-              <Icon name="Mic" size={14} color="#0B4D46" />
-              <span>Your turn · Realtime</span>
               <span className="session-realtime-dot" />
+              <span>Your turn · Realtime</span>
             </div>
           </div>
 
@@ -191,7 +190,6 @@ export const SessionPage: React.FC = () => {
           <div className="session-nav-right">
             <Link to="/dashboard" style={{ textDecoration: 'none' }}>
               <button type="button" className="session-save-exit-btn">
-                <Icon name="LogOut" size={15} color="#123F39" />
                 <span>{t.saveAndExit || 'Save & exit'}</span>
               </button>
             </Link>
@@ -215,36 +213,22 @@ export const SessionPage: React.FC = () => {
           <div className="session-col-left">
             {/* Timer Badge */}
             <div className="session-timer-pill">
-              <Icon name="Clock" size={14} color="#123F39" />
               <span>{formatTimer(timerSeconds)}</span>
             </div>
 
             {/* AI Question Headline */}
             <h1 className="session-question-text">
-              {currentPrompt || 'Take your time. What made you consider speaking with a therapist now?'}
+              {currentPrompt || (
+                <>
+                  Take your time.<br />
+                  <span className="session-question-blue">What made you consider speaking with a therapist now?</span>
+                </>
+              )}
             </h1>
 
-            {/* Tap to hear question audio button */}
-            <button
-              type="button"
-              className="session-hear-btn"
-              onClick={() => {
-                ttsService.unlockAudio();
-                speakCurrentQuestion(currentPrompt);
-              }}
-            >
-              <div className="session-play-circle">
-                <Icon name="Play" size={12} color="#FFFFFF" style={{ marginLeft: '2px' }} />
-              </div>
-              <span className="session-hear-label">{t.tapToHear || 'Tap to hear question'}</span>
-              <div className="session-hear-wave-icon" aria-hidden="true">
-                <span className="mini-wave-bar" style={{ height: '7px' }} />
-                <span className="mini-wave-bar" style={{ height: '13px' }} />
-                <span className="mini-wave-bar" style={{ height: '9px' }} />
-                <span className="mini-wave-bar" style={{ height: '15px' }} />
-                <span className="mini-wave-bar" style={{ height: '6px' }} />
-              </div>
-            </button>
+            <p className="session-question-subdesc">
+              Share your thoughts in your own words. There’s no right or wrong answer.
+            </p>
 
             {/* Finish & generate summary button */}
             <button
@@ -252,7 +236,6 @@ export const SessionPage: React.FC = () => {
               className="session-finish-pill-btn"
               onClick={handleCompleteSession}
             >
-              <Icon name="FileText" size={17} color="#FFFFFF" />
               <span>{t.finishAndSummary || 'Finish & generate summary'}</span>
               <Icon name="ArrowRight" size={17} color="#FFFFFF" />
             </button>
@@ -309,7 +292,6 @@ export const SessionPage: React.FC = () => {
               {/* Text Reflection Input Area */}
               <div className="session-text-box">
                 <div className="session-text-input-row">
-                  <Icon name="MessageSquare" size={16} color="#7D928D" style={{ marginTop: '3px' }} />
                   <textarea
                     value={
                       manualText
@@ -325,23 +307,19 @@ export const SessionPage: React.FC = () => {
                     }}
                     placeholder={t.typePlaceholder || 'Or type your thoughts here if you prefer not to speak...'}
                     className="session-textarea"
-                    rows={2}
+                    rows={1}
                   />
-                </div>
-
-                {(manualText || transcript || interimTranscript) && (
-                  <div className="session-send-row">
+                  {(manualText || transcript || interimTranscript) && (
                     <button
                       type="button"
                       className="session-send-btn"
                       onClick={handleSendResponse}
                       disabled={convStatus === 'PROCESSING'}
                     >
-                      <Icon name="Send" size={13} color="#FFFFFF" />
-                      <span>{convStatus === 'PROCESSING' ? 'Processing...' : (t.sendConversation || 'Send')}</span>
+                      <Icon name="ArrowRight" size={14} color="#FFFFFF" />
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>

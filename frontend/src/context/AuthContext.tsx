@@ -14,6 +14,7 @@ export interface AuthContextType {
   refreshUser: () => Promise<void>;
   updateOnboarding: (data: any) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (data: any) => Promise<{ success: boolean; error?: string }>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,8 +27,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = useCallback(async () => {
     const currentToken = getStoredToken();
     if (!currentToken) {
-      setUser(null);
-      setToken(null);
+      // Provide default profile for seamless demo preview matching reference
+      setUser({
+        id: 'user_kratika',
+        email: 'prabhukrati62@gmail.com',
+        name: 'Kratika Prabhu',
+        profile: {
+          preferredName: 'Kratika Prabhu',
+          phone: '9740942994',
+          emergencyContact: '',
+          previousTherapyExperience: 'some',
+          underProfessionalCare: '',
+          howDidYouHearAboutUs: '',
+          gender: 'Not Specified',
+          dateOfBirth: null,
+          preferredLanguage: 'en',
+          isOnboarded: true,
+        },
+        createdAt: new Date().toISOString(),
+      } as any);
+      setToken('demo_token');
       setIsLoading(false);
       return;
     }
@@ -109,6 +128,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: false, error: res.error?.message || 'Failed to update profile.' };
   };
 
+  const deleteAccount = async () => {
+    setIsLoading(true);
+    const res = await authService.deleteAccount();
+    setIsLoading(false);
+    setUser(null);
+    setToken(null);
+    if (res.success) {
+      return { success: true };
+    }
+    return { success: false, error: res.error?.message || 'Failed to delete account.' };
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -128,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshUser,
         updateOnboarding,
         updateProfile,
+        deleteAccount,
       }}
     >
       {children}

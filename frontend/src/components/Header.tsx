@@ -34,18 +34,18 @@ export const Header: React.FC = () => {
       const howItWorksEl = document.getElementById('how-it-works');
       const privacyEl = document.getElementById('privacy');
 
-      if (privacyEl) {
-        const pRect = privacyEl.getBoundingClientRect();
-        if (pRect.top <= 240 && pRect.bottom >= 120) {
-          setActiveSection('privacy');
-          return;
-        }
-      }
-
       if (howItWorksEl) {
         const hRect = howItWorksEl.getBoundingClientRect();
         if (hRect.top <= 240 && hRect.bottom >= 120) {
           setActiveSection('how-it-works');
+          return;
+        }
+      }
+
+      if (privacyEl) {
+        const pRect = privacyEl.getBoundingClientRect();
+        if (pRect.top <= 240 && pRect.bottom >= 120) {
+          setActiveSection('privacy');
           return;
         }
       }
@@ -102,7 +102,7 @@ export const Header: React.FC = () => {
       <header className="landing-header">
         <Logo linkTo="/" size="md" />
 
-        {/* Desktop Nav Actions: All 5 buttons aligned together in sequence */}
+        {/* Desktop Nav Actions matching reference design */}
         <nav className="landing-nav-actions desktop-only-nav">
           <a
             href="#how-it-works"
@@ -129,7 +129,6 @@ export const Header: React.FC = () => {
               aria-expanded={isOpen}
               aria-label="Select language"
             >
-              <Icon name="Globe" size={15} />
               <span>{currentLangObj.name}</span>
               <Icon name="ChevronDown" size={13} className={`chevron-icon ${isOpen ? 'open' : ''}`} />
             </button>
@@ -151,22 +150,10 @@ export const Header: React.FC = () => {
             )}
           </div>
 
-          {user ? (
-            <Link to="/dashboard" className="landing-get-started-btn">
-              <span>Go to Dashboard</span>
-              <Icon name="ArrowRight" size={14} />
-            </Link>
-          ) : (
-            <>
-              <Link to="/login" className="landing-login-btn">
-                Log in
-              </Link>
-              <Link to="/signup" className="landing-get-started-btn">
-                <span>Get started</span>
-                <Icon name="ArrowRight" size={14} />
-              </Link>
-            </>
-          )}
+          <Link to={user ? "/dashboard" : "/login"} className="landing-get-started-btn">
+            <span>Go to Dashboard</span>
+            <Icon name="ArrowRight" size={14} />
+          </Link>
         </nav>
 
         {/* Mobile Hamburger Button */}
@@ -227,22 +214,15 @@ export const Header: React.FC = () => {
           </div>
 
           <div className="mobile-nav-actions">
-            {user ? (
-              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="landing-get-started-btn" style={{ justifyContent: 'center' }}>
-                <span>Go to Dashboard</span>
-                <Icon name="ArrowRight" size={14} />
-              </Link>
-            ) : (
-              <>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="landing-login-btn" style={{ justifyContent: 'center' }}>
-                  Log in
-                </Link>
-                <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="landing-get-started-btn" style={{ justifyContent: 'center' }}>
-                  <span>Get started</span>
-                  <Icon name="ArrowRight" size={14} />
-                </Link>
-              </>
-            )}
+            <Link
+              to={user ? "/dashboard" : "/login"}
+              onClick={() => setMobileMenuOpen(false)}
+              className="landing-get-started-btn"
+              style={{ justifyContent: 'center' }}
+            >
+              <span>Go to Dashboard</span>
+              <Icon name="ArrowRight" size={14} />
+            </Link>
           </div>
         </div>
       )}

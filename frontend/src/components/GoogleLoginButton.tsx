@@ -66,7 +66,7 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
             theme: 'outline',
             size: 'large',
             type: 'standard',
-            shape: 'pill',
+            shape: 'rectangular',
             text: 'continue_with',
             logo_alignment: 'left',
             width: 380,

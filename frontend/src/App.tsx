@@ -78,6 +78,14 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/profile/edit"
+            element={
+              <ProtectedRoute>
+                <ProfilePage initialEditOpen={true} />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback 404 Route */}
           <Route path="*" element={<NotFoundPage />} />

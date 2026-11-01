@@ -1,54 +1,53 @@
 import React from 'react';
 import { Logo } from './Logo';
-import { useLanguage } from '../context/LanguageContext';
-import { Icon } from './Icon';
 
 export const Footer: React.FC = () => {
-  const { t } = useLanguage();
-
   return (
     <footer className="landing-footer">
+      {/* Soft background waves */}
+      <div className="footer-bg-waves" aria-hidden="true">
+        <svg
+          viewBox="0 0 1440 320"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
+          className="footer-wave-svg"
+        >
+          <path
+            d="M0 160 C320 80, 640 240, 960 140 C1200 60, 1360 170, 1440 190 L1440 320 L0 320 Z"
+            fill="#eaf4fb"
+            fillOpacity="0.75"
+          />
+          <path
+            d="M0 210 C280 140, 580 280, 900 200 C1160 120, 1340 230, 1440 240 L1440 320 L0 320 Z"
+            fill="#ddedf8"
+            fillOpacity="0.5"
+          />
+        </svg>
+      </div>
+
       <div className="footer-container">
-        {/* Top Section: 4 Columns (Brand & Pills, Product, Resources, Company) */}
+        {/* Top Section: 4 Columns with vertical divider borders */}
         <div className="footer-top-grid">
-          {/* Column 1: Brand & Feature Badges */}
+          {/* Column 1: Brand & Feature list */}
           <div className="footer-col-brand">
             <div className="footer-brand-logo-wrap">
               <Logo linkTo="/" />
             </div>
             <p className="footer-brand-slogan">
-              {t.footerSlogan || 'Voice-first preparation for a more human beginning to therapy.'}
+              Voice-first preparation for a<br />
+              more human beginning to<br />
+              therapy.
             </p>
 
-            {/* 2x2 Feature Value Pills */}
+            <div className="footer-brand-divider" />
+
+            {/* 2x2 Feature Tags without icons, matching image */}
             <div className="footer-features-grid">
-              <div className="footer-feature-item">
-                <div className="footer-feature-icon">
-                  <Icon name="ShieldCheck" size={13} color="#1e563e" />
-                </div>
-                <span>Private by design</span>
-              </div>
-
-              <div className="footer-feature-item">
-                <div className="footer-feature-icon">
-                  <Icon name="Mic" size={13} color="#1e563e" />
-                </div>
-                <span>Voice-first</span>
-              </div>
-
-              <div className="footer-feature-item">
-                <div className="footer-feature-icon">
-                  <Icon name="Globe" size={13} color="#1e563e" />
-                </div>
-                <span>Multilingual support</span>
-              </div>
-
-              <div className="footer-feature-item">
-                <div className="footer-feature-icon">
-                  <Icon name="Heart" size={13} color="#1e563e" />
-                </div>
-                <span>A calmer first step</span>
-              </div>
+              <span className="footer-feature-item">Private by design</span>
+              <span className="footer-feature-item">Voice-first</span>
+              <span className="footer-feature-item">Multilingual support</span>
+              <span className="footer-feature-item">A calmer first step</span>
             </div>
           </div>
 
@@ -62,7 +61,7 @@ export const Footer: React.FC = () => {
               <li><a href="#privacy" className="footer-nav-link">Privacy</a></li>
               <li>
                 <span className="footer-nav-link disabled-link">
-                  Pricing <span className="coming-soon-tag">(Coming soon)</span>
+                  Pricing
                 </span>
               </li>
             </ul>
@@ -76,13 +75,13 @@ export const Footer: React.FC = () => {
               <li><a href="#faqs" className="footer-nav-link">FAQs</a></li>
               <li>
                 <span className="footer-nav-link disabled-link">
-                  Blog <span className="coming-soon-tag">(Coming soon)</span>
+                  Blog
                 </span>
               </li>
               <li><a href="#for-therapists" className="footer-nav-link">For Therapists</a></li>
               <li>
                 <span className="footer-nav-link disabled-link">
-                  Research <span className="coming-soon-tag">(Coming soon)</span>
+                  Research
                 </span>
               </li>
             </ul>
@@ -95,7 +94,7 @@ export const Footer: React.FC = () => {
               <li><a href="#about" className="footer-nav-link">About us</a></li>
               <li>
                 <span className="footer-nav-link disabled-link">
-                  Careers <span className="coming-soon-tag">(Coming soon)</span>
+                  Careers
                 </span>
               </li>
               <li><a href="#terms" className="footer-nav-link">Terms of Service</a></li>
@@ -116,4 +115,5 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
+
 

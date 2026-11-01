@@ -65,8 +65,35 @@ export const SignupPage: React.FC = () => {
 
   return (
     <div className="signup-page-bg">
+      {/* Background Soft Organic Waves matching Login Page */}
+      <div className="signup-waves-bg" aria-hidden="true">
+        <svg
+          viewBox="0 0 1440 440"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
+          className="signup-wave-svg"
+        >
+          <path
+            d="M0 240 C300 140, 560 330, 940 210 C1180 130, 1340 210, 1440 225 L1440 440 L0 440 Z"
+            fill="#eaf3f9"
+            fillOpacity="0.85"
+          />
+          <path
+            d="M0 290 C260 210, 520 370, 840 260 C1140 170, 1320 280, 1440 285 L1440 440 L0 440 Z"
+            fill="#dcedf7"
+            fillOpacity="0.65"
+          />
+          <path
+            d="M0 345 C340 280, 680 390, 1020 310 C1240 260, 1380 330, 1440 340 L1440 440 L0 440 Z"
+            fill="#d2e8f5"
+            fillOpacity="0.5"
+          />
+        </svg>
+      </div>
+
       <div className="signup-container">
-        {/* Left Side: Stationary / Sticky Branding & Value Props */}
+        {/* Left Side: Stationary Branding & Value Props */}
         <div className="signup-left-section">
           <div className="signup-logo-wrap">
             <Logo variant="dark" linkTo="/" size="xl" />
@@ -85,7 +112,7 @@ export const SignupPage: React.FC = () => {
             {/* Feature List */}
             <div className="signup-features-list">
               <div className="signup-feature-item">
-                <div className="signup-feature-icon-circle icon-circle-green">
+                <div className="signup-feature-icon-circle icon-circle-blue-light">
                   <Icon name="Lock" size={18} />
                 </div>
                 <div>
@@ -95,7 +122,7 @@ export const SignupPage: React.FC = () => {
               </div>
 
               <div className="signup-feature-item">
-                <div className="signup-feature-icon-circle icon-circle-peach">
+                <div className="signup-feature-icon-circle icon-circle-teal-light">
                   <Icon name="Heart" size={18} />
                 </div>
                 <div>
@@ -266,7 +293,7 @@ export const SignupPage: React.FC = () => {
 
             {/* Section Divider: Care History & Background */}
             <div className="signup-section-header">
-              <Icon name="Heart" size={15} color="#52796f" />
+              <Icon name="Heart" size={15} color="#1b6ca8" />
               <span>CARE HISTORY & BACKGROUND (OPTIONAL)</span>
             </div>
 

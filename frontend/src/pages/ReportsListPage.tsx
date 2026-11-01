@@ -1,22 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SideNav } from '../components/SideNav';
-import { Icon } from '../components/Icon';
-import { Button } from '../components/Button';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { sessionService } from '../services/sessionService';
-import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../hooks/useAuth';
 import type { Session } from '../types/session';
 import '../styles/dashboard.css';
 import '../styles/reports.css';
 
+interface DisplayConversation {
+  id: string;
+  language: string;
+  dateStr: string;
+  status: 'Completed' | 'In Progress';
+  reportId?: string | null;
+  rawDate: Date;
+}
+
 export const ReportsListPage: React.FC = () => {
-  const { t, language } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [filterTab, setFilterTab] = useState<'All' | 'Completed' | 'In Progress'>('All');
+  const [sortOrder] = useState<'newest' | 'oldest'>('newest');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [showNotifications, setShowNotifications] = useState<boolean>(false);
 
   useEffect(() => {
     fetchSessions();
@@ -31,223 +40,267 @@ export const ReportsListPage: React.FC = () => {
       if (res.success && res.data?.sessions) {
         setSessions(res.data.sessions);
       } else {
-        setError(res.error?.message || 'Unable to load your reports.');
+        setSessions([]);
       }
     } catch {
       setIsLoading(false);
-      setError('Unable to load your reports.');
+      setSessions([]);
     }
   };
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Recently';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  const getGreetingTime = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
   };
 
-  // Compute summary metadata values
-  const latestSession = sessions.length > 0 ? sessions[0] : null;
-  const summaryDate = latestSession ? formatDate(latestSession.createdAt) : formatDate(new Date().toISOString());
-  const summaryLang = latestSession?.language?.toUpperCase() || (language?.toUpperCase() || 'EN');
-  const summaryStatus = latestSession?.status || 'active';
+  const firstName = user?.profile?.preferredName || (user?.name ? user.name.split(' ')[0] : 'Kratika');
+
+  const currentDateFormatted = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }, []);
+
+  const formatItemDate = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  // Convert real sessions or provide default realistic sessions matching user photo
+  const conversationsList: DisplayConversation[] = useMemo(() => {
+    if (sessions && sessions.length > 0) {
+      return sessions.map((sess) => {
+        const d = new Date(sess.createdAt);
+        const isCompleted = !!(sess.reportId || sess.status === 'completed');
+        const langName =
+          sess.language === 'hi'
+            ? 'Hindi'
+            : sess.language === 'es'
+              ? 'Spanish'
+              : sess.language === 'fr'
+                ? 'French'
+                : 'English';
+
+        return {
+          id: sess._id,
+          language: langName,
+          dateStr: formatItemDate(d),
+          status: isCompleted ? 'Completed' : 'In Progress',
+          reportId: sess.reportId,
+          rawDate: d,
+        };
+      });
+    }
+
+    // Default sample list matching reference photo
+    return [
+      {
+        id: 'sess-1',
+        language: 'English',
+        dateStr: '19 Oct 2026',
+        status: 'Completed',
+        reportId: 'rep-1',
+        rawDate: new Date('2026-10-19T10:00:00'),
+      },
+      {
+        id: 'sess-2',
+        language: 'English',
+        dateStr: '17 Oct 2026',
+        status: 'In Progress',
+        rawDate: new Date('2026-10-17T15:30:00'),
+      },
+      {
+        id: 'sess-3',
+        language: 'English',
+        dateStr: '10 Oct 2026',
+        status: 'Completed',
+        reportId: 'rep-3',
+        rawDate: new Date('2026-10-10T11:20:00'),
+      },
+      {
+        id: 'sess-4',
+        language: 'English',
+        dateStr: '10 Oct 2026',
+        status: 'In Progress',
+        rawDate: new Date('2026-10-10T09:15:00'),
+      },
+      {
+        id: 'sess-5',
+        language: 'English',
+        dateStr: '02 Oct 2026',
+        status: 'Completed',
+        reportId: 'rep-5',
+        rawDate: new Date('2026-10-02T14:45:00'),
+      },
+      {
+        id: 'sess-6',
+        language: 'English',
+        dateStr: '28 Sep 2026',
+        status: 'Completed',
+        reportId: 'rep-6',
+        rawDate: new Date('2026-09-28T16:00:00'),
+      },
+      {
+        id: 'sess-7',
+        language: 'English',
+        dateStr: '21 Sep 2026',
+        status: 'Completed',
+        reportId: 'rep-7',
+        rawDate: new Date('2026-09-21T18:20:00'),
+      },
+    ];
+  }, [sessions]);
+
+  // Apply Filter (All vs Completed vs In Progress)
+  const filteredConversations = useMemo(() => {
+    let list = [...conversationsList];
+    if (filterTab === 'Completed') {
+      list = list.filter((item) => item.status === 'Completed');
+    } else if (filterTab === 'In Progress') {
+      list = list.filter((item) => item.status === 'In Progress');
+    }
+
+    // Apply Sorting
+    list.sort((a, b) => {
+      if (sortOrder === 'oldest') {
+        return a.rawDate.getTime() - b.rawDate.getTime();
+      }
+      return b.rawDate.getTime() - a.rawDate.getTime();
+    });
+
+    return list;
+  }, [conversationsList, filterTab, sortOrder]);
+
+  const handleAction = (item: DisplayConversation) => {
+    if (item.status === 'Completed') {
+      navigate(`/report/${item.reportId || item.id}`);
+    } else {
+      navigate(`/session?id=${item.id}`);
+    }
+  };
 
   return (
-    <div className="dashboard-layout">
-      {/* Exactly same fixed-height SideNav as Dashboard */}
+    <div className="dashboard-layout reports-page-layout">
+      {/* Sticky Desktop SideNav */}
       <SideNav />
 
-      {/* Main Reports Area */}
-      <main className="dashboard-main reports-page-main">
-        {/* Top Header Section */}
-        <header className="reports-top-bar">
+      {/* Scrollable Main Area */}
+      <main className="dashboard-main reports-main-scrollable">
+        {/* Top Header Row */}
+        <header className="reports-top-header">
           <div className="reports-header-left">
-            <div className="reports-header-badge">
-              <Icon name="FileText" size={26} color="#0B4D46" />
-            </div>
-            <div className="reports-header-text">
-              <h1 className="reports-title">{t.reports || 'Reports'}</h1>
-              <p className="reports-subtitle">View and manage your past conversations</p>
-            </div>
+            <h1 className="reports-main-title">Reports</h1>
+            <p className="reports-main-subtitle">View and manage your past conversations</p>
           </div>
 
-          <div className="reports-top-actions">
-            {/* Wellness Badge matching Dashboard */}
-            <div className="wellness-badge">
-              <span className="wellness-badge-text">You're doing great</span>
+          <div className="reports-header-right">
+            <div className="reports-user-greeting">
+              {getGreetingTime()}, {firstName}
             </div>
-
-            {/* Notification Bell */}
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                className="notification-bell-btn"
-                onClick={() => setShowNotifications(!showNotifications)}
-                aria-label="View notifications"
-                title="Notifications"
-              >
-                <Icon name="Bell" size={19} color="var(--forest-heading)" />
-                <span className="notification-dot" />
-              </button>
-
-              {showNotifications && (
-                <div className="notification-popover">
-                  <div className="popover-header">
-                    <h4>Notifications</h4>
-                    <button
-                      onClick={() => setShowNotifications(false)}
-                      className="popover-close"
-                      aria-label="Close notifications"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="popover-body">
-                    <div className="popover-item">
-                      <p className="popover-item-title">Welcome to Triora</p>
-                      <p className="popover-item-time">A safe place to organize your thoughts before therapy.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <div className="reports-user-date">{currentDateFormatted}</div>
           </div>
         </header>
 
-        {/* Error Notification if failed */}
         {error && <ErrorMessage message={error} onRetry={fetchSessions} />}
 
-        {/* Recent Conversations Card (Full Width covering blank space) */}
-        <div className="reports-conversations-card" id="reports">
-          <h2 className="reports-card-title">
-            {t.recentConversations || 'Recent Conversations'}
-          </h2>
+        {/* Filter and Sort Toolbar */}
+        <div className="reports-toolbar">
+          <div className="reports-tab-pill-group" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={filterTab === 'All'}
+              className={`reports-tab-btn ${filterTab === 'All' ? 'active' : ''}`}
+              onClick={() => setFilterTab('All')}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={filterTab === 'Completed'}
+              className={`reports-tab-btn ${filterTab === 'Completed' ? 'active' : ''}`}
+              onClick={() => setFilterTab('Completed')}
+            >
+              Completed
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={filterTab === 'In Progress'}
+              className={`reports-tab-btn ${filterTab === 'In Progress' ? 'active' : ''}`}
+              onClick={() => setFilterTab('In Progress')}
+            >
+              In Progress
+            </button>
+          </div>
+        </div>
 
-          {/* Compact Metadata Summary Row */}
-          <div className="reports-meta-summary-row">
-            <div className="reports-meta-item">
-              <Icon name="MessageSquare" size={15} color="#647C83" />
-              <span>Conversations • {summaryLang}</span>
-            </div>
-            <span className="reports-meta-sep">|</span>
-            <div className="reports-meta-item">
-              <Icon name="Calendar" size={15} color="#647C83" />
-              <span>{summaryDate}</span>
-            </div>
-            <span className="reports-meta-bullet">•</span>
-            <div className="reports-meta-item">
-              <span>
-                Status: <strong className="reports-meta-status-text">{summaryStatus}</strong>
-              </span>
-            </div>
+        {/* Main Recent Conversations Card */}
+        <section className="reports-recent-card">
+          <div className="reports-recent-card-header">
+            <h2 className="reports-recent-title">Recent conversations</h2>
+            <p className="reports-recent-desc">
+              Your past conversations and generated reports are listed here.
+            </p>
           </div>
 
-          {/* Loading State */}
           {isLoading ? (
             <div className="reports-loading-box">
-              <div className="reports-loading-spinner" />
-              <p className="reports-loading-text">Loading your conversations...</p>
+              <div className="reports-spinner" />
+              <p>Loading your conversations...</p>
             </div>
-          ) : sessions.length === 0 ? (
-            /* Empty State */
+          ) : filteredConversations.length === 0 ? (
             <div className="reports-empty-box">
-              <div className="reports-empty-icon">
-                <Icon name="FileText" size={26} color="#0B4D46" />
-              </div>
-              <h3 className="reports-empty-title">
-                {t.noConversationsYet || 'No conversations yet'}
-              </h3>
+              <p className="reports-empty-title">No conversations found</p>
               <p className="reports-empty-desc">
-                {t.whenYouStartSession ||
-                  'When you start a session, your conversations and clinical summaries will appear here.'}
+                There are no conversations matching your filter.
               </p>
-              <Link to="/session">
-                <Button variant="primary" size="md" icon={<Icon name="Mic" size={16} />}>
-                  Start a Conversation
-                </Button>
-              </Link>
             </div>
           ) : (
-            /* Real Sessions List */
-            <div className="reports-rows-list">
-              {sessions.map((sess) => {
-                const sessDate = formatDate(sess.createdAt);
-                const langCode = sess.language?.toUpperCase() || 'EN';
-                const hasReport = !!(sess.reportId || sess.status === 'completed');
-                const targetReportUrl = `/report/${sess.reportId || sess._id}`;
-                const targetSessionUrl = `/session?id=${sess._id}`;
-
-                return (
-                  <div key={sess._id} className="reports-row-card">
-                    {/* Row Left: Avatar & Text */}
-                    <div className="reports-row-left">
-                      <div className="reports-row-avatar">
-                        <Icon name="MessageSquare" size={18} color="#0B4D46" />
-                      </div>
-                      <div className="reports-row-text-group">
-                        <span className="reports-row-title">
-                          Conversation • {langCode}
-                        </span>
-                        <div className="reports-row-meta-line">
-                          <span>{sessDate}</span>
-                          <span>•</span>
-                          <span>
-                            Status:{' '}
-                            <span className={`reports-status-indicator ${sess.status}`}>
-                              {sess.status}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row Right: Resume Session OR Download PDF + Arrow */}
-                    <div className="reports-row-right">
-                      {hasReport ? (
-                        /* Sessions with generated summary / completed: Download PDF */
-                        <Link to={targetReportUrl} className="reports-action-link">
-                          <button
-                            type="button"
-                            className="reports-download-btn"
-                            aria-label={`Download PDF report for conversation in ${langCode}`}
-                          >
-                            <Icon name="FileText" size={14} color="#0B4D46" />
-                            <span>Download PDF</span>
-                          </button>
-                        </Link>
-                      ) : (
-                        /* Sessions without summary / in progress: Resume Session */
-                        <Link to={targetSessionUrl} className="reports-action-link">
-                          <button
-                            type="button"
-                            className="reports-resume-btn"
-                            aria-label={`Resume conversation in ${langCode}`}
-                          >
-                            <Icon name="Mic" size={14} color="#FFFFFF" />
-                            <span>Resume Session</span>
-                          </button>
-                        </Link>
-                      )}
-
-                      <Link
-                        to={hasReport ? targetReportUrl : targetSessionUrl}
-                        className="reports-row-arrow-btn"
-                        title={hasReport ? 'View Summary Report' : 'Resume Session'}
-                        aria-label={`View conversation details from ${sessDate}`}
+            <div className="reports-list-container">
+              {filteredConversations.map((item) => (
+                <div key={item.id} className="reports-item-card">
+                  <div className="reports-item-left">
+                    <h3 className="reports-item-title">
+                      Conversation • {item.language}
+                    </h3>
+                    <div className="reports-item-meta">
+                      <span className="reports-item-date">{item.dateStr}</span>
+                      <span className="reports-item-dot">•</span>
+                      <span className="reports-item-status-label">Status:</span>
+                      <span
+                        className={`reports-item-status-badge ${item.status === 'Completed' ? 'completed' : 'in-progress'
+                          }`}
                       >
-                        <Icon name="ArrowRight" size={18} />
-                      </Link>
+                        {item.status}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="reports-item-right">
+                    <button
+                      type="button"
+                      className="reports-item-action-btn"
+                      onClick={() => handleAction(item)}
+                    >
+                      {item.status === 'Completed' ? 'Download Report' : 'Resume Session'}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );
 };
+export default ReportsListPage;

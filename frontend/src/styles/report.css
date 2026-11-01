@@ -1,598 +1,637 @@
-/* REPORT SUMMARY PAGE STYLES */
+/* ========================================================
+   TRIORA REPORT SUMMARY / DETAIL PAGE STYLES
+   - Exact recreation of reference design
+   - Integrated with SideNav navbar
+   - Smooth scrollable main content area
+   - Top action buttons: Print, Share with therapist, Go to Dashboard
+   - Powder-blue hero card: Conversation Summary
+   - Summary overview with 3 metric cards
+   - White card for Key Themes with soft tinted rows
+   ======================================================== */
 
-.report-page-bg {
-  min-height: 100vh;
-  background-color: #ebf3ee;
-  background-image: url('/images/summary-bg.png');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+.report-detail-layout {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   display: flex;
-  flex-direction: column;
-  padding-bottom: 5rem;
+  width: 100%;
+}
+
+/* Main Scrollable Content Area */
+.report-detail-main {
+  flex: 1;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2.25rem 3.5rem 5rem 3.5rem;
+  background-color: var(--bg-main, #f7f6f2);
   box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
-/* Top Toolbar */
-.report-top-toolbar {
-  background-color: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 1.1rem 3.5rem;
+/* ========================================================
+   1. TOP BAR: Back Navigation & User Greeting
+   ======================================================== */
+.report-detail-top-bar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  align-items: center;
+  margin-bottom: 0.75rem;
+  width: 100%;
 }
 
-.report-toolbar-actions {
+.report-back-nav {
   display: flex;
   align-items: center;
-  gap: 1.1rem;
 }
 
-/* Toolbar Buttons */
-.report-action-btn {
+.report-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.18s ease;
+  color: #183344;
+  font-size: 0.94rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 150ms ease;
   user-select: none;
 }
 
-.report-print-btn {
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  color: #1e293b;
-  border-radius: 8px;
-  padding: 0.5rem 1.15rem;
+.report-back-btn:hover {
+  color: var(--triora-teal, #20627e);
+  transform: translateX(-2px);
 }
 
-.report-print-btn:hover {
+.report-back-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.report-top-right-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.report-user-greeting {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: #183344;
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
+}
+
+.report-user-date {
+  font-size: 0.86rem;
+  color: #7c8d96;
+  line-height: 1.3;
+}
+
+/* ========================================================
+   2. ACTION BUTTONS TOOLBAR ROW
+   ======================================================== */
+.report-action-buttons-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+  width: 100%;
+}
+
+.report-action-btn {
+  border-radius: 8px;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+  user-select: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Print: Rounded white card button */
+.btn-print {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #183344;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.btn-print:hover {
   background-color: #f8fafc;
   border-color: #94a3b8;
   transform: translateY(-1px);
 }
 
-.report-share-btn {
-  background-color: #164032;
+/* Share with therapist: Solid dark teal */
+.btn-share {
+  background-color: var(--triora-teal, #20627e);
   border: none;
   color: #ffffff;
-  border-radius: 9999px;
-  padding: 0.55rem 1.35rem;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(22, 64, 50, 0.25);
+  box-shadow: 0 2px 6px rgba(32, 98, 126, 0.22);
 }
 
-.report-share-btn:hover {
-  background-color: #103126;
+.btn-share:hover {
+  background-color: #184e64;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 64, 50, 0.3);
+  box-shadow: 0 4px 10px rgba(32, 98, 126, 0.28);
 }
 
-.report-dashboard-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-sans);
-  font-size: 0.9rem;
+/* Go to Dashboard: Soft powder-blue */
+.btn-dashboard {
+  background-color: #e2edf3;
+  color: var(--triora-teal, #20627e);
+  border: none;
   font-weight: 600;
-  color: #164032;
-  text-decoration: none;
-  padding: 0.5rem 0.5rem;
-  transition: color 0.15s ease;
 }
 
-.report-dashboard-link:hover {
-  color: #0b221a;
+.btn-dashboard:hover {
+  background-color: #d4e5ee;
+  transform: translateY(-1px);
 }
 
-.report-arrow {
-  font-size: 1.1rem;
-  line-height: 1;
-  transition: transform 0.15s ease;
-}
-
-.report-dashboard-link:hover .report-arrow {
-  transform: translateX(3px);
-}
-
-/* Document Container - PDF covering 90% of summary page as width with required height */
-.report-document-container {
-  width: 90%;
-  max-width: 90%;
-  margin: 2.75rem auto 0;
-  background-color: #ffffff;
-  border: 1px solid rgba(216, 228, 222, 0.9);
-  border-radius: 24px;
-  padding: 3.75rem 4.75rem;
-  box-shadow: 0 12px 42px rgba(18, 42, 32, 0.07);
-  box-sizing: border-box;
-  position: relative;
-}
-
-/* Eyebrow Header */
-.report-eyebrow-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  margin-bottom: 0.75rem;
-}
-
-.report-eyebrow-line {
-  height: 1px;
-  width: 70px;
-  background-color: #cbd5e1;
-}
-
-.report-eyebrow-text {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: #557b68;
-  text-transform: uppercase;
-}
-
-/* Main Title */
-.report-main-title {
-  font-size: 2.85rem;
-  font-weight: 800;
-  color: #163629;
-  margin: 0 0 1rem;
-  text-align: center;
-  letter-spacing: -0.025em;
-  font-family: var(--font-sans);
-}
-
-/* Meta Row */
-.report-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  color: #64748b;
-  font-size: 0.92rem;
-  font-weight: 500;
-  margin-bottom: 2.5rem;
-}
-
-.report-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.meta-icon {
-  color: #557b68;
-}
-
-.report-meta-divider {
-  color: #cbd5e1;
-  font-weight: 300;
-}
-
-/* Notice Disclaimer Banner */
-.report-disclaimer-card {
-  background-color: #edf5f0;
-  border: 1px solid #dcefe3;
-  border-radius: 12px;
-  padding: 0.95rem 1.35rem;
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 2.75rem;
-}
-
-.report-disclaimer-icon-circle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background-color: #245c43;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.report-disclaimer-text {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #2b5542;
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-/* Summary Overview Intro */
-.report-section-intro {
+/* ========================================================
+   3. HERO SUMMARY CARD (Powder-Blue Tint)
+   ======================================================== */
+.report-hero-card {
+  background-color: #edf5f9;
+  border-radius: 16px;
+  padding: 2.1rem 2.65rem;
   margin-bottom: 2.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
 }
 
-.report-section-tag {
-  font-size: 0.75rem;
+.report-hero-eyebrow {
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #3f6e57;
-  margin-bottom: 0.45rem;
+  color: #557a8e;
+  margin-bottom: 0.75rem;
+  display: block;
 }
 
-.report-section-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #163629;
-  margin: 0 0 0.85rem;
+.report-hero-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.2;
   letter-spacing: -0.015em;
 }
 
-.report-section-desc {
-  font-size: 0.98rem;
-  line-height: 1.65;
-  color: #4b5563;
+.report-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.94rem;
+  color: #557383;
+  margin-bottom: 1.15rem;
+  font-weight: 400;
+}
+
+.report-meta-pipe {
+  color: #a4bcc9;
+  font-weight: 300;
+}
+
+.report-hero-desc {
+  font-size: 0.94rem;
+  color: #476677;
+  line-height: 1.5;
   margin: 0;
 }
 
-/* 3 Stat Cards Row */
-.report-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2.75rem;
+/* ========================================================
+   4. SUMMARY OVERVIEW SECTION
+   ======================================================== */
+.report-overview-section {
+  margin-bottom: 2.25rem;
   width: 100%;
 }
 
-.report-stat-card {
-  display: flex;
-  align-items: center;
-  gap: 1.15rem;
-  padding: 1.35rem 1.6rem;
-  border-radius: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.report-section-heading {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: #183344;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.report-section-desc {
+  font-size: 0.94rem;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0 0 1.5rem 0;
+  max-width: 980px;
+}
+
+/* 3 Stat Cards Row */
+.report-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  width: 100%;
   box-sizing: border-box;
 }
 
-.report-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
-}
-
-.card-time {
-  background-color: #f1f8f3;
-  border: 1px solid #d8ece0;
-}
-
-.icon-time {
-  background-color: #d6eedf;
-  color: #236c49;
-}
-
-.card-topics {
-  background-color: #fcf6ed;
-  border: 1px solid #f4e8d3;
-}
-
-.icon-topics {
-  background-color: #faebd2;
-  color: #9a6828;
-}
-
-.card-insights {
-  background-color: #eff8f4;
-  border: 1px solid #d6ebe1;
-}
-
-.icon-insights {
-  background-color: #ceeee0;
-  color: #1e704e;
-}
-
-.report-stat-icon-wrap {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.report-stat-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.report-stat-label {
-  font-size: 0.78rem;
-  color: #64748b;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.report-stat-label-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.stat-info-tooltip-icon {
-  color: #94a3b8;
-}
-
-.report-stat-value {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  white-space: nowrap;
-}
-
-/* 2 Column Cards Grid */
-.report-columns-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.75rem;
-  margin-bottom: 2.75rem;
-}
-
-.report-column-card {
-  background-color: #ffffff;
-  border: 1px solid #e7efe9;
-  border-radius: 18px;
-  padding: 1.85rem 2.15rem;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-}
-
-.report-column-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.6rem;
-}
-
-.column-icon-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.badge-green {
-  background-color: #dcf0e4;
-  color: #236c49;
-}
-
-.badge-amber {
-  background-color: #faebd2;
-  color: #9a6828;
-}
-
-.report-column-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #163629;
-  margin: 0 0 0.25rem;
-}
-
-.report-column-subtitle {
-  font-size: 0.83rem;
-  color: #64748b;
-  margin: 0;
-}
-
-/* Theme Items List */
-.report-theme-items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.report-theme-row-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.95rem 1.2rem;
-  background-color: #fcfdfc;
-  border: 1px solid #e9f1ec;
+.report-metric-card {
+  background-color: #f3f8fb;
   border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.report-theme-row-item:hover {
-  background-color: #f1f8f3;
-  border-color: #cde4d6;
-  transform: translateX(3px);
-}
-
-.theme-index-badge {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background-color: #e3f2ea;
-  color: #2d6a4f;
-  font-size: 0.82rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.theme-name-text {
-  flex: 1;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.theme-arrow-icon {
-  color: #94a3b8;
-  flex-shrink: 0;
-}
-
-/* Takeaways Bullet List */
-.report-takeaway-bullets-list {
+  padding: 1.35rem 1.65rem;
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-.report-takeaway-bullet-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-}
-
-.takeaway-bullet-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #2e6f4e;
-  margin-top: 0.5rem;
-  flex-shrink: 0;
-}
-
-.takeaway-bullet-text {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #334155;
-}
-
-/* Narrative Section */
-.report-narrative-section {
-  background-color: #f8faf8;
-  border: 1px solid #e2ede5;
-  border-radius: 16px;
-  padding: 1.75rem 2rem;
-  margin-bottom: 2.75rem;
-}
-
-.report-narrative-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #163629;
-  margin: 0 0 0.6rem;
-}
-
-.report-narrative-text {
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: #334155;
-  margin: 0;
-}
-
-/* Safety & Clinical Notice */
-.report-safety-notice {
-  padding-top: 1.75rem;
-  border-top: 1px solid #e8ece9;
+.report-metric-label {
   font-size: 0.82rem;
-  color: #64748b;
-  line-height: 1.6;
+  color: #607d8b;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
 }
 
-.report-safety-notice strong {
-  color: #1e293b;
+.report-metric-val {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #183344;
+  line-height: 1.2;
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
 }
 
-/* Responsive Styles */
-@media (max-width: 1100px) {
-  .report-top-toolbar {
-    padding: 1rem 2rem;
+/* ========================================================
+   5. KEY THEMES CARD (White Card with Soft Rows)
+   ======================================================== */
+.report-themes-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-light, #eae7df);
+  border-radius: 16px;
+  padding: 2rem 2.5rem 2.25rem 2.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.report-themes-card-header {
+  margin-bottom: 1.35rem;
+}
+
+.report-themes-subtitle {
+  font-size: 0.92rem;
+  color: #7c8d96;
+  margin: 0.35rem 0 0 0;
+  font-weight: 400;
+}
+
+.report-themes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.report-theme-row-card {
+  background-color: #f5f9fb;
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  transition: all 150ms ease;
+  box-sizing: border-box;
+}
+
+.report-theme-row-card:hover {
+  background-color: #edf5f9;
+  transform: translateY(-1px);
+}
+
+.report-theme-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #183344;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.01em;
+}
+
+.report-theme-text {
+  font-size: 0.9rem;
+  color: #556873;
+  line-height: 1.48;
+  margin: 0;
+}
+
+/* Print-Only Elements (Hidden on screen) */
+.report-print-header,
+.report-print-footer {
+  display: none;
+}
+
+/* ========================================================
+   6. PRINT MEDIA STYLES - BALANCED SINGLE-PAGE FIT
+   ======================================================== */
+@page {
+  size: A4 portrait;
+  margin: 12mm 15mm 12mm 15mm;
+}
+
+@media print {
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    font-size: 13px !important;
+    color: #102a43 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .report-document-container {
-    width: 92%;
-    max-width: 92%;
-    padding: 3rem 2.5rem;
+
+  /* Hide navigation, buttons, sidebars and headers */
+  .sidebar,
+  .report-detail-top-bar,
+  .report-action-buttons-row,
+  .mobile-app-header,
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  /* Reset layout to unconstrained page block */
+  .report-detail-layout {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .report-detail-main {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Print-only brand header */
+  .report-print-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1.5px solid #dbe6f0 !important;
+    padding-bottom: 0.55rem !important;
+    margin-bottom: 1.15rem !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .report-print-logo {
+    font-family: var(--font-serif, 'Newsreader', Georgia, serif) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #1f5970 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .report-print-meta {
+    font-size: 0.85rem !important;
+    color: #556873 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+  }
+
+  .report-print-dot {
+    color: #94a3b8 !important;
+  }
+
+  /* Section 1: Hero Card (Spacious, prominent) */
+  .report-hero-card {
+    background-color: #f0f7fb !important;
+    border: 1px solid #d2e4f0 !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.75rem !important;
+    margin-bottom: 1.15rem !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .report-hero-eyebrow {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.35rem !important;
+    color: #4b748a !important;
+    letter-spacing: 0.12em !important;
+    font-weight: 700 !important;
+  }
+
+  .report-hero-title {
+    font-size: 1.85rem !important;
+    margin: 0 0 0.4rem 0 !important;
+    line-height: 1.2 !important;
+    color: #102a43 !important;
+  }
+
+  .report-hero-meta {
+    font-size: 0.86rem !important;
+    margin-bottom: 0.55rem !important;
+    gap: 0.65rem !important;
+    color: #557383 !important;
+  }
+
+  .report-hero-desc {
+    font-size: 0.92rem !important;
+    line-height: 1.48 !important;
+    color: #3b505d !important;
+  }
+
+  /* Section 2: Summary Overview (Comfortable proportion) */
+  .report-overview-section {
+    margin-bottom: 1.15rem !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .report-section-heading {
+    font-size: 1.35rem !important;
+    margin: 0 0 0.35rem 0 !important;
+    color: #102a43 !important;
+  }
+
+  .report-section-desc {
+    font-size: 0.9rem !important;
+    line-height: 1.48 !important;
+    margin: 0 0 0.95rem 0 !important;
+    color: #475569 !important;
+  }
+
+  .report-metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.95rem !important;
+  }
+
+  .report-metric-card {
+    background-color: #f5f9fc !important;
+    border: 1px solid #dce8f2 !important;
+    border-radius: 10px !important;
+    padding: 0.95rem 1.25rem !important;
+  }
+
+  .report-metric-label {
+    font-size: 0.78rem !important;
+    margin-bottom: 0.35rem !important;
+    color: #5a7384 !important;
+    font-weight: 500 !important;
+  }
+
+  .report-metric-val {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    color: #102a43 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Section 3: Key Themes Card (Spacious rows) */
+  .report-themes-card {
+    background-color: #ffffff !important;
+    border: 1px solid #e1eaf0 !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.75rem !important;
+    box-shadow: none !important;
+    margin-bottom: 0.95rem !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .report-themes-card-header {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .report-themes-subtitle {
+    font-size: 0.85rem !important;
+    margin: 0.2rem 0 0 0 !important;
+    color: #64748b !important;
+  }
+
+  .report-themes-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.65rem !important;
+  }
+
+  .report-theme-row-card {
+    background-color: #f7fafc !important;
+    border: 1px solid #e9f0f6 !important;
+    border-radius: 10px !important;
+    padding: 0.85rem 1.25rem !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .report-theme-title {
+    font-size: 0.96rem !important;
+    font-weight: 700 !important;
+    margin: 0 0 0.25rem 0 !important;
+    color: #102a43 !important;
+  }
+
+  .report-theme-text {
+    font-size: 0.88rem !important;
+    line-height: 1.48 !important;
+    color: #475569 !important;
+  }
+
+  /* Print footer */
+  .report-print-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-top: 1px solid #e2edf5 !important;
+    padding-top: 0.65rem !important;
+    margin-top: 0.95rem !important;
+    font-size: 0.75rem !important;
+    color: #7c93a3 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
   }
 }
 
-@media (max-width: 860px) {
-  .report-stats-grid {
+/* ========================================================
+   7. RESPONSIVE DESIGN (Tablets & Mobile)
+   ======================================================== */
+@media (max-width: 1080px) {
+  .report-detail-main {
+    padding: 1.75rem 2rem 5rem 2rem;
+  }
+
+  .report-metrics-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
-  }
-  .report-columns-grid {
-    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .report-top-toolbar {
-    padding: 0.85rem 1.25rem;
-    flex-wrap: wrap;
+  .report-detail-layout {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+
+  .report-detail-main {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.25rem 1.25rem 6rem 1.25rem;
+  }
+
+  .report-detail-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.75rem;
   }
-  .report-toolbar-actions {
-    gap: 0.65rem;
-  }
-  .report-document-container {
-    width: 94%;
-    max-width: 94%;
-    padding: 2.25rem 1.5rem;
-    margin-top: 1.5rem;
-    border-radius: 18px;
-  }
-  .report-main-title {
-    font-size: 2.1rem;
-  }
-  .report-columns-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
-@media (max-width: 540px) {
-  .report-stats-grid {
-    grid-template-columns: 1fr;
+  .report-top-right-group {
+    align-items: flex-start;
   }
-  .report-meta-row {
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .report-meta-divider {
-    display: none;
-  }
-  .report-document-container {
-    width: 95%;
-    max-width: 95%;
-    padding: 1.75rem 1.15rem;
-  }
-  .report-share-btn span {
-    font-size: 0.8rem;
-  }
-}
 
-/* Print View Optimization */
-@media print {
-  .report-top-toolbar {
-    display: none !important;
+  .report-action-buttons-row {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem;
   }
-  .report-page-bg {
-    background: #ffffff !important;
-    background-image: none !important;
-    padding: 0 !important;
+
+  .report-action-btn {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
   }
-  .report-document-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
+
+  .report-hero-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .report-hero-title {
+    font-size: 1.85rem;
+  }
+
+  .report-themes-card {
+    padding: 1.5rem 1.25rem;
   }
 }

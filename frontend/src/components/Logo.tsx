@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
 
 interface LogoProps {
-  variant?: 'dark' | 'light' | 'green';
+  variant?: 'dark' | 'light';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   linkTo?: string;
   className?: string;
+  hideIcon?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -14,27 +14,40 @@ export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   linkTo = '/',
   className = '',
+  hideIcon = false,
 }) => {
-  const { t } = useLanguage();
-
   const getScale = () => {
     switch (size) {
-      case 'sm': return { markHeight: 20, fontSize: '1.15rem' };
-      case 'lg': return { markHeight: 32, fontSize: '1.75rem' };
-      case 'xl': return { markHeight: 44, fontSize: '2.4rem' };
-      default: return { markHeight: 26, fontSize: '1.4rem' };
+      case 'sm':
+        return { width: 32, height: 28, fontSize: '1.25rem', gap: '0.6rem' };
+      case 'lg':
+        return { width: 44, height: 38, fontSize: '1.75rem', gap: '0.8rem' };
+      case 'xl':
+        return { width: 54, height: 46, fontSize: '2.3rem', gap: '0.95rem' };
+      default:
+        return { width: 38, height: 33, fontSize: '1.5rem', gap: '0.7rem' };
     }
   };
 
   const getColors = () => {
-    switch (variant) {
-      case 'light': return { text: '#ffffff', mark1: '#dbe7df', mark2: '#5f8377', mark3: '#e6b486' };
-      case 'green': return { text: '#315f50', mark1: '#315f50', mark2: '#5f8377', mark3: '#e6b486' };
-      default: return { text: '#24332e', mark1: '#315f50', mark2: '#5f8377', mark3: '#e6b486' };
+    if (variant === 'light') {
+      return {
+        text: '#ffffff',
+        frontBubble: '#ffffff',
+        backBubble: '#7ea7be',
+        letterColor: '#28647e',
+      };
     }
+    // Default dark/light-bg variant
+    return {
+      text: '#1a3e5c',
+      frontBubble: '#2d6a82',
+      backBubble: '#9fc3d4',
+      letterColor: '#ffffff',
+    };
   };
 
-  const dimensions = getScale();
+  const dim = getScale();
   const colors = getColors();
 
   const content = (
@@ -42,48 +55,77 @@ export const Logo: React.FC<LogoProps> = ({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '0.6rem',
+        gap: dim.gap,
         userSelect: 'none',
       }}
-      className={className}
+      className={`triora-logo-wrap ${className}`}
     >
-      <svg
-        height={dimensions.markHeight}
-        viewBox="0 0 36 32"
+      {/* Exact Triora Logo Icon: Overlapping Speech Bubbles */}
+      {!hideIcon && (
+        <svg
+        width={dim.width}
+        height={dim.height}
+        viewBox="0 0 46 38"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
+        style={{ flexShrink: 0, overflow: 'visible' }}
       >
+        {/* Back speech bubble with tail pointing to lower right */}
         <path
-          d="M6 28C8.5 28 10 21 10 14C10 7 8.5 4 6 4C3.5 4 2 7 2 14C2 21 3.5 28 6 28Z"
-          fill={colors.mark1}
+          d="M 27 3 C 33.6 3 39 8.4 39 15 C 39 18.7 37.3 22 34.6 24.2 L 36.5 29 L 31.4 26.6 C 30 27 28.5 27.2 27 27.2 C 20.4 27.2 15 21.8 15 15 C 15 8.4 20.4 3 27 3 Z"
+          fill={colors.backBubble}
+          opacity={variant === 'light' ? 0.75 : 0.85}
         />
+
+        {/* Front speech bubble with tail pointing to lower left */}
         <path
-          d="M18 30C20.5 30 22 22 22 13C22 4 20.5 2 18 2C15.5 2 14 4 14 13C14 22 15.5 30 18 30Z"
-          fill={colors.mark2}
+          d="M 17 5 C 24.7 5 31 11.3 31 19 C 31 26.7 24.7 33 17 33 C 14.6 33 12.3 32.4 10.3 31.3 L 4.5 34.8 L 6.2 29.2 C 4.2 26.5 3 23 3 19 C 3 11.3 9.3 5 17 5 Z"
+          fill={colors.frontBubble}
         />
-        <path
-          d="M30 27C32 27 33.5 21 33.5 15C33.5 9 32 6 30 6C28 6 26.5 9 26.5 15C26.5 21 28 27 30 27Z"
-          fill={colors.mark3}
-        />
+
+        {/* Upright bold serif 't' matching the reference logo */}
+        <text
+          x="17"
+          y="23.5"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill={colors.letterColor}
+          fontFamily="'Playfair Display', 'Lora', Georgia, 'Times New Roman', serif"
+          fontWeight="800"
+          fontSize="19.5"
+          style={{ letterSpacing: '0' }}
+        >
+          t
+        </text>
       </svg>
+      )}
+
+      {/* Typography: Distinctive Playfair Display serif wordmark */}
       <span
         style={{
-          fontFamily: "'Inter', sans-serif",
-          fontWeight: 700,
-          fontSize: dimensions.fontSize,
+          fontFamily: "'Playfair Display', 'Lora', Georgia, serif",
+          fontWeight: 800,
+          fontSize: dim.fontSize,
           color: colors.text,
-          letterSpacing: '-0.03em',
+          letterSpacing: '-0.025em',
+          lineHeight: 1,
         }}
+        className="triora-logo-title"
       >
-        {t.logoName || 'triora'}
+        triora
       </span>
     </div>
   );
 
   if (linkTo) {
-    return <Link to={linkTo} style={{ textDecoration: 'none' }}>{content}</Link>;
+    return (
+      <Link to={linkTo} style={{ textDecoration: 'none', display: 'inline-flex' }}>
+        {content}
+      </Link>
+    );
   }
 
   return content;
 };
+export default Logo;
