@@ -66,10 +66,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1360px;
+  max-width: 1480px;
   margin: 0 auto;
   width: 100%;
-  padding: 1.1rem 3.5rem;
+  padding: 1.1rem clamp(1.25rem, 3.5vw, 3.5rem);
   background: transparent;
   box-sizing: border-box;
 }
@@ -349,7 +349,8 @@
 }
 
 .landing-hero-container {
-  max-width: 1360px;
+  max-width: 1480px;
+  width: 100%;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -364,7 +365,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 4.5rem 3.5rem 4rem 3.5rem;
+  padding: 4.5rem clamp(1.25rem, 3.5vw, 3.5rem) 4rem clamp(1.25rem, 3.5vw, 3.5rem);
   box-sizing: border-box;
 }
 
@@ -508,9 +509,10 @@
 }
 
 .landing-how-works-container {
-  max-width: 1360px;
+  max-width: 1480px;
+  width: 100%;
   margin: 0 auto;
-  padding: 3.25rem 3.5rem 3.5rem 3.5rem;
+  padding: 3.25rem clamp(1.25rem, 3.5vw, 3.5rem) 3.5rem;
   display: grid;
   grid-template-columns: 1.3fr 1fr 1fr 1fr;
   gap: 2.75rem;
@@ -591,10 +593,10 @@
 /* Responsive adjustments for First Section */
 @media (max-width: 1100px) {
   .landing-header {
-    padding: 1rem 2rem;
+    padding: 1rem 1.75rem;
   }
   .landing-hero-left {
-    padding: 3.5rem 2rem 3rem 2rem;
+    padding: 3.5rem 1.75rem 3rem 1.75rem;
   }
   .landing-hero-title {
     font-size: 3.1rem;
@@ -602,34 +604,66 @@
   .landing-how-works-container {
     grid-template-columns: 1fr 1fr;
     gap: 2.25rem;
-    padding: 2.75rem 2rem;
+    padding: 2.75rem 1.75rem;
   }
 }
 
 @media (max-width: 860px) {
+  .landing-header-wrapper {
+    top: 0;
+    padding: 0;
+  }
   .landing-header {
-    padding: 0.9rem 1.25rem;
+    padding: 0.85rem 1.15rem;
   }
   .landing-hero-container {
     grid-template-columns: 1fr;
   }
   .landing-hero-left {
-    padding: 2.5rem 1.25rem 2.25rem 1.25rem;
+    padding: 2.25rem 1.15rem 2rem 1.15rem;
   }
   .landing-hero-title {
-    font-size: 2.4rem;
+    font-size: clamp(2rem, 7vw, 2.6rem);
+    line-height: 1.15;
   }
   .landing-hero-desc {
-    font-size: 1.05rem;
+    font-size: 1rem;
+    line-height: 1.55;
   }
   .landing-hero-right {
-    min-height: 320px;
-    height: 340px;
+    min-height: 280px;
+    height: 300px;
+    width: 100%;
+  }
+  .landing-hero-cta-row {
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .landing-hero-primary-btn,
+  .landing-hero-secondary-btn {
+    width: 100%;
+    justify-content: center;
   }
   .landing-how-works-container {
     grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 2.5rem 1.25rem;
+    gap: 1.75rem;
+    padding: 2.25rem 1.15rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-header {
+    padding: 0.75rem 1rem;
+  }
+  .landing-hero-left {
+    padding: 1.75rem 1rem 1.5rem 1rem;
+  }
+  .landing-hero-title {
+    font-size: 1.95rem;
+  }
+  .landing-how-works-container {
+    padding: 2rem 1rem;
+    gap: 1.5rem;
   }
 }
 
@@ -1770,10 +1804,12 @@
 .hiw-inner {
   position: relative;
   z-index: 1;
-  max-width: 1100px;
+  max-width: 1480px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 clamp(1.25rem, 3.5vw, 3.5rem);
   text-align: center;
+  box-sizing: border-box;
 }
 
 .hiw-eyebrow {
@@ -2266,9 +2302,10 @@
 }
 
 .privacy-container {
-  max-width: 1320px;
+  max-width: 1480px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 3.5rem;
+  padding: 0 clamp(1.25rem, 3.5vw, 3.5rem);
   position: relative;
   z-index: 2;
   box-sizing: border-box;
@@ -2438,11 +2475,43 @@
     gap: 1.25rem;
   }
   .privacy-container {
-    padding: 0 2rem;
+    padding: 0 1.75rem;
   }
   .privacy-image-frame {
     max-width: 100%;
     height: 260px;
+  }
+}
+
+@media (max-width: 860px) {
+  .privacy-section-wrapper {
+    padding: 3.5rem 0 4.5rem;
+  }
+  .privacy-container {
+    padding: 0 1.15rem;
+  }
+  .privacy-hero-row {
+    gap: 1.75rem;
+    margin-bottom: 2.25rem;
+  }
+  .privacy-main-title {
+    font-size: clamp(1.9rem, 6.5vw, 2.5rem);
+  }
+  .privacy-card {
+    padding: 1.6rem 1.35rem 1.75rem;
+  }
+  .privacy-image-frame {
+    width: 100%;
+    height: 220px;
+  }
+}
+
+@media (max-width: 640px) {
+  .privacy-container {
+    padding: 0 1rem;
+  }
+  .privacy-card {
+    padding: 1.35rem 1.15rem;
   }
 }
 
@@ -3092,9 +3161,10 @@
 }
 
 .footer-container {
-  max-width: 1320px;
+  max-width: 1480px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 3.5rem;
+  padding: 0 clamp(1.25rem, 3.5vw, 3.5rem);
   position: relative;
   z-index: 2;
   box-sizing: border-box;

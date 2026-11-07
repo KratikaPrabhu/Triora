@@ -385,3 +385,110 @@
     text-align: center;
   }
 }
+
+/* ==========================================================================
+   REPORTS LIST PAGE — COMPREHENSIVE RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .reports-main-scrollable {
+    padding: 2rem 2.5rem 4rem 2.5rem;
+  }
+}
+
+@media (max-width: 1080px) {
+  .reports-main-scrollable {
+    padding: 1.75rem 2rem 5rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-page-layout {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+
+  .reports-main-scrollable {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.25rem 1.15rem 6rem 1.15rem;
+  }
+
+  .reports-top-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .reports-header-right {
+    align-items: flex-start;
+  }
+
+  .reports-main-title {
+    font-size: 1.9rem;
+  }
+
+  .reports-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .reports-tab-pill-group {
+    width: 100%;
+  }
+
+  .reports-tab-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .reports-sort-select-wrapper {
+    width: 100%;
+  }
+
+  .reports-sort-select {
+    width: 100%;
+  }
+
+  .reports-recent-card {
+    padding: 1.25rem 1.15rem;
+  }
+
+  .reports-item-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+  }
+
+  .reports-item-right {
+    width: 100%;
+  }
+
+  .reports-item-action-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .reports-main-scrollable {
+    padding: 1rem 0.9rem 6rem 0.9rem;
+  }
+
+  .reports-main-title {
+    font-size: 1.65rem;
+  }
+
+  .reports-recent-card {
+    padding: 1rem 0.9rem;
+  }
+
+  .reports-item-card {
+    padding: 0.9rem 0.9rem;
+  }
+}

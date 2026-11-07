@@ -635,3 +635,110 @@
     padding: 1.5rem 1.25rem;
   }
 }
+
+/* ==========================================================================
+   REPORT DETAIL PAGE — COMPREHENSIVE RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .report-detail-main {
+    padding: 2rem 2.5rem 5rem 2.5rem;
+  }
+}
+
+@media (max-width: 1080px) {
+  .report-detail-main {
+    padding: 1.75rem 2rem 5rem 2rem;
+  }
+
+  .report-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .report-detail-layout {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+
+  .report-detail-main {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.25rem 1.15rem 6rem 1.15rem;
+  }
+
+  .report-detail-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .report-top-right-group {
+    align-items: flex-start;
+  }
+
+  .report-action-buttons-row {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .report-action-btn {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .report-hero-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .report-hero-title {
+    font-size: 1.75rem;
+  }
+
+  .report-themes-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .report-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-detail-main {
+    padding: 1rem 0.9rem 6rem 0.9rem;
+  }
+
+  .report-hero-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .report-hero-title {
+    font-size: 1.5rem;
+  }
+
+  .report-action-btn {
+    font-size: 0.82rem;
+    padding: 0.48rem 0.95rem;
+  }
+
+  .report-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-themes-card {
+    padding: 1.15rem 1rem;
+  }
+
+  .report-theme-row-card {
+    padding: 1rem 1rem;
+  }
+}

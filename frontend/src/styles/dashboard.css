@@ -963,3 +963,175 @@
     white-space: normal !important;
   }
 }
+
+/* ==========================================================================
+   DASHBOARD — COMPREHENSIVE RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Large tablets / small laptops (1080px and below) */
+@media (max-width: 1080px) {
+  .dashboard-layout {
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .sidebar {
+    width: 210px;
+    min-width: 210px;
+    max-width: 210px;
+    padding: 1.25rem 1rem 1rem 1rem;
+  }
+
+  .dashboard-main {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.75rem 1.75rem 1.5rem;
+  }
+
+  .dash-2x2-grid {
+    grid-template-rows: auto;
+    gap: 1.25rem;
+  }
+}
+
+/* Tablets (768px and below) — replace sidebar with mobile header + bottom nav */
+@media (max-width: 768px) {
+  .mobile-app-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    background-color: var(--bg-main, #f7f6f2);
+    border-bottom: 1px solid #eae7df;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .mobile-bottom-nav {
+    display: flex !important;
+    justify-content: space-around;
+    align-items: center;
+    background: #ffffff;
+    border-top: 1px solid #eae7df;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.65rem 0.5rem;
+    z-index: 30;
+  }
+
+  .mobile-bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: #7c8d96;
+    font-size: 0.72rem;
+    text-decoration: none;
+  }
+
+  .mobile-bottom-nav-item.active {
+    color: var(--triora-teal, #2d6a82);
+    font-weight: 600;
+  }
+
+  .dashboard-layout {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .dashboard-main {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.25rem 1.15rem 5.5rem 1.15rem;
+  }
+
+  .dash-2x2-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 1.15rem;
+  }
+
+  .dash-hero-card {
+    padding: 1.35rem 1.25rem;
+  }
+
+  .dash-hero-title {
+    font-size: 1.45rem;
+  }
+
+  .dash-hero-desc {
+    font-size: 0.82rem;
+  }
+
+  .dash-hero-actions {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    gap: 0.75rem;
+  }
+
+  .dash-guide-card {
+    padding: 1.25rem 1.25rem;
+  }
+
+  .dash-chart-card,
+  .dash-activity-card {
+    padding: 1.1rem 1.15rem;
+  }
+
+  .dash-activity-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .dash-activity-stat-val {
+    font-size: 1.75rem;
+  }
+}
+
+/* Small phones (480px and below) */
+@media (max-width: 480px) {
+  .dashboard-main {
+    padding: 1rem 0.9rem 5.5rem 0.9rem;
+  }
+
+  .dash-hero-card {
+    padding: 1.15rem 1rem;
+    flex-direction: column;
+  }
+
+  .dash-hero-plant-wrapper {
+    display: none;
+  }
+
+  .dash-hero-title {
+    font-size: 1.3rem;
+  }
+
+  .dash-activity-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .dash-activity-stat-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .dash-activity-stat-icon {
+    margin-bottom: 0;
+  }
+}
