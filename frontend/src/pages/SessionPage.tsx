@@ -9,6 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { reportService } from '../services/reportService';
 import { sessionService } from '../services/sessionService';
 import { ttsService } from '../services/ttsService';
+import { GSRMonitoringCard } from '../components/GSRMonitoring/GSRMonitoringCard';
 import '../styles/session.css';
 
 export const SessionPage: React.FC = () => {
@@ -209,7 +210,7 @@ export const SessionPage: React.FC = () => {
           )}
 
         <div className="session-content-grid">
-          {/* Left Column: Timer, Question, Hear question, Finish button */}
+          {/* Left Column: Timer, Question, Interaction Card */}
           <div className="session-col-left">
             {/* Timer Badge */}
             <div className="session-timer-pill">
@@ -220,8 +221,7 @@ export const SessionPage: React.FC = () => {
             <h1 className="session-question-text">
               {currentPrompt || (
                 <>
-                  Take your time.<br />
-                  <span className="session-question-blue">What made you consider speaking with a therapist now?</span>
+                  Take your time. What made you consider speaking with a therapist now?
                 </>
               )}
             </h1>
@@ -230,21 +230,9 @@ export const SessionPage: React.FC = () => {
               Share your thoughts in your own words. There’s no right or wrong answer.
             </p>
 
-            {/* Finish & generate summary button */}
-            <button
-              type="button"
-              className="session-finish-pill-btn"
-              onClick={handleCompleteSession}
-            >
-              <span>{t.finishAndSummary || 'Finish & generate summary'}</span>
-              <Icon name="ArrowRight" size={17} color="#FFFFFF" />
-            </button>
-          </div>
-
-          {/* Right Column: Interaction Card */}
-          <div className="session-col-right">
+            {/* Conversation Voice / Text Interaction Card */}
             <div className="session-interaction-card">
-              {/* Big Mic Button with Glowing Halo */}
+              {/* Big Circular Mic Button with Soft Glowing Halo */}
               <div className="session-mic-orb-container">
                 <div className={`session-mic-halo ${isListening ? 'listening' : ''}`} />
                 <button
@@ -252,6 +240,7 @@ export const SessionPage: React.FC = () => {
                   className={`session-mic-btn ${isListening ? 'listening' : ''}`}
                   onClick={handleMicClick}
                   aria-label={isListening ? 'Stop recording' : 'Start recording'}
+                  title="Tap to speak"
                 >
                   <Icon name={isListening ? 'Square' : 'Mic'} size={32} color="#FFFFFF" />
                 </button>
@@ -265,8 +254,15 @@ export const SessionPage: React.FC = () => {
                 {t.speakNaturally || "Speak naturally. There’s no right answer."}
               </p>
 
-              {/* Waveform Visualizer Pill */}
-              <div className="session-waveform-pill" aria-hidden="true">
+              {/* Waveform Visualizer Pill (Clickable Mic trigger) */}
+              <div
+                className={`session-waveform-pill ${isListening ? 'listening' : ''}`}
+                onClick={handleMicClick}
+                role="button"
+                tabIndex={0}
+                aria-label={isListening ? 'Stop recording' : 'Start recording'}
+                title="Tap to speak"
+              >
                 <div className="session-waveform-bars">
                   {[6, 8, 12, 16, 22, 28, 20, 32, 38, 26, 36, 40, 30, 26, 34, 24, 18, 14, 10, 8, 6].map((baseHeight, idx) => {
                     const dynamicHeight = isListening
@@ -283,7 +279,7 @@ export const SessionPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Disclaimer subtext */}
+              {/* Disclaimer subtext under waveform */}
               <p className="session-disclaimer-text">
                 {t.reflectiveActivity || 'Reflective activity · simulated visualization.'}<br />
                 {t.visualTraceDisclaimer || 'The visual trace is simulated and is not a medical measurement.'}
@@ -322,6 +318,21 @@ export const SessionPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Right Column: Physiological Monitoring Card + Finish & Generate Summary Button */}
+          <div className="session-col-right">
+            <GSRMonitoringCard sessionId={sessionId} />
+
+            {/* Full-width Finish & Generate Summary Button directly below the monitoring card */}
+            <button
+              type="button"
+              className="session-finish-banner-btn"
+              onClick={handleCompleteSession}
+            >
+              <span>{t.finishAndSummary || 'Finish & generate summary'}</span>
+              <Icon name="ArrowRight" size={17} color="#FFFFFF" />
+            </button>
           </div>
         </div>
       </div>

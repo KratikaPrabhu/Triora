@@ -1,0 +1,391 @@
+/* ==========================================================================
+   TRIORA PHYSIOLOGICAL MONITORING CARD STYLES
+   - Exact recreation of reference design
+   - Real-time GSR and vitals during conversation
+   - 4 selectable parameters: Conductance, Resistance, Heart Rate, HRV
+   ========================================================================== */
+
+.physio-monitoring-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e5edf5;
+  box-shadow: 0 4px 20px rgba(16, 42, 67, 0.04);
+  padding: 1.75rem 2rem 1.6rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* 1. Header */
+.physio-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.physio-header-left {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.physio-card-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #102a43;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.physio-card-subtitle {
+  font-family: var(--font-sans, -apple-system, sans-serif);
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0.3rem 0 0 0;
+  line-height: 1.35;
+}
+
+/* Sensor connected badge */
+.physio-sensor-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #e6f7ec;
+  color: #15803d;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  white-space: nowrap;
+}
+
+.physio-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.physio-status-dot.connected {
+  background-color: #16a34a;
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.4);
+}
+
+.physio-status-dot.connecting {
+  background-color: #f59e0b;
+}
+
+/* 2. Middle Grid: Graph Pane + Side Metrics */
+.physio-middle-grid {
+  display: grid;
+  grid-template-columns: 1fr 135px;
+  gap: 1.15rem;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #eef4f9;
+  border-radius: 14px;
+  padding: 1.25rem 1.15rem;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+}
+
+.physio-graph-pane {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.physio-graph-block {
+  width: 100%;
+}
+
+.physio-graph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.physio-graph-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #102a43;
+  margin: 0;
+}
+
+.gsr-graph-container {
+  position: relative;
+  width: 100%;
+}
+
+.physio-yaxis-unit {
+  position: absolute;
+  top: -6px;
+  left: 2px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gsr-xaxis-title {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.gsr-graph-tooltip {
+  background-color: rgba(16, 42, 67, 0.94);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.gsr-tooltip-time {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.gsr-tooltip-val {
+  font-size: 0.84rem;
+  color: #ffffff;
+}
+
+/* Side Metrics Column */
+.physio-side-metrics-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 1.25rem;
+  border-left: 1px solid #f1f5f9;
+  gap: 1.15rem;
+}
+
+.physio-side-metric-item {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.physio-side-metric-item:hover {
+  background-color: #f8fafc;
+}
+
+.physio-side-metric-item.active-param {
+  background-color: #f0f7fb;
+  outline: 1.5px solid #1b6ca8;
+}
+
+.physio-metric-label {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+
+.physio-metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.physio-metric-num {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #102a43;
+  line-height: 1;
+}
+
+.physio-metric-unit {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #102a43;
+  line-height: 1;
+}
+
+.physio-side-divider {
+  width: 100%;
+  height: 1px;
+  background-color: #f1f5f9;
+}
+
+/* 3. Bottom Row: 2 Big Tiles */
+.physio-bottom-tiles-wrapper {
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
+.physio-bottom-tiles-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.physio-tile-card {
+  background-color: #ffffff;
+  border: 1px solid #e2edf6;
+  border-radius: 14px;
+  padding: 1.1rem 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  position: relative;
+}
+
+.physio-tile-card:hover {
+  background-color: #f7fafd;
+  border-color: #cbdfe9;
+}
+
+.physio-tile-card.active-param {
+  background-color: #ffffff;
+  border-color: #1b6ca8;
+  box-shadow: 0 2px 10px rgba(27, 108, 168, 0.1);
+}
+
+.physio-tile-top-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.physio-tile-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: #eef5fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.physio-tile-heading-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.physio-tile-label {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.physio-tile-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.physio-tile-num {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #102a43;
+  line-height: 1;
+}
+
+.physio-tile-unit {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #102a43;
+  line-height: 1;
+}
+
+.physio-selected-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background-color: #1b6ca8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 4. Disclaimer Note Pill */
+.physio-disclaimer-pill {
+  background-color: #f1f6fa;
+  border-radius: 9999px;
+  padding: 0.65rem 1.25rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #627d98;
+  font-weight: 400;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .physio-middle-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .physio-side-metrics-col {
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1rem;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .physio-side-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .physio-monitoring-card {
+    padding: 1.25rem 1.15rem;
+  }
+
+  .physio-bottom-tiles-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .physio-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .physio-disclaimer-pill {
+    border-radius: 12px;
+    font-size: 0.76rem;
+  }
+}
