@@ -1,5 +1,6 @@
 import mongoose, { Schema, Model } from 'mongoose';
 import { ISessionDocument, SessionStatus } from '../types';
+import { encryptText, decryptText } from '../utils/crypto.util';
 
 const ALLOWED_TRANSITIONS: Record<SessionStatus, SessionStatus[]> = {
   created: ['active', 'failed'],
@@ -24,7 +25,9 @@ const sessionMessageSchema = new Schema(
     text: {
       type: String,
       default: '',
-      trim: true
+      trim: true,
+      set: encryptText,
+      get: decryptText
     },
     status: {
       type: String,
@@ -49,7 +52,11 @@ const sessionMessageSchema = new Schema(
       maxFrequency: { type: Number }
     }
   },
-  { _id: false }
+  {
+    _id: false,
+    toJSON: { getters: true },
+    toObject: { getters: true }
+  }
 );
 
 const sessionSchema = new Schema<ISessionDocument>(
@@ -99,10 +106,14 @@ const sessionSchema = new Schema<ISessionDocument>(
   {
     timestamps: true,
     toJSON: {
+      getters: true,
       transform: function (_doc, ret: Record<string, any>) {
         delete ret.__v;
         return ret;
       }
+    },
+    toObject: {
+      getters: true
     }
   }
 );

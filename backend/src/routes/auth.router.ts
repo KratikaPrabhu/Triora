@@ -25,6 +25,7 @@ const authLimiter = rateLimit({
 router.post('/signup', authLimiter, validateBody(signupSchema), authController.signup);
 router.post('/login', authLimiter, validateBody(loginSchema), authController.login);
 router.post('/google', authLimiter, validateBody(googleAuthSchema), authController.googleAuth);
+router.post('/logout', authController.logout);
 
 // Protected endpoints
 router.get('/me', authenticateJWT, authController.getMe);

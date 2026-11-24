@@ -1,5 +1,6 @@
 import mongoose, { Schema, Model } from 'mongoose';
 import { IReportDocument } from '../types';
+import { encryptText, decryptText } from '../utils/crypto.util';
 
 const reportSchema = new Schema<IReportDocument>(
   {
@@ -18,7 +19,9 @@ const reportSchema = new Schema<IReportDocument>(
     summary: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
+      set: encryptText,
+      get: decryptText
     },
     keyThemes: {
       type: [String],
@@ -31,7 +34,9 @@ const reportSchema = new Schema<IReportDocument>(
     emotionalContext: {
       type: String,
       default: '',
-      trim: true
+      trim: true,
+      set: encryptText,
+      get: decryptText
     },
     importantStatements: {
       type: [String],
@@ -40,7 +45,9 @@ const reportSchema = new Schema<IReportDocument>(
     conversationOverview: {
       type: String,
       default: '',
-      trim: true
+      trim: true,
+      set: encryptText,
+      get: decryptText
     },
     voiceAnalysis: {
       type: Schema.Types.Mixed,
@@ -66,10 +73,14 @@ const reportSchema = new Schema<IReportDocument>(
   {
     timestamps: true,
     toJSON: {
+      getters: true,
       transform: function (_doc, ret: Record<string, any>) {
         delete ret.__v;
         return ret;
       }
+    },
+    toObject: {
+      getters: true
     }
   }
 );

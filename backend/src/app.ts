@@ -1,6 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
 import env from './config/env';
 import logger from './config/logger';
@@ -25,10 +27,14 @@ const allowedOrigins = [
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
+    // 1. Allow same-origin / server-to-server / curl requests (no origin header)
+    // 2. Allow explicitly whitelisted frontend domains in allowedOrigins
+    // 3. Allow all origins ONLY in local development
     if (!origin || allowedOrigins.includes(origin) || env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
-      callback(null, true);
+      logger.warn(`[CORS Blocked] Unauthorized origin attempted access: ${origin}`);
+      callback(new Error(`CORS blocked: Origin ${origin} is not allowed.`));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -57,9 +63,16 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Cookie parser for secure HttpOnly session tokens
+app.use(cookieParser());
+
 // Body parser with size limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// NoSQL Injection / MongoDB Query Sanitization
+// Recursively sanitizes prohibited characters ($ and .) from req.body, req.query, and req.params
+app.use(mongoSanitize({ replaceWith: '_' }));
 
 // Request logging middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {

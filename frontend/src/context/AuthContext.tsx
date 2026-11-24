@@ -25,6 +25,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const refreshUser = useCallback(async () => {
+    try {
+      // 1. Try to fetch authenticated user using HttpOnly cookie (or stored token)
+      const res = await authService.getMe();
+      if (res.success && res.data?.user) {
+        setUser(res.data.user);
+        setToken(getStoredToken() || 'cookie_authenticated');
+        setIsLoading(false);
+        return;
+      }
+    } catch {
+      // Request failed, check fallback
+    }
+
     const currentToken = getStoredToken();
     if (!currentToken) {
       // Provide default profile for seamless demo preview matching reference
@@ -51,23 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    try {
-      const res = await authService.getMe();
-      if (res.success && res.data?.user) {
-        setUser(res.data.user);
-        setToken(currentToken);
-      } else {
-        authService.logout();
-        setUser(null);
-        setToken(null);
-      }
-    } catch {
-      authService.logout();
-      setUser(null);
-      setToken(null);
-    } finally {
-      setIsLoading(false);
-    }
+    await authService.logout();
+    setUser(null);
+    setToken(null);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    authService.logout();
+    authService.logout().catch(() => {});
     setUser(null);
     setToken(null);
   };

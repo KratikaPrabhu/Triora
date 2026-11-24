@@ -84,7 +84,12 @@ export const authService = {
     return res;
   },
 
-  logout(): void {
+  async logout(): Promise<void> {
+    try {
+      await apiRequest('/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore network errors on logout
+    }
     removeStoredToken();
   },
 };

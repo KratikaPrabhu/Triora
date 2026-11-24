@@ -59,6 +59,7 @@ export class SpeechService {
         hostname: tokenHost,
         path: '/sts/v1.0/issueToken',
         method: 'POST',
+        maxVersion: 'TLSv1.2',
         headers: {
           'Ocp-Apim-Subscription-Key': env.AZURE_SPEECH_KEY,
           'Content-Length': '0'
@@ -132,6 +133,7 @@ export class SpeechService {
         hostname: `${region}.tts.speech.microsoft.com`,
         path: '/cognitiveservices/v1',
         method: 'POST',
+        maxVersion: 'TLSv1.2',
         headers: {
           'Ocp-Apim-Subscription-Key': env.AZURE_SPEECH_KEY,
           'Content-Type': 'application/ssml+xml',

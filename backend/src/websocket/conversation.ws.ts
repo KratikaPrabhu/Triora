@@ -28,7 +28,17 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
     }
 
     try {
-      const token = reqUrl.searchParams.get('token') || request.headers['authorization']?.replace('Bearer ', '');
+      // 1. Check HttpOnly cookie header
+      let cookieToken: string | null = null;
+      if (request.headers.cookie) {
+        const match = request.headers.cookie.match(/(?:^|;\s*)token=([^;]+)/);
+        if (match) {
+          cookieToken = decodeURIComponent(match[1]);
+        }
+      }
+
+      // 2. Fallback to URL query parameter or Authorization header
+      const token = cookieToken || reqUrl.searchParams.get('token') || request.headers['authorization']?.replace('Bearer ', '');
 
       if (!token) {
         logger.warn('WebSocket connection rejected: No authentication token provided.');

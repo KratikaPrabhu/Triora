@@ -42,6 +42,7 @@ export async function apiRequest<T = any>(
   try {
     const response = await fetch(url, {
       ...options,
+      credentials: 'include', // Automatically sends and receives HttpOnly auth cookies
       headers,
     });
 

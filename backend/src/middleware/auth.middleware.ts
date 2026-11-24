@@ -4,26 +4,19 @@ import User from '../models/user.model';
 
 export const authenticateJWT = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    // 1. Primary: Extract from secure HttpOnly cookie
+    // 2. Fallback: Extract from Authorization Bearer header (for API clients, tests, mobile)
+    const cookieToken = req.cookies?.token;
     const authHeader = req.headers.authorization;
+    const headerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({
-        success: false,
-        error: {
-          message: 'Access denied. No authentication token provided.',
-          statusCode: 401
-        }
-      });
-      return;
-    }
-
-    const token = authHeader.split(' ')[1];
+    const token = cookieToken || headerToken;
 
     if (!token) {
       res.status(401).json({
         success: false,
         error: {
-          message: 'Access denied. Invalid token format.',
+          message: 'Access denied. No authentication token provided.',
           statusCode: 401
         }
       });

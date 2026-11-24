@@ -25,6 +25,28 @@ export const SignupPage: React.FC = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
 
+  // Password Strength & Requirements Definition
+  const passwordCriteria = [
+    { id: 'length', label: 'At least 8 characters', valid: password.length >= 8 },
+    { id: 'uppercase', label: 'At least one uppercase letter (A-Z)', valid: /[A-Z]/.test(password) },
+    { id: 'lowercase', label: 'At least one lowercase letter (a-z)', valid: /[a-z]/.test(password) },
+    { id: 'number', label: 'At least one number (0-9)', valid: /[0-9]/.test(password) },
+    { id: 'special', label: 'At least one special character (!@#$%^&*)', valid: /[^A-Za-z0-9]/.test(password) },
+  ];
+
+  const validCount = passwordCriteria.filter((c) => c.valid).length;
+  const isPasswordStrong = validCount === passwordCriteria.length;
+
+  const getStrengthMeta = () => {
+    if (!password) return { label: '', color: '', score: 0 };
+    if (validCount <= 2) return { label: 'Weak', color: '#ef4444', score: 1 };
+    if (validCount === 3) return { label: 'Fair', color: '#f59e0b', score: 2 };
+    if (validCount === 4) return { label: 'Good', color: '#3b82f6', score: 3 };
+    return { label: 'Strong', color: '#10b981', score: 4 };
+  };
+
+  const strengthMeta = getStrengthMeta();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
@@ -32,13 +54,14 @@ export const SignupPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (!isPasswordStrong) {
+      const missing = passwordCriteria.filter((c) => !c.valid).map((c) => c.label);
+      setError(`Please fulfill all password requirements to make it strong: ${missing.join(', ')}.`);
       return;
     }
 
-    if (confirmPassword && password !== confirmPassword) {
-      setError('Passwords do not match.');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please verify your confirm password.');
       return;
     }
 
@@ -246,7 +269,7 @@ export const SignupPage: React.FC = () => {
                     id="signup-password"
                     type={showPassword ? 'text' : 'password'}
                     className="signup-input-field"
-                    placeholder="Create a password"
+                    placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -261,6 +284,49 @@ export const SignupPage: React.FC = () => {
                     <Icon name={showPassword ? 'Eye' : 'EyeOff'} size={17} />
                   </button>
                 </div>
+
+                {/* Real-time Password Strength Meter & Suggestions Checklist */}
+                {password.length > 0 && (
+                  <div className="signup-password-checklist" aria-live="polite">
+                    <div className="signup-password-meter-row">
+                      <span className="signup-meter-title">Password strength:</span>
+                      <span
+                        className="signup-meter-badge"
+                        style={{ color: strengthMeta.color, backgroundColor: `${strengthMeta.color}15` }}
+                      >
+                        {strengthMeta.label}
+                      </span>
+                    </div>
+
+                    <div className="signup-meter-bars" role="progressbar" aria-valuenow={strengthMeta.score} aria-valuemin={0} aria-valuemax={4}>
+                      {[1, 2, 3, 4].map((step) => (
+                        <div
+                          key={step}
+                          className="signup-meter-bar"
+                          style={{
+                            backgroundColor: step <= strengthMeta.score ? strengthMeta.color : '#e2edf6',
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="signup-req-title">Must contain:</div>
+                    <ul className="signup-req-list">
+                      {passwordCriteria.map((item) => (
+                        <li key={item.id} className={`signup-req-item ${item.valid ? 'valid' : 'pending'}`}>
+                          <span className="signup-req-icon-wrap">
+                            {item.valid ? (
+                              <Icon name="Check" size={12} color="#10b981" />
+                            ) : (
+                              <span className="signup-req-dot" />
+                            )}
+                          </span>
+                          <span className="signup-req-text">{item.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
               <div className="signup-form-group">
@@ -288,6 +354,14 @@ export const SignupPage: React.FC = () => {
                     <Icon name={showConfirmPassword ? 'Eye' : 'EyeOff'} size={17} />
                   </button>
                 </div>
+
+                {/* Confirm Password Real-time Match Indicator */}
+                {confirmPassword.length > 0 && (
+                  <div className={`signup-confirm-match-note ${password === confirmPassword ? 'match' : 'mismatch'}`}>
+                    <Icon name={password === confirmPassword ? 'Check' : 'AlertCircle'} size={13} />
+                    <span>{password === confirmPassword ? 'Passwords match' : 'Passwords do not match yet'}</span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -76,7 +76,7 @@ export async function runAuthTests(): Promise<boolean> {
   const testUser = {
     name: 'Jane Doe',
     email: 'jane.doe@example.com',
-    password: 'securepassword123'
+    password: 'SecurePassword123!'
   };
 
   let passedCount = 0;
