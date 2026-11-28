@@ -8,6 +8,7 @@ import { useConversation } from '../hooks/useConversation';
 import { useLanguage } from '../context/LanguageContext';
 import { reportService } from '../services/reportService';
 import { sessionService } from '../services/sessionService';
+import { sessionCacheService } from '../services/sessionCacheService';
 import { ttsService } from '../services/ttsService';
 import { GSRMonitoringCard } from '../components/GSRMonitoring/GSRMonitoringCard';
 import '../styles/session.css';
@@ -58,12 +59,6 @@ export const SessionPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const formatTimer = (totalSecs: number) => {
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const {
     isListening,
     transcript,
@@ -79,9 +74,43 @@ export const SessionPage: React.FC = () => {
     status: convStatus,
     messages,
     currentQuestion,
+    crisisAlert,
+    setCrisisAlert,
     sendMessage,
     speakCurrentQuestion,
   } = useConversation(sessionId, language || 'en');
+
+  // Offline resilience: save session progress to IndexedDB
+  useEffect(() => {
+    if (sessionId && messages.length > 0) {
+      sessionCacheService.saveSession({
+        sessionId,
+        language: language || 'en',
+        timerSeconds,
+        lastUpdated: Date.now(),
+        currentQuestion,
+        transcriptMessages: messages
+      });
+    }
+  }, [sessionId, language, timerSeconds, currentQuestion, messages]);
+
+  const formatTimer = (totalSecs: number) => {
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const gsrRef = useRef<any>(null);
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  const handleGSRReady = (gsrInstance: any) => {
+    gsrRef.current = gsrInstance;
+  };
+
+  // Reset question telemetry window timer when a new question arrives
+  useEffect(() => {
+    questionStartTimeRef.current = Date.now();
+  }, [currentQuestion]);
 
   // Auto-play the first question when session becomes ready
   useEffect(() => {
@@ -114,10 +143,16 @@ export const SessionPage: React.FC = () => {
       stopListening();
     }
 
+    // Capture physiological window metrics while the patient listened and answered this question
+    const physiologicalMetrics = gsrRef.current?.snapshotQuestionWindow
+      ? gsrRef.current.snapshotQuestionWindow(questionStartTimeRef.current)
+      : undefined;
+
     try {
-      await sendMessage(messageToSend);
+      await sendMessage(messageToSend, undefined, physiologicalMetrics);
       setManualText('');
       resetTranscript();
+      questionStartTimeRef.current = Date.now();
     } catch (err) {
       console.error('Failed to send answer:', err);
     }
@@ -143,11 +178,17 @@ export const SessionPage: React.FC = () => {
         throw new Error(finishRes.error?.message || 'Failed to complete session');
       }
 
+      // Extract physiological summary from active GSR instance
+      const physiologicalVitals = gsrRef.current?.getPhysiologicalSummary ? gsrRef.current.getPhysiologicalSummary() : undefined;
+
       const reportRes = await reportService.generateReport(sessionId, {
-        durationSeconds: timerSeconds
+        durationSeconds: timerSeconds,
+        physiologicalVitals
       });
 
       if (reportRes.success && reportRes.data?.report) {
+        // Clear cached session upon completion
+        await sessionCacheService.clearSession(sessionId);
         navigate(`/report/${reportRes.data.report._id}`);
       } else {
         throw new Error(reportRes.error?.message || 'Report generation failed.');
@@ -216,6 +257,48 @@ export const SessionPage: React.FC = () => {
             <div className="session-timer-pill">
               <span>{formatTimer(timerSeconds)}</span>
             </div>
+
+            {/* Crisis Safety Net Alert Modal / Overlay */}
+            {crisisAlert && (
+              <div className="session-crisis-overlay" role="alertdialog" aria-modal="true" aria-labelledby="crisis-title">
+                <div className="session-crisis-card">
+                  <div className="session-crisis-header">
+                    <span className="session-crisis-badge">Safety Support Protocol</span>
+                    <button
+                      type="button"
+                      className="session-crisis-close"
+                      onClick={() => setCrisisAlert(null)}
+                      aria-label="Dismiss alert"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <h2 id="crisis-title" className="session-crisis-title">You are not alone. Help is here.</h2>
+                  <p className="session-crisis-grounding">{crisisAlert.groundingMessage}</p>
+
+                  <div className="session-crisis-resources">
+                    <h3 className="session-crisis-resources-heading">Immediate 24/7 Crisis Helplines:</h3>
+                    {crisisAlert.safetyResources.map((res, i) => (
+                      <div key={i} className="session-crisis-resource-item">
+                        <div className="session-crisis-resource-name">{res.name}</div>
+                        <div className="session-crisis-resource-contact">{res.contact}</div>
+                        <div className="session-crisis-resource-desc">{res.description}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="session-crisis-actions">
+                    <button
+                      type="button"
+                      className="session-crisis-btn"
+                      onClick={() => setCrisisAlert(null)}
+                    >
+                      I Understand / Return to Conversation
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* AI Question Headline */}
             <h1 className="session-question-text">
@@ -322,7 +405,7 @@ export const SessionPage: React.FC = () => {
 
           {/* Right Column: Physiological Monitoring Card + Finish & Generate Summary Button */}
           <div className="session-col-right">
-            <GSRMonitoringCard sessionId={sessionId} />
+            <GSRMonitoringCard sessionId={sessionId} onGSRReady={handleGSRReady} />
 
             {/* Full-width Finish & Generate Summary Button directly below the monitoring card */}
             <button

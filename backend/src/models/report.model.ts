@@ -49,6 +49,21 @@ const reportSchema = new Schema<IReportDocument>(
       set: encryptText,
       get: decryptText
     },
+    physiologicalInsights: {
+      type: String,
+      default: '',
+      trim: true,
+      set: encryptText,
+      get: decryptText
+    },
+    physiologicalMetrics: {
+      type: Schema.Types.Mixed,
+      default: null
+    },
+    questionPhysiologicalResponses: {
+      type: [Schema.Types.Mixed],
+      default: []
+    },
     voiceAnalysis: {
       type: Schema.Types.Mixed,
       default: null

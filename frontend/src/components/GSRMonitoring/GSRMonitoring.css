@@ -53,6 +53,96 @@
   line-height: 1.35;
 }
 
+/* Controls container in header right */
+.physio-controls-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  position: relative;
+}
+
+/* 1-Click "Pair ESP32" Bluetooth Button */
+.physio-ble-pair-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background-color: #f0f7fc;
+  color: #1b6ca8;
+  border: 1px solid rgba(27, 108, 168, 0.25);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.42rem 0.85rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  outline: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.physio-ble-pair-btn:hover:not(:disabled) {
+  background-color: #e0f0fa;
+  border-color: #1b6ca8;
+  transform: translateY(-1px);
+}
+
+.physio-ble-pair-btn.pairing {
+  background-color: #fffbeb;
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.3);
+  cursor: wait;
+}
+
+.physio-ble-pair-btn.connected {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: rgba(29, 78, 216, 0.35);
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.1);
+}
+
+.ble-icon-active {
+  color: #2563eb;
+  animation: pulseBle 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseBle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.15); }
+}
+
+.physio-ble-disconnect-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+  font-size: 0.95rem;
+  color: #64748b;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  line-height: 1;
+}
+
+.physio-ble-disconnect-tag:hover {
+  color: #ef4444;
+}
+
+.physio-ble-error-tooltip {
+  font-size: 0.72rem;
+  color: #b91c1c;
+  background-color: #fef2f2;
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Sensor connected badge */
 .physio-sensor-status-badge {
   display: inline-flex;

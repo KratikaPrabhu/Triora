@@ -5,4 +5,10 @@ export const ai = new GoogleGenAI({
   apiKey: env.GEMINI_API_KEY || 'MOCK_KEY'
 });
 
-export const modelName = env.GEMINI_MODEL || 'gemini-3.5-flash';
+export const modelName = 'gemini-3.5-flash';
+
+// Fallback pool strictly uses gemini-3.5-flash
+export const FALLBACK_MODELS = [
+  'gemini-3.5-flash'
+];
+

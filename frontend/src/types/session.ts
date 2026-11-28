@@ -12,6 +12,7 @@ export interface SessionMessage {
     maxFrequency?: number;
     samples?: Array<{ time: number; frequency: number }>;
   };
+  physiologicalMetrics?: any;
 }
 
 export interface Session {

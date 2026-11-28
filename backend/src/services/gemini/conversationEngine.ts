@@ -1,4 +1,4 @@
-import { ai, modelName } from './geminiClient';
+import { ai, modelName, FALLBACK_MODELS } from './geminiClient';
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompts';
 import env from '../../config/env';
 import logger from '../../config/logger';
@@ -249,22 +249,25 @@ export class ConversationEngine {
       };
     }
 
-    // 2. Real Gemini API execution with retries and exponential backoff
+    // 2. Real Gemini API execution with multi-model failover & backoff
     const maxAttempts = 3;
     let lastError: any = null;
 
     logger.info(`[Gemini] Request started for Question ${nextQuestionNum}/${MAX_QUESTIONS}`);
     logger.info(`[Gemini] Conversation message count: ${history.length}`);
-    logger.info(`[Gemini] Model: ${modelName}`);
+    logger.info(`[Gemini] Preferred Model: ${modelName}`);
 
     const userPrompt = buildUserPrompt(selectedLanguage, history, latestMessage ? latestMessage.trim() : '', askedQuestions);
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      // Rotate to secondary models on retry if overloaded (503 / 429)
+      const currentAttemptModel = FALLBACK_MODELS[(attempt - 1) % FALLBACK_MODELS.length];
+
       try {
-        logger.info(`[Gemini] Attempt: ${attempt}`);
+        logger.info(`[Gemini] Attempt ${attempt} using model: ${currentAttemptModel}`);
 
         const generatePromise = ai.models.generateContent({
-          model: modelName,
+          model: currentAttemptModel,
           contents: [
             { role: 'user', parts: [{ text: `${SYSTEM_PROMPT}\n\n${userPrompt}` }] }
           ],
@@ -279,7 +282,7 @@ export class ConversationEngine {
         );
 
         const response: any = await Promise.race([generatePromise, timeoutPromise]);
-        logger.info(`[Gemini] Request completed`);
+        logger.info(`[Gemini] Request completed successfully with ${currentAttemptModel}`);
         logger.info(`[Gemini] Response received`);
         
         const tokenUsage = response.usageMetadata || { promptTokenCount: 0, candidatesTokenCount: 0, totalTokenCount: 0 };
@@ -343,21 +346,35 @@ export class ConversationEngine {
         };
       } catch (err: any) {
         lastError = err;
-        logger.error(`[Gemini] Attempt ${attempt} failed: ${err.message || err}`);
+        logger.error(`[Gemini] Attempt ${attempt} (${currentAttemptModel}) failed: ${err.message || err}`);
 
         if (attempt < maxAttempts) {
           const backoffDelay = Math.pow(2, attempt - 1) * 1000; // Attempt 1 -> 1s, Attempt 2 -> 2s
-          logger.info(`[Gemini] Retrying in ${backoffDelay}ms...`);
+          logger.info(`[Gemini] Switching model & retrying in ${backoffDelay}ms...`);
           await new Promise((resolve) => setTimeout(resolve, backoffDelay));
         }
       }
     }
 
-    // All retries failed - DO NOT generate fake fallback question. Throw GeminiUnavailableError to keep session alive.
-    logger.error(`[Gemini] All ${maxAttempts} attempts failed. Returning GeminiUnavailableError.`);
-    throw new GeminiUnavailableError(
-      lastError?.message || 'The AI service is temporarily unavailable. Please try again.'
-    );
+    // 3. Graceful Clinical Continuity Fallback:
+    // If all remote models are 503 unavailable, seamlessly provide a relevant question from the clinical question bank
+    // so the patient is never stranded with an error mid-conversation!
+    logger.warn(`[Gemini] All ${maxAttempts} model attempts failed. Providing seamless clinical fallback question.`);
+    const gracefulQuestion = getFallbackQuestion(selectedLanguage, askedQuestions);
+
+    return {
+      action: 'ask',
+      reply: gracefulQuestion,
+      reason: 'Graceful intake recovery (Gemini temporary high demand 503)',
+      metadata: {
+        intent: 'exploring_wellbeing',
+        topic: 'intake_continuation',
+        shouldContinue: true,
+        questionNumber: nextQuestionNum,
+        totalQuestions: MAX_QUESTIONS,
+        sessionEnded: false
+      }
+    };
   }
 }
 

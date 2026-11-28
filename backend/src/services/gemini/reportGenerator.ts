@@ -1,5 +1,5 @@
-import { ai, modelName } from './geminiClient';
-import { REPORT_GENERATION_PROMPT, buildReportPrompt } from './prompts';
+import { ai, modelName, FALLBACK_MODELS } from './geminiClient';
+import { REPORT_GENERATION_PROMPT, buildReportPrompt, PhysiologicalSummary } from './prompts';
 import { resolveLanguageName } from './conversationEngine';
 import env from '../../config/env';
 import logger from '../../config/logger';
@@ -11,15 +11,17 @@ export interface GeneratedReportData {
   emotionalContext: string;
   importantStatements: string[];
   conversationOverview: string;
+  physiologicalInsights?: string;
 }
 
 export class ReportGenerator {
   /**
-   * Generate structured intake report from session transcript
+   * Generate structured intake report from session transcript and physiological vitals
    */
   async generateReportPayload(
     language: string,
-    transcript: Array<{ role: string; text: string; status?: string }>
+    transcript: Array<{ role: string; text: string; status?: string; timestamp?: any }>,
+    physiologicalVitals?: PhysiologicalSummary
   ): Promise<GeneratedReportData> {
     const selectedLanguage = resolveLanguageName(language);
 
@@ -51,6 +53,11 @@ export class ReportGenerator {
     const generateTranscriptBasedReport = (
       userMsgs: string[]
     ): GeneratedReportData => {
+      let physioNote = 'Physiological telemetry indicated stable baseline response during the intake.';
+      if (physiologicalVitals) {
+        physioNote = `Patient maintained an average galvanic conductance of ${physiologicalVitals.meanGSR.toFixed(2)} µS with ${physiologicalVitals.spikeCount} sympathetic arousal spike(s) and an average heart rate of ${physiologicalVitals.avgHeartRate.toFixed(0)} BPM.`;
+      }
+
       if (userMsgs.length === 0) {
         return {
           summary: 'Patient completed an intake session. No specific patient statements were recorded.',
@@ -58,7 +65,8 @@ export class ReportGenerator {
           concerns: ['Not discussed during this session'],
           emotionalContext: 'Patient engaged in the intake conversation.',
           importantStatements: [],
-          conversationOverview: 'Structured intake session completed with 0 patient responses.'
+          conversationOverview: 'Structured intake session completed with 0 patient responses.',
+          physiologicalInsights: physioNote
         };
       }
 
@@ -91,7 +99,8 @@ export class ReportGenerator {
         concerns: cleanedMsgs.map((m) => `Patient reported: ${m}`),
         emotionalContext: 'Patient communicated openly about their current experience during the intake session.',
         importantStatements: cleanedMsgs.map((m) => `"${m}"`),
-        conversationOverview: `Intake session completed with ${userMsgs.length} user response(s).`
+        conversationOverview: `Intake session completed with ${userMsgs.length} user response(s).`,
+        physiologicalInsights: physioNote
       };
     };
 
@@ -101,49 +110,57 @@ export class ReportGenerator {
       return generateTranscriptBasedReport(realUserMessages);
     }
 
-    // 2. Gemini 2.5 Flash API execution with safe logging
-    try {
-      logger.info(`[Report] Provider: Gemini | Model: ${modelName} | Real user responses: ${realUserMessages.length}`);
-      const prompt = buildReportPrompt(selectedLanguage, filteredTranscript);
+    // 2. Gemini API execution with multi-model fallback and safe logging
+    const prompt = buildReportPrompt(selectedLanguage, filteredTranscript, physiologicalVitals);
+    let lastReportError: any = null;
 
-      const generatePromise = ai.models.generateContent({
-        model: modelName,
-        contents: [
-          { role: 'user', parts: [{ text: `${REPORT_GENERATION_PROMPT}\n\n${prompt}` }] }
-        ],
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.3
+    for (const currentModel of FALLBACK_MODELS) {
+      try {
+        logger.info(`[Report] Provider: Gemini | Model: ${currentModel} | Real user responses: ${realUserMessages.length}`);
+
+        const generatePromise = ai.models.generateContent({
+          model: currentModel,
+          contents: [
+            { role: 'user', parts: [{ text: `${REPORT_GENERATION_PROMPT}\n\n${prompt}` }] }
+          ],
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.3
+          }
+        });
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Gemini Report generation timed out on ${currentModel}`)), 15000)
+        );
+
+        const response: any = await Promise.race([generatePromise, timeoutPromise]);
+        const rawText = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!rawText) {
+          throw new Error('Gemini returned an empty report payload.');
         }
-      });
 
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Gemini Report generation timed out after 15 seconds')), 15000)
-      );
+        const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanedJson);
 
-      const response: any = await Promise.race([generatePromise, timeoutPromise]);
-      const rawText = response.text || response.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!rawText) {
-        throw new Error('Gemini returned an empty report payload.');
+        // Validate required report fields
+        return {
+          summary: parsed.summary || (realUserMessages.length > 0 ? `Patient reported: "${realUserMessages.join(' ')}"` : 'Summary of intake conversation.'),
+          keyThemes: Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0 ? parsed.keyThemes : ['General Intake'],
+          concerns: Array.isArray(parsed.concerns) && parsed.concerns.length > 0 ? parsed.concerns : ['Not discussed during this session'],
+          emotionalContext: parsed.emotionalContext || 'Patient communicated openly about concerns.',
+          importantStatements: Array.isArray(parsed.importantStatements) ? parsed.importantStatements : realUserMessages.map(m => `"${m}"`),
+          conversationOverview: parsed.conversationOverview || 'Intake conversation completed.',
+          physiologicalInsights: parsed.physiologicalInsights || ''
+        };
+      } catch (err: any) {
+        lastReportError = err;
+        logger.warn(`[Report] Attempt with model ${currentModel} failed: ${err.message || err}. Trying next fallback model...`);
       }
-
-      const cleanedJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanedJson);
-
-      // Validate required report fields
-      return {
-        summary: parsed.summary || (realUserMessages.length > 0 ? `Patient reported: "${realUserMessages.join(' ')}"` : 'Summary of intake conversation.'),
-        keyThemes: Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0 ? parsed.keyThemes : ['General Intake'],
-        concerns: Array.isArray(parsed.concerns) && parsed.concerns.length > 0 ? parsed.concerns : ['Not discussed during this session'],
-        emotionalContext: parsed.emotionalContext || 'Patient communicated openly about concerns.',
-        importantStatements: Array.isArray(parsed.importantStatements) ? parsed.importantStatements : realUserMessages.map(m => `"${m}"`),
-        conversationOverview: parsed.conversationOverview || 'Intake conversation completed.'
-      };
-    } catch (err: any) {
-      logger.error(`Gemini Report Generation Error: ${err.message}`);
-      return generateTranscriptBasedReport(realUserMessages);
     }
+
+    logger.error(`Gemini Report Generation Error across all models: ${lastReportError?.message}`);
+    return generateTranscriptBasedReport(realUserMessages);
   }
 }
 

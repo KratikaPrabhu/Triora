@@ -22,6 +22,66 @@ export function useSpeech(languageCode = 'en') {
   });
 
   const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null);
+  const webSpeechRecognizerRef = useRef<any>(null);
+
+  // Fallback to browser-native Web Speech API if Azure is unavailable or errors
+  const startWebSpeechFallback = useCallback((locale: string) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn('[STT] Browser does not support webkitSpeechRecognition fallback.');
+      setState((prev) => ({
+        ...prev,
+        error: 'Speech recognition service temporarily unavailable. You can also type your response below.',
+        isListening: false
+      }));
+      return;
+    }
+
+    try {
+      console.log('[STT] Starting browser-native Web Speech API fallback recognition');
+      const recognition = new SpeechRecognition();
+      webSpeechRecognizerRef.current = recognition;
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = locale;
+
+      recognition.onresult = (event: any) => {
+        let interim = '';
+        let final = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+
+        setState((prev) => ({
+          ...prev,
+          transcript: final ? (prev.transcript ? `${prev.transcript} ${final}` : final) : prev.transcript,
+          interimTranscript: interim
+        }));
+      };
+
+      recognition.onerror = (e: any) => {
+        console.warn('[STT] Web Speech API error:', e.error);
+        if (e.error !== 'no-speech') {
+          setState((prev) => ({ ...prev, isListening: false }));
+        }
+      };
+
+      recognition.onend = () => {
+        setState((prev) => ({ ...prev, isListening: false }));
+      };
+
+      recognition.start();
+      setState((prev) => ({ ...prev, isListening: true, error: null }));
+    } catch (fallbackErr) {
+      console.error('[STT] Failed to start Web Speech API fallback:', fallbackErr);
+      setState((prev) => ({ ...prev, isListening: false }));
+    }
+  }, []);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -113,6 +173,12 @@ export function useSpeech(languageCode = 'en') {
   }, []);
 
   const stopListening = useCallback(() => {
+    if (webSpeechRecognizerRef.current) {
+      try {
+        webSpeechRecognizerRef.current.stop();
+        webSpeechRecognizerRef.current = null;
+      } catch {}
+    }
     if (recognizerRef.current) {
       console.log('[STT] Stopping recognition');
       try {
@@ -123,7 +189,7 @@ export function useSpeech(languageCode = 'en') {
             recognizerRef.current = null;
             setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
           },
-          (err) => {
+          (err: any) => {
             console.warn('[STT] Error stopping Azure recognizer:', err);
             recognizerRef.current = null;
             setState((prev) => ({ ...prev, isListening: false, volumeLevel: 0 }));
@@ -163,14 +229,8 @@ export function useSpeech(languageCode = 'en') {
       // Retrieve Azure Speech token from backend endpoint
       const tokenRes = await speechService.getSpeechToken(languageCode);
       if (!tokenRes.success || !tokenRes.data?.token) {
-        const errorCategory = tokenRes.error?.message || 'missing credentials';
-        console.error(`[STT] Recognition canceled: AuthenticationFailure (${errorCategory})`);
-        setState((prev) => ({
-          ...prev,
-          error: `Azure Speech STT error: Unable to fetch speech token (${errorCategory})`,
-          isListening: false,
-        }));
-        stopAudioAnalysis();
+        console.warn(`[STT] Azure token unavailable. Auto-failing over to browser Web Speech API`);
+        startWebSpeechFallback(locale);
         return;
       }
 
@@ -178,13 +238,8 @@ export function useSpeech(languageCode = 'en') {
 
       let speechConfig: SpeechSDK.SpeechConfig;
       if (token.startsWith('mock-azure-speech-token')) {
-        console.warn('[STT] Recognition canceled: AuthenticationFailure (mock token returned, missing AZURE_SPEECH_KEY on backend)');
-        setState((prev) => ({
-          ...prev,
-          error: 'Azure Speech credentials (AZURE_SPEECH_KEY) missing or unconfigured on backend environment.',
-          isListening: false,
-        }));
-        stopAudioAnalysis();
+        console.warn('[STT] Mock Azure token detected. Auto-failing over to browser Web Speech API');
+        startWebSpeechFallback(locale);
         return;
       } else {
         speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region || 'centralindia');
@@ -255,16 +310,10 @@ export function useSpeech(languageCode = 'en') {
         }
       );
     } catch (err: any) {
-      console.error('[STT] Azure Speech SDK setup error:', err);
-      console.log(`[STT] Recognition canceled: ${err.message || err}`);
-      setState((prev) => ({
-        ...prev,
-        error: `Could not start Azure speech recognition: ${err.message || err}`,
-        isListening: false,
-      }));
-      stopAudioAnalysis();
+      console.warn('[STT] Azure Speech SDK setup error. Auto-failing over to Web Speech API:', err);
+      startWebSpeechFallback(locale);
     }
-  }, [getLocaleForLanguage, languageCode, startAudioAnalysis, stopAudioAnalysis, stopListening]);
+  }, [getLocaleForLanguage, languageCode, startAudioAnalysis, stopAudioAnalysis, stopListening, startWebSpeechFallback]);
 
   const resetTranscript = useCallback(() => {
     setState((prev) => ({

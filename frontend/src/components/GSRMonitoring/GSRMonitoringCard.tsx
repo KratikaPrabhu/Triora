@@ -7,9 +7,16 @@ import './GSRMonitoring.css';
 
 interface GSRMonitoringCardProps {
   sessionId?: string | null;
+  onGSRReady?: (gsr: ReturnType<typeof useGSR>) => void;
 }
 
-export const GSRMonitoringCard: React.FC<GSRMonitoringCardProps> = ({ sessionId }) => {
+export const GSRMonitoringCard: React.FC<GSRMonitoringCardProps> = ({ sessionId, onGSRReady }) => {
+  const gsr = useGSR({
+    sessionId,
+    autoStart: true,
+    initialMode: 'demo',
+  });
+
   const {
     mode,
     setMode,
@@ -18,11 +25,18 @@ export const GSRMonitoringCard: React.FC<GSRMonitoringCardProps> = ({ sessionId 
     connectionStatus,
     selectedParam,
     setSelectedParam,
-  } = useGSR({
-    sessionId,
-    autoStart: true,
-    initialMode: 'demo',
-  });
+    isBleSupported,
+    bleDeviceName,
+    bleErrorMessage,
+    connectBle,
+    disconnectBle,
+  } = gsr;
+
+  React.useEffect(() => {
+    if (onGSRReady) {
+      onGSRReady(gsr);
+    }
+  }, [onGSRReady, gsr]);
 
   return (
     <div className="physio-monitoring-card" role="region" aria-label="Physiological Monitoring">
@@ -40,6 +54,11 @@ export const GSRMonitoringCard: React.FC<GSRMonitoringCardProps> = ({ sessionId 
             mode={mode}
             setMode={setMode}
             connectionStatus={connectionStatus}
+            isBleSupported={isBleSupported}
+            bleDeviceName={bleDeviceName}
+            bleErrorMessage={bleErrorMessage}
+            onConnectBle={connectBle}
+            onDisconnectBle={disconnectBle}
           />
         </div>
       </div>

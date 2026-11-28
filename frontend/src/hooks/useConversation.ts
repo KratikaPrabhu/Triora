@@ -3,6 +3,19 @@ import { getStoredToken } from '../services/api';
 import { sessionService } from '../services/sessionService';
 import { ttsService } from '../services/ttsService';
 
+export interface CrisisAlertData {
+  severity: 'none' | 'low' | 'moderate' | 'high' | 'imminent';
+  crisisType?: string;
+  groundingMessage: string;
+  safetyResources: Array<{
+    name: string;
+    contact: string;
+    description: string;
+    available: string;
+  }>;
+  detectedTriggers?: string[];
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -48,6 +61,9 @@ export function useConversation(
 
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
+
+  const [crisisAlert, setCrisisAlert] =
+    useState<CrisisAlertData | null>(null);
 
   const [isWebSocketActive, setIsWebSocketActive] =
     useState(false);
@@ -212,6 +228,22 @@ export function useConversation(
 
           setStatus('completed');
 
+          break;
+
+        // --------------------------------------------
+        // Crisis Alert Safety Net Event
+        // --------------------------------------------
+
+        case 'crisis_alert':
+
+          console.warn('[WS] ⚠️ Received Crisis Alert Event:', data);
+          setCrisisAlert({
+            severity: data.severity,
+            crisisType: data.crisisType,
+            groundingMessage: data.groundingMessage,
+            safetyResources: data.safetyResources || [],
+            detectedTriggers: data.detectedTriggers || []
+          });
           break;
 
         // --------------------------------------------
@@ -474,7 +506,8 @@ export function useConversation(
   const sendMessage = useCallback(
     async (
       text: string,
-      voiceMetrics?: any
+      voiceMetrics?: any,
+      physiologicalMetrics?: any
     ) => {
 
       if (
@@ -554,7 +587,7 @@ export function useConversation(
       ) {
 
         console.log(
-          '[WS] Sending ONE user_message'
+          '[WS] Sending ONE user_message with physiological window metrics'
         );
 
         ws.send(
@@ -563,7 +596,8 @@ export function useConversation(
             sessionId,
             text: trimmedText,
             status: 'answered',
-            voiceMetrics
+            voiceMetrics,
+            physiologicalMetrics
           })
         );
 
@@ -586,7 +620,8 @@ export function useConversation(
             {
               text: trimmedText,
               status: 'answered',
-              voiceMetrics
+              voiceMetrics,
+              physiologicalMetrics
             }
           );
 
@@ -755,6 +790,8 @@ export function useConversation(
     messages,
     currentQuestion,
     errorMessage,
+    crisisAlert,
+    setCrisisAlert,
     isWebSocketActive,
     lastUserUtterance,
     sendMessage,

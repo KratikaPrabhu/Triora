@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import User from '../models/user.model';
 import conversationService from '../services/conversation.service';
 import sessionService from '../services/session.service';
+import CrisisDetector from '../services/crisisDetection.service';
 import logger from '../config/logger';
 import { IUserDocument } from '../types';
 
@@ -188,7 +189,44 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
             }
 
             // Verify session ownership before emitting processing status
-            await sessionService.getSessionById(userIdStr, sessionId);
+            const currentSession = await sessionService.getSessionById(userIdStr, sessionId);
+
+            // 1. REAL-TIME CRISIS & RISK DETECTION PROTOCOL
+            const riskAssessment = CrisisDetector.assessRisk(text || '', currentSession.language || 'en');
+            if (riskAssessment.isCrisis) {
+              logger.warn(`[WS] ⚠️ CRISIS DETECTED in session ${sessionId}! Type: ${riskAssessment.crisisType}, Severity: ${riskAssessment.severity}`);
+              
+              // Emit immediate high-priority safety alert to the client UI
+              sendEvent(ws, {
+                type: 'crisis_alert',
+                sessionId,
+                severity: riskAssessment.severity,
+                crisisType: riskAssessment.crisisType,
+                groundingMessage: riskAssessment.groundingMessage,
+                safetyResources: riskAssessment.safetyResources,
+                detectedTriggers: riskAssessment.detectedTriggers,
+                timestamp: new Date().toISOString()
+              });
+
+              // If imminent risk, immediately reply with compassionate grounding response and do not prompt further questions
+              if (riskAssessment.severity === 'imminent' || riskAssessment.severity === 'high') {
+                sendEvent(ws, {
+                  type: 'assistant_message',
+                  sessionId,
+                  text: `${riskAssessment.groundingMessage}\n\nPlease reach out right now: call or text 988 (US/Canada) or 14416 (Tele-MANAS India). Help is free, confidential, and available 24/7.`,
+                  action: 'ask',
+                  metadata: {
+                    intent: 'Crisis Grounding Protocol',
+                    topic: 'Crisis Intervention',
+                    shouldContinue: false,
+                    totalQuestions: currentSession.transcript?.length || 0,
+                    sessionEnded: false
+                  },
+                  timestamp: new Date().toISOString()
+                });
+                break;
+              }
+            }
 
             // Emit processing status
             logger.info(`[WS] Processing patient response for session ${sessionId}`);
@@ -202,7 +240,8 @@ export function initConversationWebSocket(server: Server): WebSocketServer {
                 sessionId,
                 userMessage: text || '',
                 status: msgStatus,
-                voiceMetrics: payload.voiceMetrics
+                voiceMetrics: payload.voiceMetrics,
+                physiologicalMetrics: payload.physiologicalMetrics
               });
 
               if (aiResponse.action === 'complete') {

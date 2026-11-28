@@ -1,8 +1,12 @@
 import { apiRequest } from './api';
 import type { Report, ApiResponse } from '../types';
+import type { PhysiologicalMetrics } from '../types/report';
 
 export const reportService = {
-  async generateReport(sessionId: string, payload?: { durationSeconds?: number }): Promise<ApiResponse<{ report: Report }>> {
+  async generateReport(
+    sessionId: string,
+    payload?: { durationSeconds?: number; physiologicalVitals?: PhysiologicalMetrics }
+  ): Promise<ApiResponse<{ report: Report }>> {
     return apiRequest<{ report: Report }>(`/report/generate/${sessionId}`, {
       method: 'POST',
       body: payload ? JSON.stringify(payload) : undefined,

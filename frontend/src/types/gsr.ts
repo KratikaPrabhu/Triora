@@ -18,7 +18,7 @@ export interface VitalsReading {
 
 export type GSRReading = VitalsReading;
 
-export type GSRMode = 'demo' | 'live';
+export type GSRMode = 'demo' | 'live' | 'ble';
 export type GSRConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 export interface VitalsStatsData {

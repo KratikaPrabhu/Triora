@@ -60,12 +60,30 @@ export interface IVoiceMetrics {
   maxFrequency: number;
 }
 
+export interface IQuestionPhysiologicalMetrics {
+  meanGSR: number;
+  peakConductance: number;
+  minConductance: number;
+  deltaConductance: number; // change (+ increase / - decrease)
+  meanResistance: number;
+  deltaResistance: number;
+  avgHeartRate: number;
+  minHeartRate: number;
+  maxHeartRate: number;
+  deltaHeartRate: number;
+  avgHRV: number;
+  deltaHRV: number;
+  sampleCount: number;
+  durationSeconds: number;
+}
+
 export interface ISessionMessage {
   role: 'user' | 'assistant' | 'system';
   text: string;
   timestamp: Date;
   status?: AnswerStatus;
   voiceMetrics?: IVoiceMetrics;
+  physiologicalMetrics?: IQuestionPhysiologicalMetrics;
 }
 
 export interface ISession {
@@ -93,6 +111,28 @@ export interface IReport {
   emotionalContext: string;
   importantStatements: string[];
   conversationOverview: string;
+  physiologicalInsights?: string;
+  physiologicalMetrics?: {
+    meanGSR: number;
+    peakConductance: number;
+    minConductance?: number;
+    spikeCount: number;
+    spikes?: Array<{ timestamp: string; value: number; relativeSecond: number; contextTopic?: string }>;
+    avgHeartRate: number;
+    restingHeartRateBaseline?: number;
+    stressDistribution?: {
+      calmPercent: number;
+      moderatePercent: number;
+      highPercent: number;
+    };
+  };
+  questionPhysiologicalResponses?: Array<{
+    questionIndex: number;
+    questionText: string;
+    responseText: string;
+    durationSeconds: number;
+    metrics: IQuestionPhysiologicalMetrics;
+  }>;
   duration?: number;
   voiceAnalysis?: {
     totalDuration: number;

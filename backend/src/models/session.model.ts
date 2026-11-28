@@ -50,6 +50,10 @@ const sessionMessageSchema = new Schema(
       avgFrequency: { type: Number },
       minFrequency: { type: Number },
       maxFrequency: { type: Number }
+    },
+    physiologicalMetrics: {
+      type: Schema.Types.Mixed,
+      default: null
     }
   },
   {

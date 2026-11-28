@@ -19,6 +19,9 @@ class TTSService {
    */
   public unlockAudio(): void {
     try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+      }
       const audio = new Audio();
       audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
       audio.play().catch(() => {});
@@ -85,8 +88,8 @@ class TTSService {
         const errJson = await response.json().catch(() => ({}));
         const message = errJson?.error?.message || `Azure Speech TTS error (Status ${response.status})`;
         console.error('[Triora TTS] Azure Speech TTS temporarily unavailable:', message);
-        this.isSpeakingState = false;
-        onEnd?.();
+        console.warn('[Triora TTS] Auto-failing over to browser Web Speech API synthesis');
+        this.fallbackWebSpeech(trimmedText, languageCode, onStart, onEnd);
         return;
       }
 
@@ -144,7 +147,57 @@ class TTSService {
         return;
       }
 
-      console.error('[Triora TTS] Azure Speech TTS temporarily unavailable:', err?.message || err);
+      console.warn('[Triora TTS] Azure Speech TTS error. Auto-failing over to Web Speech API:', err?.message || err);
+      this.fallbackWebSpeech(trimmedText, languageCode, onStart, onEnd);
+    }
+  }
+
+  /**
+   * Browser-native Web Speech API synthesis fallback for zero downtime
+   */
+  private fallbackWebSpeech(
+    text: string,
+    languageCode = 'en',
+    onStart?: () => void,
+    onEnd?: () => void
+  ): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      console.warn('[Triora TTS] Web Speech API synthesis not supported in this browser.');
+      this.isSpeakingState = false;
+      onEnd?.();
+      return;
+    }
+
+    try {
+      // Resume speech synthesis if suspended by browser or canvas export
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = languageCode === 'hi' ? 'hi-IN' : languageCode === 'kn' ? 'kn-IN' : 'en-US';
+      utterance.rate = 0.95;
+
+      utterance.onstart = () => {
+        this.isSpeakingState = true;
+        onStart?.();
+      };
+
+      utterance.onend = () => {
+        this.isSpeakingState = false;
+        onEnd?.();
+      };
+
+      utterance.onerror = (e) => {
+        console.warn('[Triora TTS] Web Speech API utterance error:', e);
+        this.isSpeakingState = false;
+        onEnd?.();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch (fallbackErr) {
+      console.error('[Triora TTS] Web Speech API fallback failed:', fallbackErr);
       this.isSpeakingState = false;
       onEnd?.();
     }

@@ -19,6 +19,46 @@ export interface VoiceAnalysis {
   responses?: VoiceAnalysisResponse[];
 }
 
+export interface PhysiologicalMetrics {
+  meanGSR: number;
+  peakConductance: number;
+  minConductance?: number;
+  spikeCount: number;
+  spikes?: Array<{ timestamp: string; value: number; relativeSecond: number; contextTopic?: string }>;
+  avgHeartRate: number;
+  restingHeartRateBaseline?: number;
+  stressDistribution?: {
+    calmPercent: number;
+    moderatePercent: number;
+    highPercent: number;
+  };
+}
+
+export interface QuestionPhysiologicalMetrics {
+  meanGSR: number;
+  peakConductance: number;
+  minConductance: number;
+  deltaConductance: number;
+  meanResistance: number;
+  deltaResistance: number;
+  avgHeartRate: number;
+  minHeartRate: number;
+  maxHeartRate: number;
+  deltaHeartRate: number;
+  avgHRV: number;
+  deltaHRV: number;
+  sampleCount: number;
+  durationSeconds: number;
+}
+
+export interface QuestionPhysiologicalResponse {
+  questionIndex: number;
+  questionText: string;
+  responseText: string;
+  durationSeconds: number;
+  metrics: QuestionPhysiologicalMetrics;
+}
+
 export interface Report {
   _id: string;
   sessionId: string;
@@ -29,6 +69,9 @@ export interface Report {
   emotionalContext: string;
   importantStatements: string[];
   conversationOverview: string;
+  physiologicalInsights?: string;
+  physiologicalMetrics?: PhysiologicalMetrics | null;
+  questionPhysiologicalResponses?: QuestionPhysiologicalResponse[];
   duration?: number;
   voiceAnalysis?: VoiceAnalysis | null;
   generatedAt: string;

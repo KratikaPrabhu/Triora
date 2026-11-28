@@ -5,11 +5,12 @@ import logger from '../config/logger';
 
 export const generateReport = asyncWrapper(async (req: Request, res: Response) => {
   const sessionId = req.params.sessionId as string;
-  const { durationSeconds, duration } = req.body || {};
+  const { durationSeconds, duration, physiologicalVitals } = req.body || {};
   const report = await reportService.generateReport(
     req.user!._id.toString(),
     sessionId,
-    durationSeconds || duration
+    durationSeconds || duration,
+    physiologicalVitals
   );
   res.status(201).json({
     success: true,

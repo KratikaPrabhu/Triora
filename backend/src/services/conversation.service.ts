@@ -1,6 +1,6 @@
 import conversationEngine, { ConversationEngineOutput } from './gemini/conversationEngine';
 import sessionService from './session.service';
-import { AnswerStatus, ISessionMessage, IVoiceMetrics } from '../types';
+import { AnswerStatus, ISessionMessage, IVoiceMetrics, IQuestionPhysiologicalMetrics } from '../types';
 
 export interface ProcessMessageInput {
   userId: string;
@@ -8,6 +8,7 @@ export interface ProcessMessageInput {
   userMessage: string;
   status?: AnswerStatus | 'completed';
   voiceMetrics?: IVoiceMetrics;
+  physiologicalMetrics?: IQuestionPhysiologicalMetrics;
   durationSeconds?: number;
 }
 
@@ -19,7 +20,7 @@ export class ConversationService {
     session: any;
     aiResponse: ConversationEngineOutput;
   }> {
-    const { userId, sessionId, userMessage, status = 'answered', voiceMetrics, durationSeconds } = input;
+    const { userId, sessionId, userMessage, status = 'answered', voiceMetrics, physiologicalMetrics, durationSeconds } = input;
 
     // 1. Retrieve session and verify ownership
     let session = await sessionService.getSessionById(userId, sessionId);
@@ -54,7 +55,8 @@ export class ConversationService {
         text: userMessage.trim(),
         status: 'answered',
         timestamp: new Date(),
-        ...(voiceMetrics ? { voiceMetrics } : {})
+        ...(voiceMetrics ? { voiceMetrics } : {}),
+        ...(physiologicalMetrics ? { physiologicalMetrics } : {})
       });
     } else if (status === 'skipped') {
       userTranscriptItems.push({
@@ -62,7 +64,8 @@ export class ConversationService {
         text: '',
         status: 'skipped',
         timestamp: new Date(),
-        ...(voiceMetrics ? { voiceMetrics } : {})
+        ...(voiceMetrics ? { voiceMetrics } : {}),
+        ...(physiologicalMetrics ? { physiologicalMetrics } : {})
       });
     }
 
